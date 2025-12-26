@@ -9,7 +9,7 @@ import (
 	"github.com/uqpay/uqpay-sdk-go/configuration"
 	"github.com/uqpay/uqpay-sdk-go/connect"
 	"github.com/uqpay/uqpay-sdk-go/issuing"
-	"github.com/uqpay/uqpay-sdk-go/payment"
+	"github.com/uqpay/uqpay-sdk-go/paymentintent"
 	"github.com/uqpay/uqpay-sdk-go/supporting"
 )
 
@@ -19,7 +19,7 @@ type Client struct {
 	Banking    *banking.Client
 	Connect    *connect.Client
 	Supporting *supporting.Client
-	Payment    *payment.Client
+	Payment    *paymentintent.Client
 }
 
 // NewClient creates a new UQPAY client
@@ -63,6 +63,6 @@ func NewClient(clientID, apiKey string, env *configuration.Environment) (*Client
 		Banking:    banking.NewClient(apiClient),
 		Connect:    connect.NewClient(apiClient),
 		Supporting: supporting.NewClient(filesAPIClient), // Use separate client for Files API
-		Payment:    payment.NewClient(apiClient),
+		Payment:    paymentintent.NewClient(apiClient),
 	}, nil
 }

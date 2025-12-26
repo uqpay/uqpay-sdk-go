@@ -1,4 +1,4 @@
-package payment
+package paymentintent
 
 import "github.com/uqpay/uqpay-sdk-go/common"
 
