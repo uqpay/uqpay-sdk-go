@@ -30,15 +30,32 @@ type ListSettlementsRequest struct {
 
 // Settlement represents a settlement record
 type Settlement struct {
-	ID             string `json:"id"`
-	Amount         string `json:"amount,omitempty"`
-	Currency       string `json:"currency,omitempty"`
-	Status         string `json:"status,omitempty"`
-	SettledAt      string `json:"settled_at,omitempty"`
-	TransactionFee string `json:"transaction_fee,omitempty"`
-	NetAmount      string `json:"net_amount,omitempty"`
-	CreatedAt      string `json:"created_at,omitempty"`
-	UpdatedAt      string `json:"updated_at,omitempty"`
+	SettlementID          string `json:"settlement_id"`
+	AccountID             string `json:"account_id,omitempty"`
+	AccountName           string `json:"account_name,omitempty"`
+	SourceType            string `json:"source_type,omitempty"`
+	TransactionType       string `json:"transaction_type,omitempty"`
+	MerchantOrderID       string `json:"merchant_order_id,omitempty"`
+	PaymentIntentID       string `json:"payment_intent_id,omitempty"`
+	PaymentMethod         string `json:"payment_method,omitempty"`
+	TransactionCreateDate string `json:"transaction_create_date,omitempty"`
+	TransactionAmount     string `json:"transaction_amount,omitempty"`
+	TransactionCurrency   string `json:"transaction_currency,omitempty"`
+	TransactionDate       string `json:"transaction_date,omitempty"`
+	SettlementAmount      string `json:"settlement_amount,omitempty"`
+	SettlementCurrency    string `json:"settlement_currency,omitempty"`
+	NetSettlementAmount   string `json:"net_settlement_amount,omitempty"`
+	ExchangeRate          string `json:"exchange_rate,omitempty"`
+	FeeCurrency           string `json:"fee_currency,omitempty"`
+	InterchangeFee        string `json:"interchange_fee,omitempty"`
+	SchemeFee             string `json:"scheme_fee,omitempty"`
+	TranscationFee        string `json:"transcation_fee,omitempty"` // Note: API uses "transcation" (typo)
+	ReturnFee             string `json:"return_fee,omitempty"`
+	TotalFeeAmount        string `json:"total_fee_amount,omitempty"`
+	SettlementStatus      string `json:"settlement_status,omitempty"`
+	SettlementBatchID     string `json:"settlement_batch_id,omitempty"`
+	SettlementCreateDate  string `json:"settlement_create_date,omitempty"`
+	SettlementDate        string `json:"settlement_date,omitempty"`
 }
 
 // ListSettlementsResponse represents a paginated list of settlements

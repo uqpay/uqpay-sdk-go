@@ -64,7 +64,7 @@ func (c *APIClient) Do(ctx context.Context, method, path string, body, response 
 
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-auth-token", token)
+	req.Header.Set("x-auth-token", "Bearer "+token)
 	req.Header.Set("x-idempotency-key", uuid.New().String())
 
 	// Execute request

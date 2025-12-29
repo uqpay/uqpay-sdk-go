@@ -86,7 +86,7 @@ type CapturePaymentIntentRequest struct {
 
 // CancelPaymentIntentRequest represents a payment intent cancellation request
 type CancelPaymentIntentRequest struct {
-	CancellationReason string `json:"cancellation_reason,omitempty"`
+	CancellationReason string `json:"cancellation_reason,omitempty"` // e.g., "requested_by_customer", "duplicate", "fraudulent", "abandoned"
 }
 
 // ListPaymentIntentsRequest represents a payment intents list request
@@ -105,17 +105,24 @@ type ListPaymentIntentsRequest struct {
 
 // PaymentIntent represents a payment intent response
 type PaymentIntent struct {
-	ID              string            `json:"id"`
-	Amount          string            `json:"amount"`
-	Currency        string            `json:"currency"`
-	Status          string            `json:"status"`
-	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	ReturnURL       string            `json:"return_url,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
-	CreatedAt       string            `json:"created_at,omitempty"`
-	UpdatedAt       string            `json:"updated_at,omitempty"`
+	PaymentIntentID             string                 `json:"payment_intent_id"`
+	Amount                      string                 `json:"amount"`
+	Currency                    string                 `json:"currency"`
+	IntentStatus                string                 `json:"intent_status"`
+	MerchantOrderID             string                 `json:"merchant_order_id,omitempty"`
+	Description                 string                 `json:"description,omitempty"`
+	ReturnURL                   string                 `json:"return_url,omitempty"`
+	Metadata                    map[string]string      `json:"metadata,omitempty"`
+	AvailablePaymentMethodTypes []string               `json:"available_payment_method_types,omitempty"`
+	CapturedAmount              string                 `json:"captured_amount,omitempty"`
+	ClientSecret                string                 `json:"client_secret,omitempty"`
+	CancellationReason          string                 `json:"cancellation_reason,omitempty"`
+	LatestPaymentAttempt        map[string]interface{} `json:"latest_payment_attempt,omitempty"`
+	NextAction                  map[string]interface{} `json:"next_action,omitempty"`
+	CreateTime                  string                 `json:"create_time,omitempty"`
+	UpdateTime                  string                 `json:"update_time,omitempty"`
+	CancelTime                  string                 `json:"cancel_time,omitempty"`
+	CompleteTime                string                 `json:"complete_time,omitempty"`
 }
 
 // ListPaymentIntentsResponse represents a paginated list of payment intents

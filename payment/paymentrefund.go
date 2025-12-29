@@ -40,16 +40,15 @@ type ListRefundsRequest struct {
 
 // Refund represents a refund response
 type Refund struct {
-	ID              string            `json:"id"`
-	PaymentIntentID string            `json:"payment_intent_id,omitempty"`
-	Amount          string            `json:"amount,omitempty"`
-	Currency        string            `json:"currency,omitempty"`
-	Status          string            `json:"status,omitempty"`
-	Reason          string            `json:"reason,omitempty"`
-	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"` // Reuses PaymentMethod from paymentintent.go
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	CreatedAt       string            `json:"created_at,omitempty"`
-	UpdatedAt       string            `json:"updated_at,omitempty"`
+	PaymentRefundID  string            `json:"payment_refund_id"`
+	PaymentAttemptID string            `json:"payment_attempt_id,omitempty"`
+	Amount           string            `json:"amount,omitempty"`
+	Currency         string            `json:"currency,omitempty"`
+	RefundStatus     string            `json:"refund_status,omitempty"`
+	Reason           string            `json:"reason,omitempty"`
+	Metadata         map[string]string `json:"metadata,omitempty"`
+	CreateTime       string            `json:"create_time,omitempty"`
+	UpdateTime       string            `json:"update_time,omitempty"`
 }
 
 // ListRefundsResponse represents a paginated list of refunds

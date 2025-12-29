@@ -18,12 +18,14 @@ type PaymentBalancesClient struct {
 
 // Balance represents a currency account balance
 type Balance struct {
+	BalanceID        string `json:"balance_id,omitempty"`
 	Currency         string `json:"currency"`
 	AvailableBalance string `json:"available_balance,omitempty"`
+	PayableBalance   string `json:"payable_balance,omitempty"`
 	PendingBalance   string `json:"pending_balance,omitempty"`
 	ReservedBalance  string `json:"reserved_balance,omitempty"`
-	TotalBalance     string `json:"total_balance,omitempty"`
-	UpdatedAt        string `json:"updated_at,omitempty"`
+	MarginBalance    string `json:"margin_balance,omitempty"`
+	FrozenBalance    string `json:"frozen_balance,omitempty"`
 }
 
 // ListBalancesResponse represents a list of currency balances

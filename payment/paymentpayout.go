@@ -41,16 +41,17 @@ type ListPayoutsRequest struct {
 
 // Payout represents a payout response
 type Payout struct {
-	ID              string            `json:"id"`
-	Amount          string            `json:"amount,omitempty"`
-	Currency        string            `json:"currency,omitempty"`
-	Status          string            `json:"status,omitempty"`
-	BeneficiaryID   string            `json:"beneficiary_id,omitempty"`
-	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
-	CreatedAt       string            `json:"created_at,omitempty"`
-	UpdatedAt       string            `json:"updated_at,omitempty"`
+	PayoutID            string            `json:"payout_id"`
+	PayoutAmount        string            `json:"payout_amount,omitempty"`
+	PayoutCurrency      string            `json:"payout_currency,omitempty"`
+	PayoutStatus        string            `json:"payout_status,omitempty"`
+	InternalNote        string            `json:"internal_note,omitempty"`
+	StatementDescriptor string            `json:"statement_descriptor,omitempty"`
+	BeneficiaryID       string            `json:"beneficiary_id,omitempty"`
+	MerchantOrderID     string            `json:"merchant_order_id,omitempty"`
+	Metadata            map[string]string `json:"metadata,omitempty"`
+	CreateTime          string            `json:"create_time,omitempty"`
+	CompletedTime       string            `json:"completed_time,omitempty"`
 }
 
 // ListPayoutsResponse represents a paginated list of payouts

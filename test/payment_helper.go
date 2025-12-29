@@ -2,31 +2,14 @@ package test
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
-	"github.com/joho/godotenv"
 	"github.com/uqpay/uqpay-sdk-go"
 	"github.com/uqpay/uqpay-sdk-go/configuration"
 )
 
-func init() {
-	// Try to load .env file from project root
-	// Look for .env in current directory and parent directories
-	dirs := []string{
-		".env",
-		"../.env",
-		filepath.Join("..", ".env"),
-	}
-	for _, path := range dirs {
-		if err := godotenv.Load(path); err == nil {
-			break
-		}
-	}
-}
-
-// GetTestClient creates a test client with credentials from environment variables
-func GetTestClient(t *testing.T) *uqpay.Client {
+// GetPaymentTestClient creates a test client for Payment API tests
+func GetPaymentTestClient(t *testing.T) *uqpay.Client {
 	t.Helper()
 
 	// Skip integration tests in CI environment
