@@ -51,8 +51,8 @@ type ListVirtualAccountsResponse struct {
 
 // CreateVirtualAccountRequest represents a virtual account creation request
 type CreateVirtualAccountRequest struct {
-	VirtualAccountName string   `json:"virtual_account_name"` // required
-	Currencies         []string `json:"currencies"`           // required, e.g., ["USD", "EUR"]
+	Currency      string `json:"currency"`       // required, ISO 4217 currency code(s), e.g., "USD" or "USD,SGD" for multiple
+	PaymentMethod string `json:"payment_method"` // required, "LOCAL" or "SWIFT"
 }
 
 // List lists virtual accounts

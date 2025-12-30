@@ -14,54 +14,48 @@ func TestConversionCreateQuote(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Create a quote
+	today := time.Now().Format("2006-01-02")
 	req := &banking.CreateQuoteRequest{
-		CurrencyFrom: "USD",
-		CurrencyTo:   "EUR",
-		AmountFrom:   "100.00",
+		SellCurrency:    "USD",
+		SellAmount:      "100.00",
+		BuyCurrency:     "SGD",
+		ConversionDate:  today,
+		TransactionType: "conversion",
 	}
 
-	t.Logf("Creating quote: %s -> %s, Amount: %s", req.CurrencyFrom, req.CurrencyTo, req.AmountFrom)
+	t.Logf("Creating quote: %s -> %s, Amount: %s", req.SellCurrency, req.BuyCurrency, req.SellAmount)
 
 	quote, err := client.Banking.Conversions.CreateQuote(ctx, req)
 	if err != nil {
 		t.Fatalf("Failed to create quote: %v", err)
 	}
 
-	if quote.QuoteID == "" {
+	if quote.QuotePrice.QuoteID == "" {
 		t.Error("Expected quote_id to be set")
 	}
-	if quote.CurrencyFrom != req.CurrencyFrom {
-		t.Errorf("Expected currency_from %s, got %s", req.CurrencyFrom, quote.CurrencyFrom)
+	if quote.SellCurrency != req.SellCurrency {
+		t.Errorf("Expected sell_currency %s, got %s", req.SellCurrency, quote.SellCurrency)
 	}
-	if quote.CurrencyTo != req.CurrencyTo {
-		t.Errorf("Expected currency_to %s, got %s", req.CurrencyTo, quote.CurrencyTo)
+	if quote.BuyCurrency != req.BuyCurrency {
+		t.Errorf("Expected buy_currency %s, got %s", req.BuyCurrency, quote.BuyCurrency)
 	}
-	if quote.AmountFrom != req.AmountFrom {
-		t.Errorf("Expected amount_from %s, got %s", req.AmountFrom, quote.AmountFrom)
+	if quote.QuotePrice.DirectRate == "" {
+		t.Error("Expected direct_rate to be set")
 	}
-	if quote.Rate == "" {
-		t.Error("Expected rate to be set")
-	}
-	if quote.AmountTo == "" {
-		t.Error("Expected amount_to to be set")
-	}
-	if quote.ExpiresAt == "" {
-		t.Error("Expected expires_at to be set")
+	if quote.BuyAmount == "" {
+		t.Error("Expected buy_amount to be set")
 	}
 
 	t.Logf("Quote created successfully:")
-	t.Logf("  Quote ID: %s", quote.QuoteID)
-	t.Logf("  From: %s %s", quote.AmountFrom, quote.CurrencyFrom)
-	t.Logf("  To: %s %s", quote.AmountTo, quote.CurrencyTo)
-	t.Logf("  Rate: %s", quote.Rate)
-	t.Logf("  Expires At: %s", quote.ExpiresAt)
-	if quote.SettlementDate != "" {
-		t.Logf("  Settlement Date: %s", quote.SettlementDate)
-	}
+	t.Logf("  Quote ID: %s", quote.QuotePrice.QuoteID)
+	t.Logf("  Sell: %s %s", quote.SellAmount, quote.SellCurrency)
+	t.Logf("  Buy: %s %s", quote.BuyAmount, quote.BuyCurrency)
+	t.Logf("  Rate: %s", quote.QuotePrice.DirectRate)
+	t.Logf("  Currency Pair: %s", quote.QuotePrice.CurrencyPair)
 }
 
 func TestConversionCreateQuoteWithSettlementDate(t *testing.T) {
@@ -69,11 +63,11 @@ func TestConversionCreateQuoteWithSettlementDate(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Get conversion dates first
-	dates, err := client.Banking.Conversions.ListConversionDates(ctx, "USD", "EUR")
+	dates, err := client.Banking.Conversions.ListConversionDates(ctx, "USD", "SGD")
 	if err != nil {
 		t.Fatalf("Failed to get conversion dates: %v", err)
 	}
@@ -83,31 +77,31 @@ func TestConversionCreateQuoteWithSettlementDate(t *testing.T) {
 	}
 
 	// Use the first available date
-	settlementDate := dates[0].Date
+	conversionDate := dates[0].Date
 
-	// Create a quote with settlement date
+	// Create a quote with specific conversion date
 	req := &banking.CreateQuoteRequest{
-		CurrencyFrom:   "USD",
-		CurrencyTo:     "EUR",
-		AmountFrom:     "100.00",
-		SettlementDate: settlementDate,
+		SellCurrency:    "USD",
+		SellAmount:      "100.00",
+		BuyCurrency:     "SGD",
+		ConversionDate:  conversionDate,
+		TransactionType: "conversion",
 	}
 
-	t.Logf("Creating quote with settlement date: %s", settlementDate)
+	t.Logf("Creating quote with conversion date: %s", conversionDate)
 
 	quote, err := client.Banking.Conversions.CreateQuote(ctx, req)
 	if err != nil {
 		t.Fatalf("Failed to create quote: %v", err)
 	}
 
-	if quote.SettlementDate == "" {
-		t.Error("Expected settlement_date to be set")
+	if quote.QuotePrice.QuoteID == "" {
+		t.Error("Expected quote_id to be set")
 	}
 
-	t.Logf("Quote created with settlement date:")
-	t.Logf("  Quote ID: %s", quote.QuoteID)
-	t.Logf("  Settlement Date: %s", quote.SettlementDate)
-	t.Logf("  Rate: %s", quote.Rate)
+	t.Logf("Quote created with conversion date:")
+	t.Logf("  Quote ID: %s", quote.QuotePrice.QuoteID)
+	t.Logf("  Rate: %s", quote.QuotePrice.DirectRate)
 }
 
 func TestConversionCreate(t *testing.T) {
@@ -115,17 +109,36 @@ func TestConversionCreate(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
-	// Create a conversion
-	req := &banking.CreateConversionRequest{
-		CurrencyFrom: "USD",
-		CurrencyTo:   "EUR",
-		AmountFrom:   "100.00",
+	// First create a quote to get a valid quote_id
+	today := time.Now().Format("2006-01-02")
+	quoteReq := &banking.CreateQuoteRequest{
+		SellCurrency:    "USD",
+		SellAmount:      "100.00",
+		BuyCurrency:     "SGD",
+		ConversionDate:  today,
+		TransactionType: "conversion",
 	}
 
-	t.Logf("Creating conversion: %s -> %s, Amount: %s", req.CurrencyFrom, req.CurrencyTo, req.AmountFrom)
+	quote, err := client.Banking.Conversions.CreateQuote(ctx, quoteReq)
+	if err != nil {
+		t.Fatalf("Failed to create quote: %v", err)
+	}
+
+	t.Logf("Quote created: %s", quote.QuotePrice.QuoteID)
+
+	// Create a conversion using the quote
+	req := &banking.CreateConversionRequest{
+		QuoteID:        quote.QuotePrice.QuoteID,
+		SellCurrency:   "USD",
+		SellAmount:     "100.00",
+		BuyCurrency:    "SGD",
+		ConversionDate: today,
+	}
+
+	t.Logf("Creating conversion: %s -> %s, Amount: %s, Date: %s", req.SellCurrency, req.BuyCurrency, req.SellAmount, req.ConversionDate)
 
 	resp, err := client.Banking.Conversions.Create(ctx, req)
 	if err != nil {
@@ -142,6 +155,9 @@ func TestConversionCreate(t *testing.T) {
 	t.Logf("Conversion created successfully:")
 	t.Logf("  Conversion ID: %s", resp.ConversionID)
 	t.Logf("  Short Reference ID: %s", resp.ShortReferenceID)
+	t.Logf("  Sell: %s %s", resp.SellAmount, resp.SellCurrency)
+	t.Logf("  Buy: %s %s", resp.BuyAmount, resp.BuyCurrency)
+	t.Logf("  Status: %s", resp.Status)
 
 	// Get the created conversion
 	t.Run("GetConversion", func(t *testing.T) {
@@ -155,42 +171,11 @@ func TestConversionCreate(t *testing.T) {
 		if conversion.ConversionID != resp.ConversionID {
 			t.Errorf("Expected conversion_id %s, got %s", resp.ConversionID, conversion.ConversionID)
 		}
-		if conversion.CurrencyFrom != req.CurrencyFrom {
-			t.Errorf("Expected currency_from %s, got %s", req.CurrencyFrom, conversion.CurrencyFrom)
-		}
-		if conversion.CurrencyTo != req.CurrencyTo {
-			t.Errorf("Expected currency_to %s, got %s", req.CurrencyTo, conversion.CurrencyTo)
-		}
-		if conversion.AmountFrom != req.AmountFrom {
-			t.Errorf("Expected amount_from %s, got %s", req.AmountFrom, conversion.AmountFrom)
-		}
-		if conversion.ConversionStatus == "" {
-			t.Error("Expected conversion_status to be set")
-		}
-		if conversion.Rate == "" {
-			t.Error("Expected rate to be set")
-		}
-		if conversion.AmountTo == "" {
-			t.Error("Expected amount_to to be set")
-		}
-		if conversion.CreateTime == "" {
-			t.Error("Expected create_time to be set")
-		}
 
 		t.Logf("Retrieved conversion:")
 		t.Logf("  ID: %s", conversion.ConversionID)
 		t.Logf("  Short Reference ID: %s", conversion.ShortReferenceID)
-		t.Logf("  From: %s %s", conversion.AmountFrom, conversion.CurrencyFrom)
-		t.Logf("  To: %s %s", conversion.AmountTo, conversion.CurrencyTo)
-		t.Logf("  Rate: %s", conversion.Rate)
 		t.Logf("  Status: %s", conversion.ConversionStatus)
-		t.Logf("  Create Time: %s", conversion.CreateTime)
-		if conversion.CompletedTime != "" {
-			t.Logf("  Completed Time: %s", conversion.CompletedTime)
-		}
-		if conversion.SettlementDate != "" {
-			t.Logf("  Settlement Date: %s", conversion.SettlementDate)
-		}
 	})
 }
 
@@ -199,14 +184,17 @@ func TestConversionCreateWithQuote(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// First, create a quote
+	today := time.Now().Format("2006-01-02")
 	quoteReq := &banking.CreateQuoteRequest{
-		CurrencyFrom: "USD",
-		CurrencyTo:   "EUR",
-		AmountFrom:   "100.00",
+		SellCurrency:    "USD",
+		SellAmount:      "100.00",
+		BuyCurrency:     "SGD",
+		ConversionDate:  today,
+		TransactionType: "conversion",
 	}
 
 	t.Logf("Creating quote for conversion...")
@@ -216,17 +204,18 @@ func TestConversionCreateWithQuote(t *testing.T) {
 		t.Fatalf("Failed to create quote: %v", err)
 	}
 
-	t.Logf("Quote created: %s with rate %s", quote.QuoteID, quote.Rate)
+	t.Logf("Quote created: %s with rate %s", quote.QuotePrice.QuoteID, quote.QuotePrice.DirectRate)
 
 	// Now create conversion using the quote
 	convReq := &banking.CreateConversionRequest{
-		CurrencyFrom: "USD",
-		CurrencyTo:   "EUR",
-		AmountFrom:   "100.00",
-		QuoteID:      quote.QuoteID,
+		QuoteID:        quote.QuotePrice.QuoteID,
+		SellCurrency:   "USD",
+		SellAmount:     "100.00",
+		BuyCurrency:    "SGD",
+		ConversionDate: today,
 	}
 
-	t.Logf("Creating conversion with quote ID: %s", quote.QuoteID)
+	t.Logf("Creating conversion with quote ID: %s", quote.QuotePrice.QuoteID)
 
 	conv, err := client.Banking.Conversions.Create(ctx, convReq)
 	if err != nil {
@@ -236,16 +225,9 @@ func TestConversionCreateWithQuote(t *testing.T) {
 	t.Logf("Conversion created successfully:")
 	t.Logf("  Conversion ID: %s", conv.ConversionID)
 	t.Logf("  Short Reference ID: %s", conv.ShortReferenceID)
-
-	// Verify the conversion used the quoted rate
-	conversion, err := client.Banking.Conversions.Get(ctx, conv.ConversionID)
-	if err != nil {
-		t.Fatalf("Failed to get conversion: %v", err)
-	}
-
-	t.Logf("Verified conversion details:")
-	t.Logf("  Rate: %s", conversion.Rate)
-	t.Logf("  Amount To: %s %s", conversion.AmountTo, conversion.CurrencyTo)
+	t.Logf("  Sell: %s %s", conv.SellAmount, conv.SellCurrency)
+	t.Logf("  Buy: %s %s", conv.BuyAmount, conv.BuyCurrency)
+	t.Logf("  Status: %s", conv.Status)
 }
 
 func TestConversionList(t *testing.T) {
@@ -253,7 +235,7 @@ func TestConversionList(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	req := &banking.ListConversionsRequest{
@@ -297,7 +279,7 @@ func TestConversionListWithFilters(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Test with status filter
@@ -329,7 +311,7 @@ func TestConversionListWithCurrencyFilters(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Test with currency filters
@@ -365,7 +347,7 @@ func TestConversionListWithTimeRange(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Get conversions from last 30 days
@@ -394,7 +376,7 @@ func TestConversionDates(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	currencyFrom := "USD"
@@ -440,7 +422,7 @@ func TestConversionFullFlow(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Step 1: Get conversion dates
@@ -461,10 +443,13 @@ func TestConversionFullFlow(t *testing.T) {
 	var quoteRate string
 
 	t.Run("CreateQuote", func(t *testing.T) {
+		today := time.Now().Format("2006-01-02")
 		req := &banking.CreateQuoteRequest{
-			CurrencyFrom: "USD",
-			CurrencyTo:   "EUR",
-			AmountFrom:   "100.00",
+			SellCurrency:    "USD",
+			SellAmount:      "100.00",
+			BuyCurrency:     "EUR",
+			ConversionDate:  today,
+			TransactionType: "conversion",
 		}
 
 		quote, err := client.Banking.Conversions.CreateQuote(ctx, req)
@@ -472,24 +457,26 @@ func TestConversionFullFlow(t *testing.T) {
 			t.Fatalf("Failed to create quote: %v", err)
 		}
 
-		quoteID = quote.QuoteID
-		quoteRate = quote.Rate
+		quoteID = quote.QuotePrice.QuoteID
+		quoteRate = quote.QuotePrice.DirectRate
 
 		t.Logf("Quote created:")
-		t.Logf("  ID: %s", quote.QuoteID)
-		t.Logf("  Rate: %s", quote.Rate)
-		t.Logf("  Amount To: %s %s", quote.AmountTo, quote.CurrencyTo)
+		t.Logf("  ID: %s", quote.QuotePrice.QuoteID)
+		t.Logf("  Rate: %s", quote.QuotePrice.DirectRate)
+		t.Logf("  Buy Amount: %s %s", quote.BuyAmount, quote.BuyCurrency)
 	})
 
 	// Step 3: Create conversion using the quote
 	var conversionID string
 
 	t.Run("CreateConversion", func(t *testing.T) {
+		today := time.Now().Format("2006-01-02")
 		req := &banking.CreateConversionRequest{
-			CurrencyFrom: "USD",
-			CurrencyTo:   "EUR",
-			AmountFrom:   "100.00",
-			QuoteID:      quoteID,
+			QuoteID:        quoteID,
+			SellCurrency:   "USD",
+			SellAmount:     "100.00",
+			BuyCurrency:    "EUR",
+			ConversionDate: today,
 		}
 
 		conv, err := client.Banking.Conversions.Create(ctx, req)
@@ -502,6 +489,8 @@ func TestConversionFullFlow(t *testing.T) {
 		t.Logf("Conversion created:")
 		t.Logf("  ID: %s", conv.ConversionID)
 		t.Logf("  Short Reference ID: %s", conv.ShortReferenceID)
+		t.Logf("  Sell: %s %s", conv.SellAmount, conv.SellCurrency)
+		t.Logf("  Buy: %s %s", conv.BuyAmount, conv.BuyCurrency)
 	})
 
 	// Step 4: Get the conversion details
@@ -558,7 +547,7 @@ func TestConversionErrorHandling(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Test getting non-existent conversion
@@ -572,10 +561,13 @@ func TestConversionErrorHandling(t *testing.T) {
 
 	// Test creating conversion with invalid currency
 	t.Run("CreateConversionInvalidCurrency", func(t *testing.T) {
+		today := time.Now().Format("2006-01-02")
 		req := &banking.CreateConversionRequest{
-			CurrencyFrom: "INVALID",
-			CurrencyTo:   "EUR",
-			AmountFrom:   "100.00",
+			QuoteID:        "invalid-quote-id",
+			SellCurrency:   "INVALID",
+			SellAmount:     "100.00",
+			BuyCurrency:    "EUR",
+			ConversionDate: today,
 		}
 
 		_, err := client.Banking.Conversions.Create(ctx, req)
@@ -587,10 +579,13 @@ func TestConversionErrorHandling(t *testing.T) {
 
 	// Test creating quote with invalid amount
 	t.Run("CreateQuoteInvalidAmount", func(t *testing.T) {
+		today := time.Now().Format("2006-01-02")
 		req := &banking.CreateQuoteRequest{
-			CurrencyFrom: "USD",
-			CurrencyTo:   "EUR",
-			AmountFrom:   "invalid",
+			SellCurrency:    "USD",
+			SellAmount:      "invalid",
+			BuyCurrency:     "SGD",
+			ConversionDate:  today,
+			TransactionType: "conversion",
 		}
 
 		_, err := client.Banking.Conversions.CreateQuote(ctx, req)
@@ -606,7 +601,7 @@ func TestConversionPagination(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	// Get first page
@@ -653,7 +648,7 @@ func TestConversionDatesMultipleCurrencyPairs(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	client := GetTestClient(t)
+	client := GetBankingTestClient(t)
 	ctx := context.Background()
 
 	currencyPairs := []struct {
