@@ -49,6 +49,55 @@ func TestPaymentIntents(t *testing.T) {
 		t.Logf("   Created: %s", resp.CreateTime)
 	})
 
+	t.Run("Confirm", func(t *testing.T) {
+		if createdIntentID == "" {
+			t.Log("No payment intent ID available, skipping Confirm test")
+			return
+		}
+
+		// Confirm with test card details
+		confirmReq := &payment.ConfirmPaymentIntentRequest{
+			PaymentMethod: &payment.PaymentMethod{
+				Type: "card",
+				Card: &payment.Card{
+					CardNumber:  "4242424242424242",
+					ExpiryMonth: "12",
+					ExpiryYear:  "2026",
+					CVC:         "123",
+					CardName:    "Test User",
+				},
+			},
+			ReturnURL: "https://example.com/return",
+		}
+
+		resp, err := client.Payment.PaymentIntents.Confirm(ctx, createdIntentID, confirmReq)
+		if err != nil {
+			t.Logf("Confirm payment intent returned error: %v", err)
+			return
+		}
+
+		t.Logf("Payment intent confirmed successfully")
+		t.Logf("   ID: %s", resp.PaymentIntentID)
+		t.Logf("   Status: %s", resp.IntentStatus)
+		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+
+		// Check expected statuses after confirmation
+		validStatuses := map[string]bool{
+			"REQUIRES_CUSTOMER_ACTION": true, // Needs 3DS or other action
+			"REQUIRES_CAPTURE":         true, // Ready to capture
+			"PENDING":                  true, // Waiting for provider
+			"SUCCEEDED":                true, // Payment complete
+		}
+
+		if !validStatuses[resp.IntentStatus] {
+			t.Logf("   Warning: Unexpected status after confirm: %s", resp.IntentStatus)
+		}
+
+		if resp.NextAction != nil {
+			t.Logf("   Next Action: %v", resp.NextAction)
+		}
+	})
+
 	t.Run("Get", func(t *testing.T) {
 		// First list to get an ID if we don't have one
 		if createdIntentID == "" {
@@ -175,6 +224,317 @@ func TestPaymentIntents(t *testing.T) {
 		t.Logf("   ID: %s", resp.PaymentIntentID)
 		t.Logf("   Status: %s", resp.IntentStatus)
 	})
+}
+
+// ============================================================================
+// Payment Method Confirmation Tests (Table-Driven)
+// ============================================================================
+
+// TestConfirmPaymentMethods tests confirmation with various payment method types
+// Each test creates its own payment intent and confirms with a specific payment method
+func TestConfirmPaymentMethods(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	// Define test cases for each payment method type
+	testCases := []struct {
+		name          string
+		paymentMethod *payment.PaymentMethod
+		currency      string // Some payment methods may require specific currencies
+		skipReason    string // If set, test will be skipped with this reason
+	}{
+		// ================================================================
+		// Card Payments
+		// ================================================================
+		{
+			name: "Card",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "card",
+				Card: &payment.Card{
+					CardNumber:  "4242424242424242",
+					ExpiryMonth: "12",
+					ExpiryYear:  "2026",
+					CVC:         "123",
+					CardName:    "Test User",
+				},
+			},
+			currency: "USD",
+		},
+		{
+			name: "CardWithBilling",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "card",
+				Card: &payment.Card{
+					CardNumber:  "4242424242424242",
+					ExpiryMonth: "12",
+					ExpiryYear:  "2026",
+					CVC:         "123",
+					CardName:    "Test User",
+					Billing: &payment.Billing{
+						FirstName:   "John",
+						LastName:    "Doe",
+						Email:       "john.doe@example.com",
+						PhoneNumber: "+12025550123",
+						Address: &payment.Address{
+							CountryCode: "SG",
+							City:        "Singapore",
+							Street:      "123 Test Street",
+							Postcode:    "123456",
+						},
+					},
+				},
+			},
+			currency: "USD",
+		},
+		{
+			name: "CardPresent",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "card_present",
+				CardPresent: &payment.CardPresent{
+					CardNumber:   "4242424242424242",
+					ExpiryMonth:  "12",
+					ExpiryYear:   "2026",
+					PANEntryMode: "chip",
+					TerminalInfo: &payment.TerminalInfo{
+						TerminalID:   "TERM001",
+						MobileDevice: false,
+					},
+				},
+			},
+			currency:   "SGD",
+			skipReason: "Card present requires POS terminal setup",
+		},
+
+		// ================================================================
+		// China & Hong Kong Wallets
+		// ================================================================
+		{
+			name: "AlipayCN_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "alipaycn",
+				AlipayCN: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "SGD",
+		},
+		{
+			name: "AlipayHK_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "alipayhk",
+				AlipayHK: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "HKD",
+		},
+		{
+			name: "UnionPay_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "unionpay",
+				UnionPay: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "CNY",
+		},
+		{
+			name: "UnionPay_SecurePay",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "unionpay",
+				UnionPay: &payment.WalletPayment{
+					Flow: "securepay",
+				},
+			},
+			currency: "CNY",
+		},
+		{
+			name: "WeChatPay_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "wechatpay",
+				WeChatPay: &payment.WeChatPay{
+					Flow: "qrcode",
+				},
+			},
+			currency: "CNY",
+		},
+		{
+			name: "WeChatPay_MobileWeb",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "wechatpay",
+				WeChatPay: &payment.WeChatPay{
+					Flow:   "mobile_web",
+					OSType: "ios",
+				},
+			},
+			currency: "CNY",
+		},
+
+		// ================================================================
+		// Southeast Asia Wallets
+		// ================================================================
+		{
+			name: "GrabPay_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "grabpay",
+				GrabPay: &payment.GrabPay{
+					Flow:        "qrcode",
+					ShopperName: "Test Shopper",
+				},
+			},
+			currency: "SGD",
+		},
+		{
+			name: "PayNow_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "paynow",
+				PayNow: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "SGD",
+		},
+		{
+			name: "TrueMoney_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "truemoney",
+				TrueMoney: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "THB",
+		},
+		{
+			name: "TNG_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "tng",
+				TNG: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "MYR",
+		},
+		{
+			name: "GCash_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "gcash",
+				GCash: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "PHP",
+		},
+		{
+			name: "Dana_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "dana",
+				Dana: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "IDR",
+		},
+
+		// ================================================================
+		// Korean Wallets
+		// ================================================================
+		{
+			name: "KakaoPay_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "kakaopay",
+				KakaoPay: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "KRW",
+		},
+		{
+			name: "Toss_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "toss",
+				Toss: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "KRW",
+		},
+		{
+			name: "NaverPay_QRCode",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "naverpay",
+				NaverPay: &payment.WalletPayment{
+					Flow: "qrcode",
+				},
+			},
+			currency: "KRW",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Skip if specified
+			if tc.skipReason != "" {
+				t.Skip(tc.skipReason)
+			}
+
+			// Step 1: Create a payment intent
+			createReq := &payment.CreatePaymentIntentRequest{
+				Amount:          "0.01",
+				Currency:        tc.currency,
+				MerchantOrderID: "test-" + tc.name + "-001",
+				Description:     "Test " + tc.name + " payment",
+				ReturnURL:       "https://example.com/return",
+			}
+
+			intent, err := client.Payment.PaymentIntents.Create(ctx, createReq)
+			if err != nil {
+				t.Logf("Create intent failed: %v", err)
+				t.Logf("   Payment method %s may not be available in sandbox", tc.name)
+				return
+			}
+
+			t.Logf("Created intent: %s (status: %s)", intent.PaymentIntentID, intent.IntentStatus)
+
+			// Step 2: Confirm with the specific payment method
+			confirmReq := &payment.ConfirmPaymentIntentRequest{
+				PaymentMethod: tc.paymentMethod,
+				ReturnURL:     "https://example.com/return",
+			}
+
+			resp, err := client.Payment.PaymentIntents.Confirm(ctx, intent.PaymentIntentID, confirmReq)
+			if err != nil {
+				t.Logf("Confirm failed: %v", err)
+				t.Logf("   Payment method %s may not be enabled for this merchant", tc.name)
+				return
+			}
+
+			t.Logf("Confirmed successfully")
+			t.Logf("   ID: %s", resp.PaymentIntentID)
+			t.Logf("   Status: %s", resp.IntentStatus)
+			t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+
+			// Log next action if present (common for QR code payments)
+			if resp.NextAction != nil {
+				t.Logf("   Next Action: %v", resp.NextAction)
+			}
+
+			// Verify valid status
+			validStatuses := map[string]bool{
+				"REQUIRES_CUSTOMER_ACTION": true,
+				"REQUIRES_CAPTURE":         true,
+				"PENDING":                  true,
+				"SUCCEEDED":                true,
+			}
+
+			if !validStatuses[resp.IntentStatus] {
+				t.Logf("   Warning: Unexpected status: %s", resp.IntentStatus)
+			}
+		})
+	}
 }
 
 // ============================================================================

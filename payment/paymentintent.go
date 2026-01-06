@@ -27,13 +27,42 @@ type CreatePaymentIntentRequest struct {
 	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
 }
 
+// ============================================================================
+// Payment Method Types
+// ============================================================================
+
 // PaymentMethod represents the payment method details
+// Only one payment method type should be set based on the Type field
 type PaymentMethod struct {
-	Type string `json:"type"` // e.g., "card"
-	Card *Card  `json:"card,omitempty"`
+	Type string `json:"type"` // card, card_present, alipaycn, alipayhk, unionpay, wechatpay, grabpay, paynow, truemoney, tng, gcash, dana, kakaopay, toss, naverpay
+
+	// Card payments (online)
+	Card *Card `json:"card,omitempty"`
+
+	// Card present payments (POS terminal)
+	CardPresent *CardPresent `json:"card_present,omitempty"`
+
+	// E-wallet and QR code payments
+	AlipayCN  *WalletPayment `json:"alipaycn,omitempty"`
+	AlipayHK  *WalletPayment `json:"alipayhk,omitempty"`
+	UnionPay  *WalletPayment `json:"unionpay,omitempty"`
+	WeChatPay *WeChatPay     `json:"wechatpay,omitempty"`
+	GrabPay   *GrabPay       `json:"grabpay,omitempty"`
+	PayNow    *WalletPayment `json:"paynow,omitempty"`
+	TrueMoney *WalletPayment `json:"truemoney,omitempty"`
+	TNG       *WalletPayment `json:"tng,omitempty"`
+	GCash     *WalletPayment `json:"gcash,omitempty"`
+	Dana      *WalletPayment `json:"dana,omitempty"`
+	KakaoPay  *WalletPayment `json:"kakaopay,omitempty"`
+	Toss      *WalletPayment `json:"toss,omitempty"`
+	NaverPay  *WalletPayment `json:"naverpay,omitempty"`
 }
 
-// Card represents card payment details
+// ============================================================================
+// Card Payment (Online)
+// ============================================================================
+
+// Card represents online card payment details
 type Card struct {
 	CardName          string   `json:"card_name,omitempty"`
 	CardNumber        string   `json:"card_number,omitempty"`
@@ -43,8 +72,8 @@ type Card struct {
 	Network           string   `json:"network,omitempty"` // e.g., "mastercard", "visa"
 	Billing           *Billing `json:"billing,omitempty"`
 	AutoCapture       *bool    `json:"auto_capture,omitempty"`
-	AuthorizationType string   `json:"authorization_type,omitempty"`
-	ThreeDSAction     string   `json:"three_ds_action,omitempty"`
+	AuthorizationType string   `json:"authorization_type,omitempty"` // "authorization"
+	ThreeDSAction     string   `json:"three_ds_action,omitempty"`    // "enforce_3ds"
 }
 
 // Billing represents billing information for a card payment
@@ -56,13 +85,82 @@ type Billing struct {
 	Address     *Address `json:"address,omitempty"`
 }
 
-// Address represents a billing address
+// Address represents a billing or shipping address
 type Address struct {
 	CountryCode string `json:"country_code,omitempty"`
 	State       string `json:"state,omitempty"`
 	City        string `json:"city,omitempty"`
 	Street      string `json:"street,omitempty"`
 	Postcode    string `json:"postcode,omitempty"`
+}
+
+// ============================================================================
+// Card Present Payment (POS Terminal)
+// ============================================================================
+
+// CardPresent represents card present (POS terminal) payment details
+type CardPresent struct {
+	CardNumber                   string        `json:"card_number"`
+	ExpiryMonth                  string        `json:"expiry_month"`
+	ExpiryYear                   string        `json:"expiry_year"`
+	CardholderVerificationMethod string        `json:"cardholder_verification_method,omitempty"` // online_pin, manual_signature, skipped
+	EncryptedPIN                 string        `json:"encrypted_pin,omitempty"`
+	PANEntryMode                 string        `json:"pan_entry_mode"` // manual_entry, chip, magstripe, contactless_chip, contactless_magstripe
+	Fallback                     bool          `json:"fallback,omitempty"`
+	FallbackReason               string        `json:"fallback_reason,omitempty"` // chip_read_failure
+	EMVTags                      string        `json:"emv_tags,omitempty"`
+	Track1                       string        `json:"track1,omitempty"`
+	Track2                       string        `json:"track2,omitempty"`
+	TerminalInfo                 *TerminalInfo `json:"terminal_info,omitempty"`
+	SystemTraceAuditNumber       string        `json:"system_trace_audit_number,omitempty"` // 6-digit
+}
+
+// TerminalInfo represents POS terminal information
+type TerminalInfo struct {
+	TerminalID        string `json:"terminal_id,omitempty"`         // Up to 8 alphanumeric characters
+	MobileDevice      bool   `json:"mobile_device,omitempty"`       // Is mobile POS device
+	UseEmbeddedReader bool   `json:"use_embedded_reader,omitempty"` // Reader embedded in mobile POS
+}
+
+// ============================================================================
+// Wallet/E-Wallet Payments (Common Structure)
+// ============================================================================
+
+// WalletPayment represents common fields for wallet/e-wallet payments
+// Used for: alipaycn, alipayhk, unionpay, paynow, truemoney, tng, gcash, dana, kakaopay, toss, naverpay
+type WalletPayment struct {
+	Flow        string `json:"flow"`                   // qrcode, securepay, mobile_app, mobile_web, etc.
+	OSType      string `json:"os_type,omitempty"`      // ios, android (required for mobile_web, mobile_app flows)
+	IsPresent   bool   `json:"is_present,omitempty"`   // Customer physically present during payment
+	PaymentCode string `json:"payment_code,omitempty"` // Customer's payment code from wallet app
+}
+
+// ============================================================================
+// WeChat Pay (Extended Wallet)
+// ============================================================================
+
+// WeChatPay represents WeChat Pay payment details
+// Has additional fields compared to standard wallet payments
+type WeChatPay struct {
+	Flow        string `json:"flow"`                   // qrcode, mini_program, mobile_app, mobile_web, official_account
+	OSType      string `json:"os_type,omitempty"`      // ios, android (required for mobile_web, mobile_app)
+	IsPresent   bool   `json:"is_present,omitempty"`   // Customer physically present during payment
+	PaymentCode string `json:"payment_code,omitempty"` // Customer's payment code from wallet app
+	OpenID      string `json:"open_id,omitempty"`      // Required for mini_program, mobile_app, official_account flows
+}
+
+// ============================================================================
+// GrabPay (Extended Wallet)
+// ============================================================================
+
+// GrabPay represents GrabPay payment details
+// Has additional fields compared to standard wallet payments
+type GrabPay struct {
+	Flow        string `json:"flow"`                   // qrcode
+	OSType      string `json:"os_type,omitempty"`      // ios, android (required for mobile_web)
+	IsPresent   bool   `json:"is_present,omitempty"`   // Customer physically present during payment
+	PaymentCode string `json:"payment_code,omitempty"` // Customer's payment code from wallet app
+	ShopperName string `json:"shopper_name,omitempty"` // Name of the shopper
 }
 
 // UpdatePaymentIntentRequest represents a payment intent update request
