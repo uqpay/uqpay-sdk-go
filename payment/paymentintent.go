@@ -54,7 +54,7 @@ type PaymentMethod struct {
 	GCash     *WalletPayment `json:"gcash,omitempty"`
 	Dana      *WalletPayment `json:"dana,omitempty"`
 	KakaoPay  *WalletPayment `json:"kakaopay,omitempty"`
-	Toss      *WalletPayment `json:"toss,omitempty"`
+	Toss      *WalletPayment `json:"tosspay,omitempty"`
 	NaverPay  *WalletPayment `json:"naverpay,omitempty"`
 }
 

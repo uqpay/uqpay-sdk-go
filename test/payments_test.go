@@ -35,8 +35,18 @@ func TestPaymentIntents(t *testing.T) {
 
 		resp, err := client.Payment.PaymentIntents.Create(ctx, req)
 		if err != nil {
-			t.Logf("Create payment intent returned error: %v", err)
-			return
+			t.Fatalf("Create payment intent failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentIntentID == "" {
+			t.Error("PaymentIntentID should not be empty")
+		}
+		if resp.Amount != "100.00" {
+			t.Errorf("Amount mismatch: got %s, want 100.00", resp.Amount)
+		}
+		if resp.Currency != "USD" {
+			t.Errorf("Currency mismatch: got %s, want USD", resp.Currency)
 		}
 
 		createdIntentID = resp.PaymentIntentID
@@ -51,8 +61,7 @@ func TestPaymentIntents(t *testing.T) {
 
 	t.Run("Confirm", func(t *testing.T) {
 		if createdIntentID == "" {
-			t.Log("No payment intent ID available, skipping Confirm test")
-			return
+			t.Skip("No payment intent ID available, skipping Confirm test")
 		}
 
 		// Confirm with test card details
@@ -60,10 +69,10 @@ func TestPaymentIntents(t *testing.T) {
 			PaymentMethod: &payment.PaymentMethod{
 				Type: "card",
 				Card: &payment.Card{
-					CardNumber:  "4242424242424242",
-					ExpiryMonth: "12",
-					ExpiryYear:  "2026",
-					CVC:         "123",
+					CardNumber:  "",
+					ExpiryMonth: "",
+					ExpiryYear:  "",
+					CVC:         "",
 					CardName:    "Test User",
 				},
 			},
@@ -72,14 +81,16 @@ func TestPaymentIntents(t *testing.T) {
 
 		resp, err := client.Payment.PaymentIntents.Confirm(ctx, createdIntentID, confirmReq)
 		if err != nil {
-			t.Logf("Confirm payment intent returned error: %v", err)
-			return
+			t.Fatalf("Confirm payment intent failed: %v", err)
 		}
 
-		t.Logf("Payment intent confirmed successfully")
-		t.Logf("   ID: %s", resp.PaymentIntentID)
-		t.Logf("   Status: %s", resp.IntentStatus)
-		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+		// Assertions
+		if resp.PaymentIntentID == "" {
+			t.Error("PaymentIntentID should not be empty")
+		}
+		if resp.IntentStatus == "" {
+			t.Error("IntentStatus should not be empty")
+		}
 
 		// Check expected statuses after confirmation
 		validStatuses := map[string]bool{
@@ -90,8 +101,13 @@ func TestPaymentIntents(t *testing.T) {
 		}
 
 		if !validStatuses[resp.IntentStatus] {
-			t.Logf("   Warning: Unexpected status after confirm: %s", resp.IntentStatus)
+			t.Errorf("Unexpected status after confirm: %s", resp.IntentStatus)
 		}
+
+		t.Logf("Payment intent confirmed successfully")
+		t.Logf("   ID: %s", resp.PaymentIntentID)
+		t.Logf("   Status: %s", resp.IntentStatus)
+		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
 
 		if resp.NextAction != nil {
 			t.Logf("   Next Action: %v", resp.NextAction)
@@ -107,20 +123,25 @@ func TestPaymentIntents(t *testing.T) {
 			}
 			listResp, err := client.Payment.PaymentIntents.List(ctx, listReq)
 			if err != nil {
-				t.Logf("List payment intents failed, skipping Get test: %v", err)
-				return
+				t.Skipf("List payment intents failed, skipping Get test: %v", err)
 			}
 			if len(listResp.Data) == 0 {
-				t.Log("No payment intents available, skipping Get test")
-				return
+				t.Skip("No payment intents available, skipping Get test")
 			}
 			createdIntentID = listResp.Data[0].PaymentIntentID
 		}
 
 		resp, err := client.Payment.PaymentIntents.Get(ctx, createdIntentID)
 		if err != nil {
-			t.Logf("Get payment intent returned error: %v", err)
-			return
+			t.Fatalf("Get payment intent failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentIntentID == "" {
+			t.Error("PaymentIntentID should not be empty")
+		}
+		if resp.PaymentIntentID != createdIntentID {
+			t.Errorf("PaymentIntentID mismatch: got %s, want %s", resp.PaymentIntentID, createdIntentID)
 		}
 
 		t.Logf("Payment intent retrieved successfully")
@@ -138,8 +159,12 @@ func TestPaymentIntents(t *testing.T) {
 
 		resp, err := client.Payment.PaymentIntents.List(ctx, req)
 		if err != nil {
-			t.Logf("List payment intents returned error: %v", err)
-			return
+			t.Fatalf("List payment intents failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d payment intents (total: %d)", len(resp.Data), resp.TotalItems)
@@ -171,8 +196,13 @@ func TestPaymentIntents(t *testing.T) {
 
 			resp, err := client.Payment.PaymentIntents.List(ctx, req)
 			if err != nil {
-				t.Logf("%s intents: error - %v", status, err)
+				t.Errorf("%s intents: failed - %v", status, err)
 				continue
+			}
+
+			// Assertion
+			if resp.Data == nil {
+				t.Errorf("%s intents: Data should not be nil", status)
 			}
 
 			t.Logf("%s intents: %d found", status, resp.TotalItems)
@@ -181,8 +211,7 @@ func TestPaymentIntents(t *testing.T) {
 
 	t.Run("Update", func(t *testing.T) {
 		if createdIntentID == "" {
-			t.Log("No payment intent ID available, skipping Update test")
-			return
+			t.Skip("No payment intent ID available, skipping Update test")
 		}
 
 		req := &payment.UpdatePaymentIntentRequest{
@@ -194,8 +223,15 @@ func TestPaymentIntents(t *testing.T) {
 
 		resp, err := client.Payment.PaymentIntents.Update(ctx, createdIntentID, req)
 		if err != nil {
-			t.Logf("Update payment intent returned error: %v", err)
-			return
+			t.Fatalf("Update payment intent failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentIntentID == "" {
+			t.Error("PaymentIntentID should not be empty")
+		}
+		if resp.Description != "Updated test payment intent" {
+			t.Errorf("Description mismatch: got %s, want 'Updated test payment intent'", resp.Description)
 		}
 
 		t.Logf("Payment intent updated successfully")
@@ -206,8 +242,7 @@ func TestPaymentIntents(t *testing.T) {
 
 	t.Run("Cancel", func(t *testing.T) {
 		if createdIntentID == "" {
-			t.Log("No payment intent ID available, skipping Cancel test")
-			return
+			t.Skip("No payment intent ID available, skipping Cancel test")
 		}
 
 		req := &payment.CancelPaymentIntentRequest{
@@ -216,8 +251,15 @@ func TestPaymentIntents(t *testing.T) {
 
 		resp, err := client.Payment.PaymentIntents.Cancel(ctx, createdIntentID, req)
 		if err != nil {
-			t.Logf("Cancel payment intent returned error: %v", err)
-			return
+			t.Fatalf("Cancel payment intent failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentIntentID == "" {
+			t.Error("PaymentIntentID should not be empty")
+		}
+		if resp.IntentStatus != "CANCELED" {
+			t.Errorf("IntentStatus mismatch: got %s, want CANCELED", resp.IntentStatus)
 		}
 
 		t.Logf("Payment intent canceled successfully")
@@ -255,58 +297,30 @@ func TestConfirmPaymentMethods(t *testing.T) {
 			paymentMethod: &payment.PaymentMethod{
 				Type: "card",
 				Card: &payment.Card{
-					CardNumber:  "4242424242424242",
-					ExpiryMonth: "12",
-					ExpiryYear:  "2026",
-					CVC:         "123",
-					CardName:    "Test User",
-				},
-			},
-			currency: "USD",
-		},
-		{
-			name: "CardWithBilling",
-			paymentMethod: &payment.PaymentMethod{
-				Type: "card",
-				Card: &payment.Card{
-					CardNumber:  "4242424242424242",
-					ExpiryMonth: "12",
-					ExpiryYear:  "2026",
-					CVC:         "123",
-					CardName:    "Test User",
+					CardNumber:        "4111111111111111",
+					ExpiryMonth:       "12",
+					ExpiryYear:        "2030",
+					CVC:               "123",
+					CardName:          "Test User",
+					Network:           "visa",
+					AuthorizationType: "authorization",
+					ThreeDSAction:     "skip_3ds",
 					Billing: &payment.Billing{
-						FirstName:   "John",
-						LastName:    "Doe",
-						Email:       "john.doe@example.com",
-						PhoneNumber: "+12025550123",
+						FirstName:   "Test",
+						LastName:    "User",
+						Email:       "test@example.com",
+						PhoneNumber: "+10000000000",
 						Address: &payment.Address{
 							CountryCode: "SG",
+							State:       "",
 							City:        "Singapore",
-							Street:      "123 Test Street",
-							Postcode:    "123456",
+							Street:      "444 Orchard Rd, Midpoint Orchard, Singapore",
+							Postcode:    "924011",
 						},
 					},
 				},
 			},
 			currency: "USD",
-		},
-		{
-			name: "CardPresent",
-			paymentMethod: &payment.PaymentMethod{
-				Type: "card_present",
-				CardPresent: &payment.CardPresent{
-					CardNumber:   "4242424242424242",
-					ExpiryMonth:  "12",
-					ExpiryYear:   "2026",
-					PANEntryMode: "chip",
-					TerminalInfo: &payment.TerminalInfo{
-						TerminalID:   "TERM001",
-						MobileDevice: false,
-					},
-				},
-			},
-			currency:   "SGD",
-			skipReason: "Card present requires POS terminal setup",
 		},
 
 		// ================================================================
@@ -317,20 +331,24 @@ func TestConfirmPaymentMethods(t *testing.T) {
 			paymentMethod: &payment.PaymentMethod{
 				Type: "alipaycn",
 				AlipayCN: &payment.WalletPayment{
-					Flow: "qrcode",
+					Flow:      "qrcode",
+					OSType:    "",
+					IsPresent: false,
 				},
 			},
-			currency: "SGD",
+			currency: "USD",
 		},
 		{
 			name: "AlipayHK_QRCode",
 			paymentMethod: &payment.PaymentMethod{
 				Type: "alipayhk",
 				AlipayHK: &payment.WalletPayment{
-					Flow: "qrcode",
+					Flow:      "qrcode",
+					OSType:    "",
+					IsPresent: false,
 				},
 			},
-			currency: "HKD",
+			currency: "USD",
 		},
 		{
 			name: "UnionPay_QRCode",
@@ -340,7 +358,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "CNY",
+			currency: "USD",
 		},
 		{
 			name: "UnionPay_SecurePay",
@@ -350,7 +368,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "securepay",
 				},
 			},
-			currency: "CNY",
+			currency: "USD",
 		},
 		{
 			name: "WeChatPay_QRCode",
@@ -360,7 +378,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "CNY",
+			currency: "USD",
 		},
 		{
 			name: "WeChatPay_MobileWeb",
@@ -371,7 +389,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					OSType: "ios",
 				},
 			},
-			currency: "CNY",
+			currency: "USD",
 		},
 
 		// ================================================================
@@ -386,7 +404,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					ShopperName: "Test Shopper",
 				},
 			},
-			currency: "SGD",
+			currency: "USD",
 		},
 		{
 			name: "PayNow_QRCode",
@@ -406,7 +424,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "THB",
+			currency: "USD",
 		},
 		{
 			name: "TNG_QRCode",
@@ -416,7 +434,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "MYR",
+			currency: "USD",
 		},
 		{
 			name: "GCash_QRCode",
@@ -426,7 +444,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "PHP",
+			currency: "USD",
 		},
 		{
 			name: "Dana_QRCode",
@@ -436,7 +454,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "IDR",
+			currency: "USD",
 		},
 
 		// ================================================================
@@ -450,17 +468,18 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "KRW",
+			currency: "USD",
 		},
 		{
 			name: "Toss_QRCode",
 			paymentMethod: &payment.PaymentMethod{
-				Type: "toss",
+				Type: "tosspay",
 				Toss: &payment.WalletPayment{
-					Flow: "qrcode",
+					Flow:      "qrcode",
+					IsPresent: false,
 				},
 			},
-			currency: "KRW",
+			currency: "USD",
 		},
 		{
 			name: "NaverPay_QRCode",
@@ -470,7 +489,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "KRW",
+			currency: "USD",
 		},
 	}
 
@@ -492,9 +511,12 @@ func TestConfirmPaymentMethods(t *testing.T) {
 
 			intent, err := client.Payment.PaymentIntents.Create(ctx, createReq)
 			if err != nil {
-				t.Logf("Create intent failed: %v", err)
-				t.Logf("   Payment method %s may not be available in sandbox", tc.name)
-				return
+				t.Fatalf("Create intent failed: %v", err)
+			}
+
+			// Assertions for create
+			if intent.PaymentIntentID == "" {
+				t.Error("PaymentIntentID should not be empty")
 			}
 
 			t.Logf("Created intent: %s (status: %s)", intent.PaymentIntentID, intent.IntentStatus)
@@ -507,19 +529,15 @@ func TestConfirmPaymentMethods(t *testing.T) {
 
 			resp, err := client.Payment.PaymentIntents.Confirm(ctx, intent.PaymentIntentID, confirmReq)
 			if err != nil {
-				t.Logf("Confirm failed: %v", err)
-				t.Logf("   Payment method %s may not be enabled for this merchant", tc.name)
-				return
+				t.Fatalf("Confirm failed: %v", err)
 			}
 
-			t.Logf("Confirmed successfully")
-			t.Logf("   ID: %s", resp.PaymentIntentID)
-			t.Logf("   Status: %s", resp.IntentStatus)
-			t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
-
-			// Log next action if present (common for QR code payments)
-			if resp.NextAction != nil {
-				t.Logf("   Next Action: %v", resp.NextAction)
+			// Assertions for confirm
+			if resp.PaymentIntentID == "" {
+				t.Error("PaymentIntentID should not be empty after confirm")
+			}
+			if resp.IntentStatus == "" {
+				t.Error("IntentStatus should not be empty after confirm")
 			}
 
 			// Verify valid status
@@ -531,16 +549,95 @@ func TestConfirmPaymentMethods(t *testing.T) {
 			}
 
 			if !validStatuses[resp.IntentStatus] {
-				t.Logf("   Warning: Unexpected status: %s", resp.IntentStatus)
+				t.Errorf("Unexpected status after confirm: %s", resp.IntentStatus)
+			}
+
+			t.Logf("Confirmed successfully")
+			t.Logf("   ID: %s", resp.PaymentIntentID)
+			t.Logf("   Status: %s", resp.IntentStatus)
+			t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+
+			// Log next action if present (common for QR code payments)
+			if resp.NextAction != nil {
+				t.Logf("   Next Action: %v", resp.NextAction)
 			}
 		})
 	}
 }
 
+func TestGetPaymentIntent(t *testing.T) {
+	paymentId := "PI2008755505874341888"
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	t.Logf("Retrieving payment intent: %s", paymentId)
+
+	resp, err := client.Payment.PaymentIntents.Get(ctx, paymentId)
+	if err != nil {
+		t.Fatalf("Get payment intent failed: %v", err)
+	}
+
+	// Assertions
+	if resp.PaymentIntentID == "" {
+		t.Error("PaymentIntentID should not be empty")
+	}
+	if resp.PaymentIntentID != paymentId {
+		t.Errorf("PaymentIntentID mismatch: got %s, want %s", resp.PaymentIntentID, paymentId)
+	}
+
+	t.Logf("Retrieved successfully")
+	t.Logf("   ID: %s", resp.PaymentIntentID)
+	t.Logf("   IntentStatus: %s", resp.IntentStatus)
+	t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+	t.Logf("   MerchantOrderID: %s", resp.MerchantOrderID)
+	t.Logf("   Description: %s", resp.Description)
+	t.Logf("   Created: %s", resp.CreateTime)
+
+	if resp.NextAction != nil {
+		t.Logf("   Next Action: %v", resp.NextAction)
+	}
+}
+
+func TestGetPaymentAttempt(t *testing.T) {
+	var attemptId string // Payment Attempt ID
+	if attemptId == "" {
+		t.Skip("No attempt ID configured, skipping test")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	t.Logf("Retrieving payment attempt: %s", attemptId)
+
+	resp, err := client.Payment.PaymentAttempts.Get(ctx, attemptId)
+	if err != nil {
+		t.Fatalf("Get payment attempt failed: %v", err)
+	}
+
+	// Assertions
+	if resp.AttemptID == "" {
+		t.Error("AttemptID should not be empty")
+	}
+	if resp.AttemptID != attemptId {
+		t.Errorf("AttemptID mismatch: got %s, want %s", resp.AttemptID, attemptId)
+	}
+
+	t.Logf("Retrieved successfully")
+	t.Logf("   ID: %s", resp.AttemptID)
+	t.Logf("   Payment Intent ID: %s", resp.AttemptID)
+	t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+	t.Logf("   Captured Amount: %s", resp.CapturedAmount)
+	t.Logf("   Refunded Amount: %s", resp.RefundedAmount)
+	t.Logf("   Status: %s", resp.AttemptStatus)
+	if resp.FailureCode != "" {
+		t.Logf("   Failure Code: %s", resp.FailureCode)
+	}
+	t.Logf("   Created: %s", resp.CreateTime)
+}
+
 // ============================================================================
 // Payment Attempts Tests
 // ============================================================================
-
 func TestPaymentAttempts(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
@@ -557,8 +654,12 @@ func TestPaymentAttempts(t *testing.T) {
 
 		resp, err := client.Payment.PaymentAttempts.List(ctx, req)
 		if err != nil {
-			t.Logf("List payment attempts returned error: %v", err)
-			return
+			t.Fatalf("List payment attempts failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d payment attempts (total: %d)", len(resp.Data), resp.TotalItems)
@@ -589,21 +690,26 @@ func TestPaymentAttempts(t *testing.T) {
 
 		listResp, err := client.Payment.PaymentAttempts.List(ctx, listReq)
 		if err != nil {
-			t.Logf("List payment attempts failed, skipping Get test: %v", err)
-			return
+			t.Skipf("List payment attempts failed, skipping Get test: %v", err)
 		}
 
 		if len(listResp.Data) == 0 {
-			t.Log("No payment attempts available, skipping Get test")
-			return
+			t.Skip("No payment attempts available, skipping Get test")
 		}
 
 		attemptID := listResp.Data[0].AttemptID
 
 		resp, err := client.Payment.PaymentAttempts.Get(ctx, attemptID)
 		if err != nil {
-			t.Logf("Get payment attempt returned error: %v", err)
-			return
+			t.Fatalf("Get payment attempt failed: %v", err)
+		}
+
+		// Assertions
+		if resp.AttemptID == "" {
+			t.Error("AttemptID should not be empty")
+		}
+		if resp.AttemptID != attemptID {
+			t.Errorf("AttemptID mismatch: got %s, want %s", resp.AttemptID, attemptID)
 		}
 
 		t.Logf("Payment attempt retrieved successfully")
@@ -625,8 +731,13 @@ func TestPaymentAttempts(t *testing.T) {
 
 			resp, err := client.Payment.PaymentAttempts.List(ctx, req)
 			if err != nil {
-				t.Logf("%s attempts: error - %v", status, err)
+				t.Errorf("%s attempts: failed - %v", status, err)
 				continue
+			}
+
+			// Assertion
+			if resp.Data == nil {
+				t.Errorf("%s attempts: Data should not be nil", status)
 			}
 
 			t.Logf("%s attempts: %d found", status, resp.TotalItems)
@@ -649,8 +760,12 @@ func TestPaymentBalances(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		resp, err := client.Payment.Balances.List(ctx)
 		if err != nil {
-			t.Logf("List payment balances returned error: %v", err)
-			return
+			t.Fatalf("List payment balances failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d payment balances", len(resp.Data))
@@ -673,8 +788,15 @@ func TestPaymentBalances(t *testing.T) {
 
 		resp, err := client.Payment.Balances.Get(ctx, currency)
 		if err != nil {
-			t.Logf("Get payment balance for %s returned error: %v", currency, err)
-			return
+			t.Fatalf("Get payment balance for %s failed: %v", currency, err)
+		}
+
+		// Assertions
+		if resp.BalanceID == "" {
+			t.Error("BalanceID should not be empty")
+		}
+		if resp.Currency != currency {
+			t.Errorf("Currency mismatch: got %s, want %s", resp.Currency, currency)
 		}
 
 		t.Logf("Balance retrieved for %s", currency)
@@ -691,8 +813,13 @@ func TestPaymentBalances(t *testing.T) {
 		for _, currency := range currencies {
 			resp, err := client.Payment.Balances.Get(ctx, currency)
 			if err != nil {
-				t.Logf("%s: error - %v", currency, err)
+				t.Errorf("%s: failed - %v", currency, err)
 				continue
+			}
+
+			// Assertion
+			if resp.BalanceID == "" {
+				t.Errorf("%s: BalanceID should not be empty", currency)
 			}
 
 			t.Logf("%s: Available=%s, Payable=%s",
@@ -721,8 +848,12 @@ func TestPaymentPayouts(t *testing.T) {
 
 		resp, err := client.Payment.Payouts.List(ctx, req)
 		if err != nil {
-			t.Logf("List payouts returned error: %v", err)
-			return
+			t.Fatalf("List payouts failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d payouts (total: %d)", len(resp.Data), resp.TotalItems)
@@ -751,21 +882,26 @@ func TestPaymentPayouts(t *testing.T) {
 
 		listResp, err := client.Payment.Payouts.List(ctx, listReq)
 		if err != nil {
-			t.Logf("List payouts failed, skipping Get test: %v", err)
-			return
+			t.Skipf("List payouts failed, skipping Get test: %v", err)
 		}
 
 		if len(listResp.Data) == 0 {
-			t.Log("No payouts available, skipping Get test")
-			return
+			t.Skip("No payouts available, skipping Get test")
 		}
 
 		payoutID := listResp.Data[0].PayoutID
 
 		resp, err := client.Payment.Payouts.Get(ctx, payoutID)
 		if err != nil {
-			t.Logf("Get payout returned error: %v", err)
-			return
+			t.Fatalf("Get payout failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PayoutID == "" {
+			t.Error("PayoutID should not be empty")
+		}
+		if resp.PayoutID != payoutID {
+			t.Errorf("PayoutID mismatch: got %s, want %s", resp.PayoutID, payoutID)
 		}
 
 		t.Logf("Payout retrieved successfully")
@@ -787,8 +923,13 @@ func TestPaymentPayouts(t *testing.T) {
 
 			resp, err := client.Payment.Payouts.List(ctx, req)
 			if err != nil {
-				t.Logf("%s payouts: error - %v", status, err)
+				t.Errorf("%s payouts: failed - %v", status, err)
 				continue
+			}
+
+			// Assertion
+			if resp.Data == nil {
+				t.Errorf("%s payouts: Data should not be nil", status)
 			}
 
 			t.Logf("%s payouts: %d found", status, resp.TotalItems)
@@ -816,8 +957,12 @@ func TestPaymentRefunds(t *testing.T) {
 
 		resp, err := client.Payment.Refunds.List(ctx, req)
 		if err != nil {
-			t.Logf("List refunds returned error: %v", err)
-			return
+			t.Fatalf("List refunds failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d refunds (total: %d)", len(resp.Data), resp.TotalItems)
@@ -846,21 +991,26 @@ func TestPaymentRefunds(t *testing.T) {
 
 		listResp, err := client.Payment.Refunds.List(ctx, listReq)
 		if err != nil {
-			t.Logf("List refunds failed, skipping Get test: %v", err)
-			return
+			t.Skipf("List refunds failed, skipping Get test: %v", err)
 		}
 
 		if len(listResp.Data) == 0 {
-			t.Log("No refunds available, skipping Get test")
-			return
+			t.Skip("No refunds available, skipping Get test")
 		}
 
 		refundID := listResp.Data[0].PaymentRefundID
 
 		resp, err := client.Payment.Refunds.Get(ctx, refundID)
 		if err != nil {
-			t.Logf("Get refund returned error: %v", err)
-			return
+			t.Fatalf("Get refund failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentRefundID == "" {
+			t.Error("PaymentRefundID should not be empty")
+		}
+		if resp.PaymentRefundID != refundID {
+			t.Errorf("PaymentRefundID mismatch: got %s, want %s", resp.PaymentRefundID, refundID)
 		}
 
 		t.Logf("Refund retrieved successfully")
@@ -882,8 +1032,13 @@ func TestPaymentRefunds(t *testing.T) {
 
 			resp, err := client.Payment.Refunds.List(ctx, req)
 			if err != nil {
-				t.Logf("%s refunds: error - %v", status, err)
+				t.Errorf("%s refunds: failed - %v", status, err)
 				continue
+			}
+
+			// Assertion
+			if resp.Data == nil {
+				t.Errorf("%s refunds: Data should not be nil", status)
 			}
 
 			t.Logf("%s refunds: %d found", status, resp.TotalItems)
@@ -911,8 +1066,12 @@ func TestPaymentReports(t *testing.T) {
 
 		resp, err := client.Payment.Reports.ListSettlements(ctx, req)
 		if err != nil {
-			t.Logf("List settlements returned error: %v", err)
-			return
+			t.Fatalf("List settlements failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d settlements (total: %d)", len(resp.Data), resp.TotalItems)
@@ -945,8 +1104,12 @@ func TestPaymentReports(t *testing.T) {
 
 		resp, err := client.Payment.Reports.ListSettlements(ctx, req)
 		if err != nil {
-			t.Logf("List settlements with date range returned error: %v", err)
-			return
+			t.Fatalf("List settlements with date range failed: %v", err)
+		}
+
+		// Assertions
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
 		}
 
 		t.Logf("Found %d settlements in date range (total: %d)", len(resp.Data), resp.TotalItems)
