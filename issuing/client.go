@@ -8,6 +8,7 @@ type Client struct {
 	Cardholders  *CardholdersClient
 	Transactions *TransactionsClient
 	Products     *ProductsClient
+	Balances     *BalancesClient
 }
 
 // NewClient creates a new Issuing client
@@ -17,5 +18,6 @@ func NewClient(apiClient *common.APIClient) *Client {
 		Cardholders:  &CardholdersClient{client: apiClient},
 		Transactions: &TransactionsClient{client: apiClient},
 		Products:     &ProductsClient{client: apiClient},
+		Balances:     &BalancesClient{client: apiClient},
 	}
 }

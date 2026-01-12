@@ -378,7 +378,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					Flow: "qrcode",
 				},
 			},
-			currency: "USD",
+			currency: "SGD",
 		},
 		{
 			name: "WeChatPay_MobileWeb",
@@ -389,7 +389,44 @@ func TestConfirmPaymentMethods(t *testing.T) {
 					OSType: "ios",
 				},
 			},
-			currency: "USD",
+			currency: "SGD",
+		},
+		{
+			name: "WeChatPay_MobileWeb",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "wechatpay",
+				WeChatPay: &payment.WeChatPay{
+					Flow:   "mini_program",
+					OSType: "ios",
+					OpenID: "",
+				},
+			},
+			currency: "SGD",
+		},
+		{
+			name: "WeChatPay_MobileWeb",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "wechatpay",
+				WeChatPay: &payment.WeChatPay{
+					Flow:   "mobile_app",
+					OSType: "ios",
+					OpenID: "", //required
+				},
+			},
+			currency: "SGD",
+		},
+
+		{
+			name: "WeChatPay_MobileWeb",
+			paymentMethod: &payment.PaymentMethod{
+				Type: "wechatpay",
+				WeChatPay: &payment.WeChatPay{
+					Flow:   "official_account",
+					OSType: "ios",
+					OpenID: "", //required
+				},
+			},
+			currency: "SGD",
 		},
 
 		// ================================================================
