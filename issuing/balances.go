@@ -41,14 +41,14 @@ type ListBalanceTransactionsRequest struct {
 
 // IssuingBalance represents an issuing account balance
 type IssuingBalance struct {
-	BalanceID        string  `json:"balance_id"`
-	Currency         string  `json:"currency"`
-	AvailableBalance float64 `json:"available_balance"`
-	MarginBalance    float64 `json:"margin_balance"`
-	FrozenBalance    float64 `json:"frozen_balance"`
-	CreateTime       string  `json:"create_time"`
-	LastTradeTime    string  `json:"last_trade_time"`
-	BalanceStatus    string  `json:"balance_status"` // ACTIVE, PENDING, PROCESSING, CLOSED
+	BalanceID        string `json:"balance_id"`
+	Currency         string `json:"currency"`
+	AvailableBalance string `json:"available_balance"`
+	MarginBalance    string `json:"margin_balance"`
+	FrozenBalance    string `json:"frozen_balance"`
+	CreateTime       string `json:"create_time"`
+	LastTradeTime    string `json:"last_trade_time"`
+	BalanceStatus    string `json:"balance_status"` // ACTIVE, PENDING, PROCESSING, CLOSED
 }
 
 // ListBalancesResponse represents a paginated list of issuing balances
@@ -60,18 +60,18 @@ type ListBalancesResponse struct {
 
 // IssuingBalanceTransaction represents an issuing balance transaction
 type IssuingBalanceTransaction struct {
-	TransactionID      string  `json:"transaction_id"`
-	ShortTransactionID string  `json:"short_transaction_id"`
-	AccountID          string  `json:"account_id"`
-	BalanceID          string  `json:"balance_id"`
-	TransactionType    string  `json:"transaction_type"` // DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
-	Currency           string  `json:"currency"`
-	Amount             float64 `json:"amount"`
-	CreateTime         string  `json:"create_time"`
-	CompleteTime       string  `json:"complete_time"`
-	TransactionStatus  string  `json:"transaction_status"` // FAILED, PENDING, COMPLETED, CANCELLED
-	EndingBalance      float64 `json:"ending_balance"`
-	Description        string  `json:"description"`
+	TransactionID      string `json:"transaction_id"`
+	ShortTransactionID string `json:"short_transaction_id"`
+	AccountID          string `json:"account_id"`
+	BalanceID          string `json:"balance_id"`
+	TransactionType    string `json:"transaction_type"` // DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
+	Currency           string `json:"currency"`
+	Amount             string `json:"amount"`
+	CreateTime         string `json:"create_time"`
+	CompleteTime       string `json:"complete_time"`
+	TransactionStatus  string `json:"transaction_status"` // FAILED, PENDING, COMPLETED, CANCELLED
+	EndingBalance      string `json:"ending_balance"`
+	Description        string `json:"description"`
 }
 
 // ListBalanceTransactionsResponse represents a paginated list of issuing balance transactions

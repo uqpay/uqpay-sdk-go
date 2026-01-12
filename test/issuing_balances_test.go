@@ -29,9 +29,9 @@ func TestIssuingBalances(t *testing.T) {
 		t.Logf("✅ Issuing balance retrieved for %s", req.Currency)
 		t.Logf("💰 Balance ID: %s", resp.BalanceID)
 		t.Logf("   Currency: %s", resp.Currency)
-		t.Logf("   Available: %.2f", resp.AvailableBalance)
-		t.Logf("   Margin: %.2f", resp.MarginBalance)
-		t.Logf("   Frozen: %.2f", resp.FrozenBalance)
+		t.Logf("   Available: %s", resp.AvailableBalance)
+		t.Logf("   Margin: %s", resp.MarginBalance)
+		t.Logf("   Frozen: %s", resp.FrozenBalance)
 		t.Logf("   Status: %s", resp.BalanceStatus)
 		t.Logf("   Created: %s", resp.CreateTime)
 		t.Logf("   Last Trade: %s", resp.LastTradeTime)
@@ -54,7 +54,7 @@ func TestIssuingBalances(t *testing.T) {
 
 		if len(resp.Data) > 0 {
 			for i, balance := range resp.Data {
-				t.Logf("💰 Balance %d: %s - Available: %.2f, Margin: %.2f, Status: %s",
+				t.Logf("💰 Balance %d: %s - Available: %s, Margin: %s, Status: %s",
 					i+1, balance.Currency, balance.AvailableBalance, balance.MarginBalance, balance.BalanceStatus)
 			}
 		} else {
@@ -85,9 +85,9 @@ func TestIssuingBalances(t *testing.T) {
 			t.Logf("   Account ID: %s", txn.AccountID)
 			t.Logf("   Balance ID: %s", txn.BalanceID)
 			t.Logf("   Type: %s", txn.TransactionType)
-			t.Logf("   Amount: %.2f %s", txn.Amount, txn.Currency)
+			t.Logf("   Amount: %s %s", txn.Amount, txn.Currency)
 			t.Logf("   Status: %s", txn.TransactionStatus)
-			t.Logf("   Ending Balance: %.2f", txn.EndingBalance)
+			t.Logf("   Ending Balance: %s", txn.EndingBalance)
 			t.Logf("   Description: %s", txn.Description)
 			t.Logf("   Created: %s", txn.CreateTime)
 			t.Logf("   Completed: %s", txn.CompleteTime)
@@ -100,8 +100,8 @@ func TestIssuingBalances(t *testing.T) {
 		req := &issuing.ListBalanceTransactionsRequest{
 			PageSize:   10,
 			PageNumber: 1,
-			StartTime:  "2024-01-01T00:00:00+00:00",
-			EndTime:    "2024-12-31T23:59:59+00:00",
+			StartTime:  "2024-01-01T00:00:00%2B08:00",
+			EndTime:    "2025-12-31T23:59:59%2B08:00",
 		}
 
 		resp, err := client.Issuing.Balances.ListTransactions(ctx, req)
@@ -118,7 +118,7 @@ func TestIssuingBalances(t *testing.T) {
 					t.Logf("   ... and %d more", len(resp.Data)-5)
 					break
 				}
-				t.Logf("💰 Transaction %d: %s %.2f %s, Status: %s",
+				t.Logf("💰 Transaction %d: %s %s %s, Status: %s",
 					i+1, txn.TransactionType, txn.Amount, txn.Currency, txn.TransactionStatus)
 			}
 		}

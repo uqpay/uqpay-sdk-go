@@ -113,3 +113,49 @@ func (c *APIClient) Put(ctx context.Context, path string, body, response interfa
 func (c *APIClient) Delete(ctx context.Context, path string, response interface{}) error {
 	return c.Do(ctx, "DELETE", path, nil, response)
 }
+
+// GetRaw sends a GET request and returns raw bytes (for file downloads)
+func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
+	url := c.Config.Environment.BaseURL + path
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Get auth token
+	token, err := c.TokenProvider.GetToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token: %w", err)
+	}
+
+	// Set headers
+	req.Header.Set("Accept", "application/octet-stream")
+	req.Header.Set("x-auth-token", "Bearer "+token)
+	req.Header.Set("x-idempotency-key", uuid.New().String())
+
+	// Execute request
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for errors
+	if resp.StatusCode >= 400 {
+		var apiErr APIError
+		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
+			return nil, fmt.Errorf("request failed with status %d", resp.StatusCode)
+		}
+		apiErr.StatusCode = resp.StatusCode
+		return nil, &apiErr
+	}
+
+	// Read response body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	return data, nil
+}
