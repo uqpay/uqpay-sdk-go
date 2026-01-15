@@ -137,39 +137,59 @@ type ListBankAccountsResponse struct {
 // ============================================================================
 
 // Create creates a new bank account for settlement purposes
-func (c *BankAccountsClient) Create(ctx context.Context, req *CreateBankAccountRequest) (*BankAccount, error) {
+// Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
+func (c *BankAccountsClient) Create(ctx context.Context, req *CreateBankAccountRequest, opts ...*common.RequestOptions) (*BankAccount, error) {
 	var resp BankAccount
-	if err := c.client.Post(ctx, "/v2/payment/bankaccount/create", req, &resp); err != nil {
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if err := c.client.PostWithOptions(ctx, "/v2/payment/bankaccount/create", req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to create bank account: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific bank account by ID
-func (c *BankAccountsClient) Get(ctx context.Context, id string) (*BankAccount, error) {
+// Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
+func (c *BankAccountsClient) Get(ctx context.Context, id string, opts ...*common.RequestOptions) (*BankAccount, error) {
 	var resp BankAccount
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 	path := fmt.Sprintf("/v2/payment/bankaccount/%s", id)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to get bank account: %w", err)
 	}
 	return &resp, nil
 }
 
 // Update updates an existing bank account
-func (c *BankAccountsClient) Update(ctx context.Context, id string, req *UpdateBankAccountRequest) (*BankAccount, error) {
+// Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
+func (c *BankAccountsClient) Update(ctx context.Context, id string, req *UpdateBankAccountRequest, opts ...*common.RequestOptions) (*BankAccount, error) {
 	var resp BankAccount
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 	path := fmt.Sprintf("/v2/payment/bankaccount/%s", id)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to update bank account: %w", err)
 	}
 	return &resp, nil
 }
 
 // List retrieves a paginated list of all bank accounts
-func (c *BankAccountsClient) List(ctx context.Context, req *ListBankAccountsRequest) (*ListBankAccountsResponse, error) {
+// Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
+func (c *BankAccountsClient) List(ctx context.Context, req *ListBankAccountsRequest, opts ...*common.RequestOptions) (*ListBankAccountsResponse, error) {
 	var resp ListBankAccountsResponse
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
 	path := fmt.Sprintf("/v2/payment/bankaccount?page_number=%d&page_size=%d", req.PageNumber, req.PageSize)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to list bank accounts: %w", err)
 	}
 	return &resp, nil

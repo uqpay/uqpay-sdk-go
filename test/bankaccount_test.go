@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/uqpay/uqpay-sdk-go/common"
 	"github.com/uqpay/uqpay-sdk-go/payment"
 )
 
@@ -21,15 +23,17 @@ func TestBankAccounts(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		req := &payment.CreateBankAccountRequest{
-			AccountNumber:   "GC71950018692652646591",
-			BankName:        "DBS Bank",
-			SwiftCode:       "DBSSSGSG",
+			AccountNumber:   "4501717407208859482",
+			BankName:        "Maybank",
+			SwiftCode:       "MBBESGSG",
 			BankCountryCode: "SG",
-			BankAddress:     "22 Merina Boulevard, Singapore 028982",
-			Currency:        "SGD",
+			BankAddress:     "2 Battery Road, Maybank Tower, Singapore 049907",
+			Currency:        "HKD",
 		}
 
-		resp, err := client.Payment.BankAccounts.Create(ctx, req)
+		resp, err := client.Payment.BankAccounts.Create(ctx, req, &common.RequestOptions{
+			IdempotencyKey: uuid.New().String(),
+		})
 		if err != nil {
 			t.Fatalf("Create bank account failed: %v", err)
 		}
@@ -213,21 +217,6 @@ func TestBankAccounts(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		// First create a bank account to ensure there's at least one
-		createReq := &payment.CreateBankAccountRequest{
-			AccountNumber:   "GB71820018692652646598",
-			BankName:        "DBS Bank",
-			SwiftCode:       "DBSSSGSG",
-			BankCountryCode: "SG",
-			BankAddress:     "17 Marini Boulevard, Singapore 014982",
-			Currency:        "SGD",
-		}
-
-		_, err := client.Payment.BankAccounts.Create(ctx, createReq)
-		if err != nil {
-			t.Fatalf("Create bank account failed: %v", err)
-		}
-
 		// Now list bank accounts
 		listReq := &payment.ListBankAccountsRequest{
 			PageNumber: 1,
@@ -255,10 +244,9 @@ func TestBankAccounts(t *testing.T) {
 		t.Logf("   Total Items: %d", resp.TotalItems)
 		t.Logf("   Items in page: %d", len(resp.Data))
 
-		// Log first bank account details
-		if len(resp.Data) > 0 {
-			acc := resp.Data[0]
-			t.Logf("   First bank account:")
+		// Log all bank account details
+		for i, acc := range resp.Data {
+			t.Logf("   Bank Account #%d:", i+1)
 			t.Logf("      ID: %s", acc.ID)
 			t.Logf("      Account Number: %s", acc.AccountNumber)
 			t.Logf("      Bank Name: %s", acc.BankName)

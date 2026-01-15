@@ -17,6 +17,16 @@ type TokenProvider interface {
 	GetToken() (string, error)
 }
 
+// RequestOptions contains optional parameters for API requests
+type RequestOptions struct {
+	// IdempotencyKey is a unique key to ensure idempotent requests.
+	// If not provided, a UUID will be generated automatically.
+	IdempotencyKey string
+	// AuthToken overrides the default auth token for this request.
+	// If not provided, the token from TokenProvider will be used.
+	AuthToken string
+}
+
 // APIClient handles HTTP requests to UQPAY API
 type APIClient struct {
 	Config        *configuration.Configuration
@@ -92,6 +102,83 @@ func (c *APIClient) Do(ctx context.Context, method, path string, body, response 
 	}
 
 	return nil
+}
+
+// DoWithOptions executes an HTTP request with custom options
+func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body, response interface{}, opts *RequestOptions) error {
+	url := c.Config.Environment.BaseURL + path
+
+	var reqBody io.Reader
+	if body != nil {
+		jsonData, err := json.Marshal(body)
+		if err != nil {
+			return fmt.Errorf("failed to marshal request: %w", err)
+		}
+		reqBody = bytes.NewReader(jsonData)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Determine auth token
+	var token string
+	if opts != nil && opts.AuthToken != "" {
+		token = opts.AuthToken
+	} else {
+		token, err = c.TokenProvider.GetToken()
+		if err != nil {
+			return fmt.Errorf("failed to get token: %w", err)
+		}
+	}
+
+	// Determine idempotency key
+	idempotencyKey := uuid.New().String()
+	if opts != nil && opts.IdempotencyKey != "" {
+		idempotencyKey = opts.IdempotencyKey
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-auth-token", "Bearer "+token)
+	req.Header.Set("x-idempotency-key", idempotencyKey)
+
+	// Execute request
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for errors
+	if resp.StatusCode >= 400 {
+		var apiErr APIError
+		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
+			return fmt.Errorf("request failed with status %d", resp.StatusCode)
+		}
+		apiErr.StatusCode = resp.StatusCode
+		return &apiErr
+	}
+
+	// Decode response
+	if response != nil {
+		if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
+			return fmt.Errorf("failed to decode response: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// PostWithOptions sends a POST request with custom options
+func (c *APIClient) PostWithOptions(ctx context.Context, path string, body, response interface{}, opts *RequestOptions) error {
+	return c.DoWithOptions(ctx, "POST", path, body, response, opts)
+}
+
+// GetWithOptions sends a GET request with custom options
+func (c *APIClient) GetWithOptions(ctx context.Context, path string, response interface{}, opts *RequestOptions) error {
+	return c.DoWithOptions(ctx, "GET", path, nil, response, opts)
 }
 
 // Get sends a GET request
