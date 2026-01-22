@@ -34,6 +34,7 @@ import (
 const (
 	EventNameOnboarding = "ONBOARDING"
 	EventNameAcquiring  = "ACQUIRING"
+	EventNameConversion = "CONVERSION"
 )
 
 // Event types for onboarding
@@ -57,6 +58,13 @@ const (
 	EventTypePaymentAttemptSucceeded        = "acquiring.payment_attempt.succeeded"
 	EventTypePaymentAttemptFailed           = "acquiring.payment_attempt.failed"
 	EventTypePaymentAttemptCanceled         = "acquiring.payment_attempt.canceled"
+)
+
+// Event types for conversion
+const (
+	EventTypeConversionTradeSettled  = "conversion.trade.settled"
+	EventTypeConversionFundsAwaiting = "conversion.funds.awaiting"
+	EventTypeConversionFundsArrived  = "conversion.funds.arrived"
 )
 
 // Event represents the base webhook event envelope.
@@ -193,6 +201,40 @@ func (e *Event) ParsePaymentAttemptData() (*PaymentAttemptData, error) {
 // Use this only when you are certain the event type is correct.
 func (e *Event) MustParsePaymentAttemptData() *PaymentAttemptData {
 	data, err := e.ParsePaymentAttemptData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsConversionEvent returns true if this is a conversion-related event
+func (e *Event) IsConversionEvent() bool {
+	return e.EventName == EventNameConversion
+}
+
+// IsConversionTradeSettledEvent returns true if this is a conversion trade settled event
+func (e *Event) IsConversionTradeSettledEvent() bool {
+	return e.EventType == EventTypeConversionTradeSettled
+}
+
+// ParseConversionData parses the event data as a ConversionData struct.
+// Returns an error if the event type is not a conversion event or if parsing fails.
+func (e *Event) ParseConversionData() (*ConversionData, error) {
+	if !e.IsConversionEvent() {
+		return nil, fmt.Errorf("event type %s is not a conversion event", e.EventType)
+	}
+
+	var data ConversionData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse conversion data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseConversionData is like ParseConversionData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseConversionData() *ConversionData {
+	data, err := e.ParseConversionData()
 	if err != nil {
 		panic(err)
 	}
