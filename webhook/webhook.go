@@ -60,6 +60,13 @@ const (
 	EventTypePaymentAttemptCanceled         = "acquiring.payment_attempt.canceled"
 )
 
+// Event types for acquiring (refunds)
+const (
+	EventTypeRefundCreated   = "acquiring.refund.created"
+	EventTypeRefundSucceeded = "acquiring.refund.succeeded"
+	EventTypeRefundFailed    = "acquiring.refund.failed"
+)
+
 // Event types for conversion
 const (
 	EventTypeConversionTradeSettled  = "conversion.trade.settled"
@@ -201,6 +208,41 @@ func (e *Event) ParsePaymentAttemptData() (*PaymentAttemptData, error) {
 // Use this only when you are certain the event type is correct.
 func (e *Event) MustParsePaymentAttemptData() *PaymentAttemptData {
 	data, err := e.ParsePaymentAttemptData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsRefundEvent returns true if this is a refund event
+func (e *Event) IsRefundEvent() bool {
+	switch e.EventType {
+	case EventTypeRefundCreated,
+		EventTypeRefundSucceeded,
+		EventTypeRefundFailed:
+		return true
+	}
+	return false
+}
+
+// ParseRefundData parses the event data as a RefundData struct.
+// Returns an error if the event type is not a refund event or if parsing fails.
+func (e *Event) ParseRefundData() (*RefundData, error) {
+	if !e.IsRefundEvent() {
+		return nil, fmt.Errorf("event type %s is not a refund event", e.EventType)
+	}
+
+	var data RefundData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse refund data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseRefundData is like ParseRefundData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseRefundData() *RefundData {
+	data, err := e.ParseRefundData()
 	if err != nil {
 		panic(err)
 	}

@@ -181,3 +181,64 @@ const (
 	// AttemptStatusCanceled indicates the attempt was canceled
 	AttemptStatusCanceled = "CANCELED"
 )
+
+// RefundData represents the refund information in acquiring webhook events.
+// This is returned in the data field for acquiring.refund.* events.
+type RefundData struct {
+	// PaymentRefundID is the unique identifier for the refund
+	PaymentRefundID string `json:"payment_refund_id"`
+
+	// PaymentIntentID is the ID of the parent payment intent
+	PaymentIntentID string `json:"payment_intent_id"`
+
+	// PaymentAttemptID is the ID of the payment attempt being refunded
+	PaymentAttemptID string `json:"payment_attempt_id"`
+
+	// Amount is the refund amount as a string (e.g., "0.001")
+	Amount string `json:"amount"`
+
+	// Currency is the ISO 4217 currency code (e.g., "USD")
+	Currency string `json:"currency"`
+
+	// RefundStatus is the current status of the refund
+	RefundStatus string `json:"refund_status"`
+
+	// Reason is the reason for the refund (e.g., "requested_by_customer")
+	Reason string `json:"reason,omitempty"`
+
+	// Metadata contains custom key-value pairs
+	Metadata map[string]string `json:"metadata,omitempty"`
+
+	// CreateTime is the creation timestamp
+	CreateTime string `json:"create_time,omitempty"`
+
+	// CompleteTime is the completion timestamp (if completed)
+	CompleteTime *string `json:"complete_time,omitempty"`
+}
+
+// Refund status constants
+const (
+	// RefundStatusInitiated indicates the refund has been initiated
+	RefundStatusInitiated = "INITIATED"
+
+	// RefundStatusPending indicates the refund is pending
+	RefundStatusPending = "PENDING"
+
+	// RefundStatusSucceeded indicates the refund was successful
+	RefundStatusSucceeded = "SUCCEEDED"
+
+	// RefundStatusFailed indicates the refund failed
+	RefundStatusFailed = "FAILED"
+)
+
+// Refund reason constants
+const (
+	// RefundReasonRequestedByCustomer indicates customer requested the refund
+	RefundReasonRequestedByCustomer = "requested_by_customer"
+
+	// RefundReasonDuplicate indicates the payment was a duplicate
+	RefundReasonDuplicate = "duplicate"
+
+	// RefundReasonFraudulent indicates the payment was fraudulent
+	RefundReasonFraudulent = "fraudulent"
+)

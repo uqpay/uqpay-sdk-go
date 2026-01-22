@@ -237,7 +237,10 @@ type ListPaymentIntentsResponse struct {
 // Create creates a new payment intent
 func (c *PaymentIntentsClient) Create(ctx context.Context, req *CreatePaymentIntentRequest) (*PaymentIntent, error) {
 	var resp PaymentIntent
-	if err := c.client.Post(ctx, "/v2/payment_intents/create", req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, "/v2/payment_intents/create", req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to create payment intent: %w", err)
 	}
 	return &resp, nil
@@ -247,7 +250,10 @@ func (c *PaymentIntentsClient) Create(ctx context.Context, req *CreatePaymentInt
 func (c *PaymentIntentsClient) Get(ctx context.Context, paymentIntentID string) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s", paymentIntentID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.GetWithOptions(ctx, path, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to get payment intent: %w", err)
 	}
 	return &resp, nil
@@ -258,7 +264,10 @@ func (c *PaymentIntentsClient) Get(ctx context.Context, paymentIntentID string) 
 func (c *PaymentIntentsClient) Update(ctx context.Context, paymentIntentID string, req *UpdatePaymentIntentRequest) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s", paymentIntentID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to update payment intent: %w", err)
 	}
 	return &resp, nil
@@ -279,7 +288,10 @@ func (c *PaymentIntentsClient) Confirm(ctx context.Context, paymentIntentID stri
 func (c *PaymentIntentsClient) Capture(ctx context.Context, paymentIntentID string, req *CapturePaymentIntentRequest) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/capture", paymentIntentID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to capture payment intent: %w", err)
 	}
 	return &resp, nil
@@ -289,7 +301,10 @@ func (c *PaymentIntentsClient) Capture(ctx context.Context, paymentIntentID stri
 func (c *PaymentIntentsClient) Cancel(ctx context.Context, paymentIntentID string, req *CancelPaymentIntentRequest) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/cancel", paymentIntentID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to cancel payment intent: %w", err)
 	}
 	return &resp, nil
@@ -326,7 +341,10 @@ func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntents
 		path += fmt.Sprintf("%scurrency=%s", separator, req.Currency)
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.GetWithOptions(ctx, path, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to list payment intents: %w", err)
 	}
 	return &resp, nil

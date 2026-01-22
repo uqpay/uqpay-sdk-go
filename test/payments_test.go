@@ -19,11 +19,11 @@ func TestPaymentIntents(t *testing.T) {
 	client := GetPaymentTestClient(t)
 	ctx := context.Background()
 
-	var createdIntentID string
+	var createdIntentID string = "PI2014290195662245888"
 
 	t.Run("Create", func(t *testing.T) {
 		req := &payment.CreatePaymentIntentRequest{
-			Amount:          "101.00",
+			Amount:          "103.00",
 			Currency:        "USD",
 			MerchantOrderID: "test-order-002",
 			Description:     "Test payment intent",
@@ -42,7 +42,7 @@ func TestPaymentIntents(t *testing.T) {
 		if resp.PaymentIntentID == "" {
 			t.Error("PaymentIntentID should not be empty")
 		}
-		if resp.Amount != "101" {
+		if resp.Amount != "103" {
 			t.Errorf("Amount mismatch: got %s, want 101", resp.Amount)
 		}
 		if resp.Currency != "USD" {
@@ -539,7 +539,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 
 			// Step 1: Create a payment intent
 			createReq := &payment.CreatePaymentIntentRequest{
-				Amount:          "0.01",
+				Amount:          "300.00",
 				Currency:        tc.currency,
 				MerchantOrderID: "test-" + tc.name + "-001",
 				Description:     "Test " + tc.name + " payment",
@@ -603,7 +603,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 }
 
 func TestGetPaymentIntent(t *testing.T) {
-	paymentId := "PI2014152219800113152"
+	paymentId := "PI2014264204080451584"
 	client := GetPaymentTestClient(t)
 	ctx := context.Background()
 
@@ -1080,6 +1080,66 @@ func TestPaymentRefunds(t *testing.T) {
 
 			t.Logf("%s refunds: %d found", status, resp.TotalItems)
 		}
+	})
+}
+
+// Create Refund
+func TestCreateRefund(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	// Payment intent ID that has been successfully captured
+	// Note: Each test requires a separate payment intent ID because
+	// you cannot create a new refund while one is still processing
+	paymentIntentID := "PI2014267344594931712" // Set a valid payment intent ID that can be refunded
+	if paymentIntentID == "" {
+		t.Skip("No payment intent ID configured, skipping refund create test")
+	}
+
+	t.Run("CreateRefund", func(t *testing.T) {
+		req := &payment.CreateRefundRequest{
+			PaymentIntentID: paymentIntentID,
+			Amount:          "10.0",
+			Reason:          "requested_by_customer",
+			Metadata: map[string]string{
+				"test": "true",
+			},
+		}
+
+		resp, err := client.Payment.Refunds.Create(ctx, req)
+		if err != nil {
+			t.Fatalf("Create refund failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PaymentRefundID == "" {
+			t.Error("PaymentRefundID should not be empty")
+		}
+		if resp.RefundStatus == "" {
+			t.Error("RefundStatus should not be empty")
+		}
+
+		// Verify valid refund status
+		validStatuses := map[string]bool{
+			"INITIATED":  true,
+			"PROCESSING": true,
+			"SUCCEEDED":  true,
+		}
+		if !validStatuses[resp.RefundStatus] {
+			t.Errorf("Unexpected refund status: %s", resp.RefundStatus)
+		}
+
+		t.Logf("Refund created successfully")
+		t.Logf("   ID: %s", resp.PaymentRefundID)
+		t.Logf("   Payment Attempt ID: %s", resp.PaymentAttemptID)
+		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
+		t.Logf("   Status: %s", resp.RefundStatus)
+		t.Logf("   Reason: %s", resp.Reason)
+		t.Logf("   Created: %s", resp.CreateTime)
 	})
 }
 

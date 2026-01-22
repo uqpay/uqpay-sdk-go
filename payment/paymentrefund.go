@@ -18,10 +18,11 @@ type PaymentRefundsClient struct {
 
 // CreateRefundRequest represents a refund creation request
 type CreateRefundRequest struct {
-	PaymentIntentID string            `json:"payment_intent_id"`
-	Amount          string            `json:"amount,omitempty"` // Optional: for partial refund
-	Reason          string            `json:"reason,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
+	PaymentIntentID  string            `json:"payment_intent_id"`            // Required: The ID of the payment intent to refund
+	PaymentAttemptID string            `json:"payment_attempt_id,omitempty"` // Optional: The ID of the payment attempt to refund
+	Amount           string            `json:"amount"`                       // Required: The amount to refund
+	Reason           string            `json:"reason"`                       // Required: The reason for the refund (max 100 chars)
+	Metadata         map[string]string `json:"metadata,omitempty"`           // Optional: Additional metadata for the refund
 }
 
 // ListRefundsRequest represents a refunds list request
@@ -65,7 +66,10 @@ type ListRefundsResponse struct {
 // Create creates a new refund for a completed payment
 func (c *PaymentRefundsClient) Create(ctx context.Context, req *CreateRefundRequest) (*Refund, error) {
 	var resp Refund
-	if err := c.client.Post(ctx, "/v2/payment/refunds", req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, "/v2/payment/refunds", req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to create refund: %w", err)
 	}
 	return &resp, nil
