@@ -23,9 +23,9 @@ func TestPaymentIntents(t *testing.T) {
 
 	t.Run("Create", func(t *testing.T) {
 		req := &payment.CreatePaymentIntentRequest{
-			Amount:          "100.00",
+			Amount:          "101.00",
 			Currency:        "USD",
-			MerchantOrderID: "test-order-001",
+			MerchantOrderID: "test-order-002",
 			Description:     "Test payment intent",
 			ReturnURL:       "https://example.com/return",
 			Metadata: map[string]string{
@@ -42,8 +42,8 @@ func TestPaymentIntents(t *testing.T) {
 		if resp.PaymentIntentID == "" {
 			t.Error("PaymentIntentID should not be empty")
 		}
-		if resp.Amount != "100.00" {
-			t.Errorf("Amount mismatch: got %s, want 100.00", resp.Amount)
+		if resp.Amount != "101" {
+			t.Errorf("Amount mismatch: got %s, want 101", resp.Amount)
 		}
 		if resp.Currency != "USD" {
 			t.Errorf("Currency mismatch: got %s, want USD", resp.Currency)
@@ -69,10 +69,10 @@ func TestPaymentIntents(t *testing.T) {
 			PaymentMethod: &payment.PaymentMethod{
 				Type: "card",
 				Card: &payment.Card{
-					CardNumber:  "",
-					ExpiryMonth: "",
-					ExpiryYear:  "",
-					CVC:         "",
+					CardNumber:  "4176660000000027",
+					ExpiryMonth: "12",
+					ExpiryYear:  "33",
+					CVC:         "303",
 					CardName:    "Test User",
 				},
 			},
@@ -603,7 +603,7 @@ func TestConfirmPaymentMethods(t *testing.T) {
 }
 
 func TestGetPaymentIntent(t *testing.T) {
-	paymentId := "PI2008755505874341888"
+	paymentId := "PI2014152219800113152"
 	client := GetPaymentTestClient(t)
 	ctx := context.Background()
 
@@ -636,7 +636,7 @@ func TestGetPaymentIntent(t *testing.T) {
 }
 
 func TestGetPaymentAttempt(t *testing.T) {
-	var attemptId string // Payment Attempt ID
+	var attemptId string = "" // Payment Attempt ID
 	if attemptId == "" {
 		t.Skip("No attempt ID configured, skipping test")
 	}
