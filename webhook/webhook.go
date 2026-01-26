@@ -32,9 +32,11 @@ import (
 
 // Event names
 const (
-	EventNameOnboarding = "ONBOARDING"
-	EventNameAcquiring  = "ACQUIRING"
-	EventNameConversion = "CONVERSION"
+	EventNameOnboarding  = "ONBOARDING"
+	EventNameAcquiring   = "ACQUIRING"
+	EventNameConversion  = "CONVERSION"
+	EventNameIssuing     = "ISSUING"
+	EventNameBeneficiary = "BENEFICIARY"
 )
 
 // Event types for onboarding
@@ -72,6 +74,34 @@ const (
 	EventTypeConversionTradeSettled  = "conversion.trade.settled"
 	EventTypeConversionFundsAwaiting = "conversion.funds.awaiting"
 	EventTypeConversionFundsArrived  = "conversion.funds.arrived"
+)
+
+// Event types for issuing (card events)
+const (
+	EventTypeCardCreateSucceeded       = "card.create.succeeded"
+	EventTypeCardCreateFailed          = "card.create.failed"
+	EventTypeCardUpdateSucceeded       = "card.update.succeeded"
+	EventTypeCardUpdateFailed          = "card.update.failed"
+	EventTypeCardRechargeSucceeded     = "card.recharge.succeeded"
+	EventTypeCardRechargeFailed        = "card.recharge.failed"
+	EventTypeCardActivationCode        = "card.activation.code"
+	EventTypeCardActivated             = "card.activated"
+	EventTypeCardSuspended             = "card.suspended"
+	EventTypeCardClosed                = "card.closed"
+	EventTypeCardStatusUpdateSucceeded = "card.status.update.succeeded"
+	EventTypeCardStatusUpdateFailed    = "card.status.update.failed"
+)
+
+// Event types for issuing (card transaction events)
+const (
+	EventTypeIssuingFeeCard = "issuing.fee.card"
+)
+
+// Event types for beneficiary
+const (
+	EventTypeBeneficiarySuccessful = "beneficiary.successful"
+	EventTypeBeneficiaryFailed     = "beneficiary.failed"
+	EventTypeBeneficiaryPending    = "beneficiary.pending"
 )
 
 // Event represents the base webhook event envelope.
@@ -277,6 +307,236 @@ func (e *Event) ParseConversionData() (*ConversionData, error) {
 // Use this only when you are certain the event type is correct.
 func (e *Event) MustParseConversionData() *ConversionData {
 	data, err := e.ParseConversionData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsIssuingEvent returns true if this is an issuing-related event
+func (e *Event) IsIssuingEvent() bool {
+	return e.EventName == EventNameIssuing
+}
+
+// IsCardEvent returns true if this is a card event
+func (e *Event) IsCardEvent() bool {
+	switch e.EventType {
+	case EventTypeCardCreateSucceeded,
+		EventTypeCardCreateFailed,
+		EventTypeCardUpdateSucceeded,
+		EventTypeCardUpdateFailed,
+		EventTypeCardRechargeSucceeded,
+		EventTypeCardRechargeFailed,
+		EventTypeCardActivationCode,
+		EventTypeCardActivated,
+		EventTypeCardSuspended,
+		EventTypeCardClosed,
+		EventTypeCardStatusUpdateSucceeded,
+		EventTypeCardStatusUpdateFailed:
+		return true
+	}
+	return false
+}
+
+// IsCardStatusUpdateEvent returns true if this is a card status update event
+func (e *Event) IsCardStatusUpdateEvent() bool {
+	switch e.EventType {
+	case EventTypeCardStatusUpdateSucceeded,
+		EventTypeCardStatusUpdateFailed:
+		return true
+	}
+	return false
+}
+
+// IsCardCreateOrUpdateEvent returns true if this is a card create or update event
+func (e *Event) IsCardCreateOrUpdateEvent() bool {
+	switch e.EventType {
+	case EventTypeCardCreateSucceeded,
+		EventTypeCardCreateFailed,
+		EventTypeCardUpdateSucceeded,
+		EventTypeCardUpdateFailed:
+		return true
+	}
+	return false
+}
+
+// ParseCardData parses the event data as a CardData struct.
+// Returns an error if the event type is not a card create/update event or if parsing fails.
+func (e *Event) ParseCardData() (*CardData, error) {
+	if !e.IsCardCreateOrUpdateEvent() {
+		return nil, fmt.Errorf("event type %s is not a card create/update event", e.EventType)
+	}
+
+	var data CardData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse card data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseCardData is like ParseCardData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseCardData() *CardData {
+	data, err := e.ParseCardData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsCardRechargeEvent returns true if this is a card recharge event
+func (e *Event) IsCardRechargeEvent() bool {
+	switch e.EventType {
+	case EventTypeCardRechargeSucceeded,
+		EventTypeCardRechargeFailed:
+		return true
+	}
+	return false
+}
+
+// IsCardActivationCodeEvent returns true if this is a card activation code event
+func (e *Event) IsCardActivationCodeEvent() bool {
+	return e.EventType == EventTypeCardActivationCode
+}
+
+// ParseCardActivationCodeData parses the event data as a CardActivationCodeData struct.
+// Returns an error if the event type is not a card activation code event or if parsing fails.
+func (e *Event) ParseCardActivationCodeData() (*CardActivationCodeData, error) {
+	if !e.IsCardActivationCodeEvent() {
+		return nil, fmt.Errorf("event type %s is not a card activation code event", e.EventType)
+	}
+
+	var data CardActivationCodeData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse card activation code data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseCardActivationCodeData is like ParseCardActivationCodeData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseCardActivationCodeData() *CardActivationCodeData {
+	data, err := e.ParseCardActivationCodeData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// ParseCardRechargeData parses the event data as a CardRechargeData struct.
+// Returns an error if the event type is not a card recharge event or if parsing fails.
+func (e *Event) ParseCardRechargeData() (*CardRechargeData, error) {
+	if !e.IsCardRechargeEvent() {
+		return nil, fmt.Errorf("event type %s is not a card recharge event", e.EventType)
+	}
+
+	var data CardRechargeData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse card recharge data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseCardRechargeData is like ParseCardRechargeData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseCardRechargeData() *CardRechargeData {
+	data, err := e.ParseCardRechargeData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// ParseCardStatusUpdateData parses the event data as a CardStatusUpdateData struct.
+// Returns an error if the event type is not a card status update event or if parsing fails.
+func (e *Event) ParseCardStatusUpdateData() (*CardStatusUpdateData, error) {
+	if !e.IsCardStatusUpdateEvent() {
+		return nil, fmt.Errorf("event type %s is not a card status update event", e.EventType)
+	}
+
+	var data CardStatusUpdateData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse card status update data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseCardStatusUpdateData is like ParseCardStatusUpdateData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseCardStatusUpdateData() *CardStatusUpdateData {
+	data, err := e.ParseCardStatusUpdateData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsCardTransactionEvent returns true if this is a card transaction event
+func (e *Event) IsCardTransactionEvent() bool {
+	switch e.EventType {
+	case EventTypeIssuingFeeCard:
+		return true
+	}
+	return false
+}
+
+// ParseCardTransactionData parses the event data as a CardTransactionData struct.
+// Returns an error if the event type is not a card transaction event or if parsing fails.
+func (e *Event) ParseCardTransactionData() (*CardTransactionData, error) {
+	if !e.IsCardTransactionEvent() {
+		return nil, fmt.Errorf("event type %s is not a card transaction event", e.EventType)
+	}
+
+	var data CardTransactionData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse card transaction data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseCardTransactionData is like ParseCardTransactionData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseCardTransactionData() *CardTransactionData {
+	data, err := e.ParseCardTransactionData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsBeneficiaryEvent returns true if this is a beneficiary-related event
+func (e *Event) IsBeneficiaryEvent() bool {
+	return e.EventName == EventNameBeneficiary
+}
+
+// IsBeneficiarySuccessfulEvent returns true if this is a beneficiary successful event
+func (e *Event) IsBeneficiarySuccessfulEvent() bool {
+	return e.EventType == EventTypeBeneficiarySuccessful
+}
+
+// IsBeneficiaryFailedEvent returns true if this is a beneficiary failed event
+func (e *Event) IsBeneficiaryFailedEvent() bool {
+	return e.EventType == EventTypeBeneficiaryFailed
+}
+
+// ParseBeneficiaryData parses the event data as a BeneficiaryData struct.
+// Returns an error if the event type is not a beneficiary event or if parsing fails.
+func (e *Event) ParseBeneficiaryData() (*BeneficiaryData, error) {
+	if !e.IsBeneficiaryEvent() {
+		return nil, fmt.Errorf("event type %s is not a beneficiary event", e.EventType)
+	}
+
+	var data BeneficiaryData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse beneficiary data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseBeneficiaryData is like ParseBeneficiaryData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseBeneficiaryData() *BeneficiaryData {
+	data, err := e.ParseBeneficiaryData()
 	if err != nil {
 		panic(err)
 	}
