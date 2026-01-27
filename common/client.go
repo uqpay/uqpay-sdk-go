@@ -25,6 +25,9 @@ type RequestOptions struct {
 	// AuthToken overrides the default auth token for this request.
 	// If not provided, the token from TokenProvider will be used.
 	AuthToken string
+	// ClientID is the client identifier for requests that require it.
+	// When set, it will be sent as the x-client-id header.
+	ClientID string
 }
 
 // APIClient handles HTTP requests to UQPAY API
@@ -143,6 +146,11 @@ func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-auth-token", "Bearer "+token)
 	req.Header.Set("x-idempotency-key", idempotencyKey)
+
+	// Set x-client-id header if provided
+	if opts != nil && opts.ClientID != "" {
+		req.Header.Set("x-client-id", opts.ClientID)
+	}
 
 	// Execute request
 	resp, err := c.HTTPClient.Do(req)
