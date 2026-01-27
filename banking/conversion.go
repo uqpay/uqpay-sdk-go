@@ -29,17 +29,26 @@ type Conversion struct {
 
 // CreateConversionRequest represents a conversion creation request
 type CreateConversionRequest struct {
-	CurrencyFrom   string `json:"currency_from"`   // required
-	CurrencyTo     string `json:"currency_to"`     // required
-	AmountFrom     string `json:"amount_from"`     // required
-	SettlementDate string `json:"settlement_date"` // optional, format: YYYY-MM-DD
-	QuoteID        string `json:"quote_id"`        // optional, if provided, conversion will use quoted rate
+	QuoteID        string `json:"quote_id"`              // required, UUID from quote
+	SellCurrency   string `json:"sell_currency"`         // required, ISO 4217 currency code
+	SellAmount     string `json:"sell_amount,omitempty"` // provide either sell_amount or buy_amount
+	BuyCurrency    string `json:"buy_currency"`          // required, ISO 4217 currency code
+	BuyAmount      string `json:"buy_amount,omitempty"`  // provide either sell_amount or buy_amount
+	ConversionDate string `json:"conversion_date"`       // required, format: YYYY-MM-DD (only current date supported)
 }
 
 // CreateConversionResponse represents a conversion creation response
 type CreateConversionResponse struct {
 	ConversionID     string `json:"conversion_id"`
 	ShortReferenceID string `json:"short_reference_id"`
+	SellCurrency     string `json:"sell_currency"`
+	SellAmount       string `json:"sell_amount"`
+	BuyCurrency      string `json:"buy_currency"`
+	BuyAmount        string `json:"buy_amount"`
+	CreatedDate      string `json:"created_date"`
+	CurrencyPair     string `json:"currency_pair"`
+	Reference        string `json:"reference"`
+	Status           string `json:"status"`
 }
 
 // ListConversionsRequest represents a conversion list request
@@ -62,22 +71,36 @@ type ListConversionsResponse struct {
 
 // CreateQuoteRequest represents a quote creation request
 type CreateQuoteRequest struct {
-	CurrencyFrom   string `json:"currency_from"`   // required
-	CurrencyTo     string `json:"currency_to"`     // required
-	AmountFrom     string `json:"amount_from"`     // required
-	SettlementDate string `json:"settlement_date"` // optional, format: YYYY-MM-DD
+	SellCurrency    string `json:"sell_currency"`    // required, ISO 4217 currency code
+	SellAmount      string `json:"sell_amount"`      // amount to sell
+	BuyCurrency     string `json:"buy_currency"`     // required, ISO 4217 currency code
+	BuyAmount       string `json:"buy_amount"`       // amount to buy
+	ConversionDate  string `json:"conversion_date"`  // required, format: YYYY-MM-DD
+	TransactionType string `json:"transaction_type"` // required, e.g., "conversion"
+}
+
+// QuoteValidity represents the validity period of a quote
+type QuoteValidity struct {
+	ValidFrom int64 `json:"valid_from"` // Unix timestamp in milliseconds
+	ValidTo   int64 `json:"valid_to"`   // Unix timestamp in milliseconds
+}
+
+// QuotePrice represents the price details of a quote
+type QuotePrice struct {
+	CurrencyPair string        `json:"currency_pair"`
+	DirectRate   string        `json:"direct_rate"`
+	InverseRate  string        `json:"inverse_rate"`
+	QuoteID      string        `json:"quote_id"`
+	Validity     QuoteValidity `json:"validity"`
 }
 
 // CreateQuoteResponse represents a quote creation response
 type CreateQuoteResponse struct {
-	QuoteID        string `json:"quote_id"`
-	CurrencyFrom   string `json:"currency_from"`
-	CurrencyTo     string `json:"currency_to"`
-	AmountFrom     string `json:"amount_from"`
-	AmountTo       string `json:"amount_to"`
-	Rate           string `json:"rate"`
-	SettlementDate string `json:"settlement_date,omitempty"`
-	ExpiresAt      string `json:"expires_at"` // ISO8601 timestamp
+	SellCurrency string     `json:"sell_currency"`
+	SellAmount   string     `json:"sell_amount"`
+	BuyCurrency  string     `json:"buy_currency"`
+	BuyAmount    string     `json:"buy_amount"`
+	QuotePrice   QuotePrice `json:"quote_price"`
 }
 
 // ConversionDate represents available conversion dates for a currency pair

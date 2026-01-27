@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -66,12 +66,12 @@ func (p *TokenProvider) GetToken() (string, error) {
 	defer cancel()
 
 	url := p.baseURL + "/v1/connect/token"
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader([]byte("{}")))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("x-client-id", p.clientID)
 	req.Header.Set("x-api-key", p.apiKey)
 
@@ -82,7 +82,8 @@ func (p *TokenProvider) GetToken() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to get token: status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("failed to get token: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
 	var tokenResp TokenResponse
