@@ -174,7 +174,7 @@ type CardOrder struct {
 	CardID       string  `json:"card_id"`
 	CardOrderID  string  `json:"card_order_id"`
 	OrderType    string  `json:"order_type"`
-	Amount       float64 `json:"amount,string"`
+	Amount       float64 `json:"amount"`
 	CardCurrency string  `json:"card_currency"`
 	CreateTime   string  `json:"create_time"`
 	UpdateTime   string  `json:"update_time"`
