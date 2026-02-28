@@ -153,21 +153,46 @@ type GetAdditionalDocumentsResponse struct {
 	Documents []Document `json:"documents"`
 }
 
-// CreateSubAccount creates a new sub-account using the new API endpoint
-func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateAccountRequest) (*Account, error) {
-	// Validate discriminated union
-	if req.EntityType == EntityTypeIndividual && req.Individual == nil {
-		return nil, fmt.Errorf("individual details required for INDIVIDUAL entity type")
+// CreateSubAccount creates a new sub-account using the new API endpoint.
+// For INDIVIDUAL accounts, populate IndividualInfo, IdentityVerification, ExpectedActivity, and ProofDocuments.
+// For COMPANY accounts, populate CompanyInfo, CompanyAddress, OwnershipDetails, and BusinessDetails.
+func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAccountRequest) (*CreateSubAccountResponse, error) {
+	if req.EntityType == EntityTypeIndividual {
+		if req.IndividualInfo == nil {
+			return nil, fmt.Errorf("individual_info required for INDIVIDUAL entity type")
+		}
+		if req.IdentityVerification == nil {
+			return nil, fmt.Errorf("identity_verification required for INDIVIDUAL entity type")
+		}
+		if req.ExpectedActivity == nil {
+			return nil, fmt.Errorf("expected_activity required for INDIVIDUAL entity type")
+		}
+		if req.ProofDocuments == nil {
+			return nil, fmt.Errorf("proof_documents required for INDIVIDUAL entity type")
+		}
 	}
-	if req.EntityType == EntityTypeCompany && req.Company == nil {
-		return nil, fmt.Errorf("company details required for COMPANY entity type")
+	if req.EntityType == EntityTypeCompany {
+		if req.Inherit == nil || *req.Inherit != 1 {
+			if req.CompanyInfo == nil {
+				return nil, fmt.Errorf("company_info required for COMPANY entity type when inherit != 1")
+			}
+			if req.CompanyAddress == nil {
+				return nil, fmt.Errorf("company_address required for COMPANY entity type when inherit != 1")
+			}
+			if req.OwnershipDetails == nil {
+				return nil, fmt.Errorf("ownership_details required for COMPANY entity type when inherit != 1")
+			}
+		}
+	}
+	if req.TosAcceptance == nil {
+		return nil, fmt.Errorf("tos_acceptance is required")
 	}
 
-	var account Account
-	if err := c.client.Post(ctx, "/v1/accounts/create_accounts", req, &account); err != nil {
+	var resp CreateSubAccountResponse
+	if err := c.client.Post(ctx, "/v1/accounts/create_accounts", req, &resp); err != nil {
 		return nil, fmt.Errorf("failed to create sub-account: %w", err)
 	}
-	return &account, nil
+	return &resp, nil
 }
 
 // GetAdditionalDocuments retrieves additional required documents for an account
