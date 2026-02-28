@@ -13,6 +13,16 @@ type PaymentBalancesClient struct {
 }
 
 // ============================================================================
+// Request Structures
+// ============================================================================
+
+// ListBalancesRequest represents a balances list request
+type ListBalancesRequest struct {
+	PageSize   int `json:"page_size"`   // Number of items per page
+	PageNumber int `json:"page_number"` // Page number (1-based)
+}
+
+// ============================================================================
 // Response Structures
 // ============================================================================
 
@@ -28,9 +38,11 @@ type Balance struct {
 	FrozenBalance    string `json:"frozen_balance,omitempty"`
 }
 
-// ListBalancesResponse represents a list of currency balances
+// ListBalancesResponse represents a paginated list of currency balances
 type ListBalancesResponse struct {
-	Data []Balance `json:"data"`
+	TotalPages int       `json:"total_pages"`
+	TotalItems int       `json:"total_items"`
+	Data       []Balance `json:"data"`
 }
 
 // ============================================================================
@@ -47,10 +59,22 @@ func (c *PaymentBalancesClient) Get(ctx context.Context, currency string) (*Bala
 	return &resp, nil
 }
 
-// List returns all currency account balances
-func (c *PaymentBalancesClient) List(ctx context.Context) (*ListBalancesResponse, error) {
+// List returns a paginated list of currency account balances
+func (c *PaymentBalancesClient) List(ctx context.Context, req *ListBalancesRequest) (*ListBalancesResponse, error) {
 	var resp ListBalancesResponse
-	if err := c.client.Get(ctx, "/v2/payment/balances", &resp); err != nil {
+
+	path := "/v2/payment/balances"
+	separator := "?"
+
+	if req.PageSize > 0 {
+		path += fmt.Sprintf("%spage_size=%d", separator, req.PageSize)
+		separator = "&"
+	}
+	if req.PageNumber > 0 {
+		path += fmt.Sprintf("%spage_number=%d", separator, req.PageNumber)
+	}
+
+	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list balances: %w", err)
 	}
 	return &resp, nil

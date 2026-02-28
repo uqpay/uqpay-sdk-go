@@ -27,12 +27,12 @@ type CreateRefundRequest struct {
 
 // ListRefundsRequest represents a refunds list request
 type ListRefundsRequest struct {
-	PageSize        int    `json:"page_size"`         // Number of items per page (default: 10)
+	PageSize        int    `json:"page_size"`         // Number of items per page
 	PageNumber      int    `json:"page_number"`       // Page number (1-based)
-	PaymentIntentID string `json:"payment_intent_id"` // Filter by payment intent ID
-	Status          string `json:"status"`            // Filter by status
 	StartTime       string `json:"start_time"`        // Filter by creation time (ISO8601)
 	EndTime         string `json:"end_time"`          // Filter by creation time (ISO8601)
+	PaymentIntentID string `json:"payment_intent_id"` // Filter by payment intent ID
+	MerchantOrderID string `json:"merchant_order_id"` // Filter by merchant order ID
 }
 
 // ============================================================================
@@ -100,20 +100,20 @@ func (c *PaymentRefundsClient) List(ctx context.Context, req *ListRefundsRequest
 		path += fmt.Sprintf("%spage_number=%d", separator, req.PageNumber)
 		separator = "&"
 	}
-	if req.PaymentIntentID != "" {
-		path += fmt.Sprintf("%spayment_intent_id=%s", separator, req.PaymentIntentID)
-		separator = "&"
-	}
-	if req.Status != "" {
-		path += fmt.Sprintf("%sstatus=%s", separator, req.Status)
-		separator = "&"
-	}
 	if req.StartTime != "" {
 		path += fmt.Sprintf("%sstart_time=%s", separator, req.StartTime)
 		separator = "&"
 	}
 	if req.EndTime != "" {
 		path += fmt.Sprintf("%send_time=%s", separator, req.EndTime)
+		separator = "&"
+	}
+	if req.PaymentIntentID != "" {
+		path += fmt.Sprintf("%spayment_intent_id=%s", separator, req.PaymentIntentID)
+		separator = "&"
+	}
+	if req.MerchantOrderID != "" {
+		path += fmt.Sprintf("%smerchant_order_id=%s", separator, req.MerchantOrderID)
 	}
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
