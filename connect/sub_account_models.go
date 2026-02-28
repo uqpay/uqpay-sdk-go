@@ -342,7 +342,7 @@ type SubAccountRepresentative struct {
 	JobTitle string `json:"job_title"`
 
 	// OwnershipPercentage is the ownership percentage
-	OwnershipPercentage string `json:"ownership_percentage,omitempty"`
+	OwnershipPercentage float64 `json:"ownership_percentage,omitempty"`
 
 	// Nationality is the ISO 3166-1 alpha-2 country code
 	Nationality string `json:"nationality"`
