@@ -12,6 +12,7 @@ Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
 - 💳 **Card Issuing** - Create and manage virtual/physical cards
 - 👤 **Cardholder Management** - Full cardholder lifecycle management
 - 💰 **Card Operations** - Recharge, withdraw, freeze, and manage card status
+- 🏦 **Banking** - Balances, transfers, deposits, payouts, beneficiaries, virtual accounts, conversions, and exchange rates
 - 📊 **Transaction Tracking** - Real-time transaction monitoring
 - 🔒 **Secure** - Built-in OAuth2 authentication with automatic token management
 - ⚡ **Idempotency** - Automatic idempotency key generation for safe retries
@@ -213,6 +214,21 @@ cp .env.example .env
 
 ## API Coverage
 
+### Banking API
+
+> 详细使用文档: [docs/banking-usage.md](docs/banking-usage.md)
+
+| Resource | Operations |
+|----------|------------|
+| **Balances** | Get, List, ListTransactions |
+| **Transfers** | Create, List, Get |
+| **Deposits** | List, Get |
+| **Beneficiaries** | Create, List, Get, Update, Delete, ListPaymentMethods, Check |
+| **Payouts** | Create, List, Get |
+| **Virtual Accounts** | Create, List |
+| **Conversions** | CreateQuote, Create, List, Get, ListConversionDates |
+| **Exchange Rates** | List |
+
 ### Issuing API
 
 | Resource | Operations |
@@ -310,15 +326,25 @@ The SDK includes comprehensive integration tests covering:
 ```
 uqpay-sdk-go/
 ├── auth/              # OAuth2 authentication
+├── banking/           # Banking API client
+│   ├── balances.go
+│   ├── beneficiaries.go
+│   ├── conversion.go
+│   ├── deposits.go
+│   ├── exchange_rates.go
+│   ├── payouts.go
+│   ├── transfers.go
+│   └── virtual_accounts.go
 ├── common/            # Shared API client
 ├── configuration/     # Environment configuration
-├── issuing/          # Issuing API client
+├── issuing/           # Issuing API client
 │   ├── cardholders.go
 │   ├── cards.go
 │   ├── transactions.go
 │   └── products.go
-├── test/             # Integration tests
-└── version.go        # SDK version
+├── docs/              # Documentation
+├── test/              # Integration tests
+└── version.go         # SDK version
 ```
 
 ### Build
