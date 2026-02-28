@@ -15,26 +15,32 @@ type ExchangeRatesClient struct {
 
 // RateItem represents an exchange rate for a currency pair
 type RateItem struct {
-	CurrencyPair string `json:"currency_pair"` // e.g., "USD/EUR"
-	BuyPrice     string `json:"buy_price"`     // Price for buying the base currency
-	SellPrice    string `json:"sell_price"`    // Price for selling the base currency
-	UpdateTime   string `json:"update_time"`   // Timestamp of the rate
+	CurrencyPair string `json:"currency_pair"` // e.g., "USDEUR"
+	BuyPrice     string `json:"buy_price"`
+	SellPrice    string `json:"sell_price"`
 }
 
 // ListRatesRequest represents a request to list exchange rates
 type ListRatesRequest struct {
-	CurrencyPairs []string `json:"currency_pairs,omitempty"` // optional: filter by specific currency pairs (e.g., ["USD/EUR", "GBP/USD"])
+	CurrencyPairs []string `json:"currency_pairs,omitempty"` // optional: filter by specific currency pairs (e.g., ["USDEUR", "GBPUSD"])
 }
 
 // ListRatesResponse represents a response containing exchange rates
 type ListRatesResponse struct {
-	Rates []RateItem `json:"rates"`
+	Rates                    []RateItem `json:"rates"`
+	UnavailableCurrencyPairs []string   `json:"unavailable_currency_pairs"`
+	LastUpdated              string     `json:"last_updated"`
+}
+
+// listRatesDataWrapper wraps the API response
+type listRatesDataWrapper struct {
+	Data ListRatesResponse `json:"data"`
 }
 
 // List retrieves current exchange rates
 // Optionally filter by specific currency pairs
 func (c *ExchangeRatesClient) List(ctx context.Context, req *ListRatesRequest) (*ListRatesResponse, error) {
-	var resp ListRatesResponse
+	var wrapper listRatesDataWrapper
 	path := "/v1/exchange/rates"
 
 	// Add currency_pairs query parameter if specified
@@ -43,8 +49,8 @@ func (c *ExchangeRatesClient) List(ctx context.Context, req *ListRatesRequest) (
 		path += fmt.Sprintf("?currency_pairs=%s", pairs)
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.Get(ctx, path, &wrapper); err != nil {
 		return nil, fmt.Errorf("failed to list exchange rates: %w", err)
 	}
-	return &resp, nil
+	return &wrapper.Data, nil
 }

@@ -16,128 +16,81 @@ func TestBalances(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Get", func(t *testing.T) {
-		// Test getting balance for a specific currency
-		currency := "USD"
-
-		resp, err := client.Banking.Balances.Get(ctx, currency)
+		resp, err := client.Banking.Balances.Get(ctx, "USD")
 		if err != nil {
-			t.Logf("❌ Get balance for %s returned error: %v", currency, err)
+			t.Logf("Get balance returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Balance retrieved for %s", currency)
-		t.Logf("💰 Balance ID: %s", resp.BalanceID)
-		t.Logf("   Currency: %s", resp.Currency)
-		t.Logf("   Available: %s", resp.AvailableBalance)
-		t.Logf("   Prepaid: %s", resp.PrepaidBalance)
-		t.Logf("   Margin: %s", resp.MarginBalance)
-		t.Logf("   Frozen: %s", resp.FrozenBalance)
-		t.Logf("   Status: %s", resp.BalanceStatus)
-		t.Logf("   Created: %s", resp.CreateTime)
-		t.Logf("   Updated: %s", resp.UpdateTime)
+		t.Logf("Balance: ID=%s, Currency=%s, Available=%s, Status=%s",
+			resp.BalanceID, resp.Currency, resp.AvailableBalance, resp.BalanceStatus)
+		t.Logf("  Prepaid=%s, Margin=%s, Frozen=%s", resp.PrepaidBalance, resp.MarginBalance, resp.FrozenBalance)
+		t.Logf("  Created=%s, LastTrade=%s", resp.CreateTime, resp.LastTradeTime)
 	})
 
 	t.Run("List", func(t *testing.T) {
-		req := &banking.ListBalancesRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		resp, err := client.Banking.Balances.List(ctx, req)
+		resp, err := client.Banking.Balances.List(ctx, &banking.ListBalancesRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ List balances returned error: %v", err)
+			t.Logf("List balances returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d balances (total: %d)", len(resp.Data), resp.TotalItems)
-		t.Logf("📊 Total pages: %d", resp.TotalPages)
-
-		if len(resp.Data) > 0 {
-			for i, balance := range resp.Data {
-				t.Logf("💰 Balance %d: %s - Available: %s, Status: %s",
-					i+1, balance.Currency, balance.AvailableBalance, balance.BalanceStatus)
+		t.Logf("Found %d balances (total: %d, pages: %d)", len(resp.Data), resp.TotalItems, resp.TotalPages)
+		for i, b := range resp.Data {
+			if i >= 3 {
+				break
 			}
-		} else {
-			t.Logf("ℹ️  No balances found")
+			t.Logf("  %d: %s - Available=%s, Status=%s", i+1, b.Currency, b.AvailableBalance, b.BalanceStatus)
 		}
 	})
 
 	t.Run("ListTransactions", func(t *testing.T) {
-		req := &banking.ListBalanceTransactionsRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		resp, err := client.Banking.Balances.ListTransactions(ctx, req)
+		resp, err := client.Banking.Balances.ListTransactions(ctx, &banking.ListBalanceTransactionsRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ List balance transactions returned error: %v", err)
+			t.Logf("List transactions returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d balance transactions (total: %d)", len(resp.Data), resp.TotalItems)
-		t.Logf("📊 Total pages: %d", resp.TotalPages)
-
+		t.Logf("Found %d transactions (total: %d)", len(resp.Data), resp.TotalItems)
 		if len(resp.Data) > 0 {
 			txn := resp.Data[0]
-			t.Logf("🔍 First transaction:")
-			t.Logf("   ID: %s", txn.TransactionID)
-			t.Logf("   Type: %s", txn.TransactionType)
-			t.Logf("   Amount: %s %s", txn.Amount, txn.Currency)
-			t.Logf("   Status: %s", txn.TransactionStatus)
-			t.Logf("   Balance Before: %s", txn.BalanceBefore)
-			t.Logf("   Balance After: %s", txn.BalanceAfter)
-			t.Logf("   Description: %s", txn.Description)
-			t.Logf("   Reference ID: %s", txn.ReferenceID)
-			t.Logf("   Created: %s", txn.CreateTime)
-		} else {
-			t.Logf("ℹ️  No balance transactions found")
+			t.Logf("  First: ID=%s, Type=%s, Amount=%s %s, Status=%s, CreditDebit=%s",
+				txn.TransactionID, txn.TransactionType, txn.Amount, txn.Currency,
+				txn.TransactionStatus, txn.CreditDebitType)
+			t.Logf("    Ref=%s, Way=%s, Complete=%s", txn.ReferenceID, txn.TransactionWay, txn.CompleteTime)
 		}
 	})
 
 	t.Run("ListTransactionsWithFilters", func(t *testing.T) {
-		req := &banking.ListBalanceTransactionsRequest{
-			PageSize:          10,
-			PageNumber:        1,
-			Currency:          "USD",
-			TransactionType:   "DEPOSIT",
-			TransactionStatus: "COMPLETED",
-		}
-
-		resp, err := client.Banking.Balances.ListTransactions(ctx, req)
+		resp, err := client.Banking.Balances.ListTransactions(ctx, &banking.ListBalanceTransactionsRequest{
+			PageSize:        10,
+			PageNumber:      1,
+			Currency:        "USD",
+			TransactionType: "CONVERSION",
+		})
 		if err != nil {
-			t.Logf("❌ List balance transactions with filters returned error: %v", err)
+			t.Logf("List transactions with filters returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d completed USD deposit transactions (total: %d)",
-			len(resp.Data), resp.TotalItems)
-
-		if len(resp.Data) > 0 {
-			for i, txn := range resp.Data {
-				t.Logf("💰 Transaction %d: %s %s, Type: %s, Balance: %s -> %s",
-					i+1, txn.Amount, txn.Currency, txn.TransactionType,
-					txn.BalanceBefore, txn.BalanceAfter)
-			}
-		}
+		t.Logf("Found %d USD CONVERSION transactions (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("ListTransactionsByType", func(t *testing.T) {
-		transactionTypes := []string{"PAYIN", "DEPOSIT", "PAYOUT", "TRANSFER", "CONVERSION", "FEE"}
-
-		for _, txnType := range transactionTypes {
-			req := &banking.ListBalanceTransactionsRequest{
-				PageSize:        10,
-				PageNumber:      1,
-				TransactionType: txnType,
-			}
-
-			resp, err := client.Banking.Balances.ListTransactions(ctx, req)
+		types := []string{"DEPOSIT", "PAYOUT", "TRANSFER", "CONVERSION", "FEE"}
+		for _, txnType := range types {
+			resp, err := client.Banking.Balances.ListTransactions(ctx, &banking.ListBalanceTransactionsRequest{
+				PageSize: 10, PageNumber: 1, TransactionType: txnType,
+			})
 			if err != nil {
-				t.Logf("❌ List %s transactions returned error: %v", txnType, err)
+				t.Logf("  %s: error - %v", txnType, err)
 				continue
 			}
-
-			t.Logf("📊 %s transactions: %d found", txnType, resp.TotalItems)
+			t.Logf("  %s: %d found", txnType, resp.TotalItems)
 		}
 	})
 }

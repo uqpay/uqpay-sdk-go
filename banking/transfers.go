@@ -14,16 +14,18 @@ type TransfersClient struct {
 
 // Transfer represents a transfer between accounts
 type Transfer struct {
-	TransferID       string `json:"transfer_id"`
-	ShortReferenceID string `json:"short_reference_id"`
-	SourceAccountID  string `json:"source_account_id"`
-	TargetAccountID  string `json:"target_account_id"`
-	Currency         string `json:"currency"`
-	Amount           string `json:"amount"`
-	Reason           string `json:"reason"`
-	TransferStatus   string `json:"transfer_status"`
-	CreateTime       string `json:"create_time"`
-	CompletedTime    string `json:"completed_time"`
+	TransferID             string `json:"transfer_id"`
+	ReferenceID            string `json:"reference_id"`
+	ShortReferenceID       string `json:"short_reference_id"`
+	SourceAccountName      string `json:"source_account_name"`
+	DestinationAccountName string `json:"destination_account_name"`
+	TransferCurrency       string `json:"transfer_currency"`
+	TransferAmount         string `json:"transfer_amount"`
+	TransferReason         string `json:"transfer_reason"`
+	TransferStatus         string `json:"transfer_status"`
+	CreatedBy              string `json:"created_by"`
+	CreateTime             string `json:"create_time"`
+	CompleteTime           string `json:"complete_time"`
 }
 
 // ListTransfersRequest represents a transfer list request

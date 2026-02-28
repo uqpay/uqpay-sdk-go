@@ -16,116 +16,63 @@ func TestTransfers(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("List", func(t *testing.T) {
-		req := &banking.ListTransfersRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		resp, err := client.Banking.Transfers.List(ctx, req)
+		resp, err := client.Banking.Transfers.List(ctx, &banking.ListTransfersRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ List transfers returned error: %v", err)
+			t.Logf("List transfers returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d transfers (total: %d)", len(resp.Data), resp.TotalItems)
-		t.Logf("📊 Total pages: %d", resp.TotalPages)
-
+		t.Logf("Found %d transfers (total: %d, pages: %d)", len(resp.Data), resp.TotalItems, resp.TotalPages)
 		if len(resp.Data) > 0 {
-			transfer := resp.Data[0]
-			t.Logf("🔍 First transfer: ID=%s, Amount=%s %s, Status=%s",
-				transfer.TransferID, transfer.Amount, transfer.Currency, transfer.TransferStatus)
-			t.Logf("   Source: %s -> Target: %s",
-				transfer.SourceAccountID, transfer.TargetAccountID)
-			t.Logf("   Reference: %s, Created: %s",
-				transfer.ShortReferenceID, transfer.CreateTime)
-		} else {
-			t.Logf("ℹ️  No transfers found")
+			tr := resp.Data[0]
+			t.Logf("  First: ID=%s, Amount=%s %s, Status=%s",
+				tr.TransferID, tr.TransferAmount, tr.TransferCurrency, tr.TransferStatus)
+			t.Logf("    From=%s, To=%s, Reason=%s",
+				tr.SourceAccountName, tr.DestinationAccountName, tr.TransferReason)
 		}
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
-		req := &banking.ListTransfersRequest{
-			PageSize:       10,
-			PageNumber:     1,
-			TransferStatus: "completed",
-			Currency:       "USD",
-		}
-
-		resp, err := client.Banking.Transfers.List(ctx, req)
+		resp, err := client.Banking.Transfers.List(ctx, &banking.ListTransfersRequest{
+			PageSize: 10, PageNumber: 1, TransferStatus: "completed", Currency: "USD",
+		})
 		if err != nil {
-			t.Logf("❌ List transfers with filters returned error: %v", err)
+			t.Logf("List with filters returned error: %v", err)
 			return
 		}
-
-		t.Logf("✅ Found %d completed USD transfers (total: %d)", len(resp.Data), resp.TotalItems)
-
-		if len(resp.Data) > 0 {
-			transfer := resp.Data[0]
-			t.Logf("🔍 Sample transfer: ID=%s, Amount=%s %s",
-				transfer.TransferID, transfer.Amount, transfer.Currency)
-		}
+		t.Logf("Found %d completed USD transfers (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		// Skip create test if no source/target accounts available
-		t.Skip("⏭️  Skipping create test - requires valid source and target account IDs")
-
-		// Uncomment and update with valid account IDs to test
-		/*
-		req := &banking.CreateTransferRequest{
-			SourceAccountID: "source-account-uuid",
-			TargetAccountID: "target-account-uuid",
-			Currency:        "USD",
-			Amount:          "10.00",
-			Reason:          "Test transfer",
-		}
-
-		resp, err := client.Banking.Transfers.Create(ctx, req)
-		if err != nil {
-			t.Fatalf("❌ Failed to create transfer: %v", err)
-		}
-
-		t.Logf("✅ Transfer created successfully")
-		t.Logf("💰 Transfer ID: %s", resp.TransferID)
-		t.Logf("   Reference: %s", resp.ShortReferenceID)
-		*/
+		t.Skip("Skipping create test - requires valid source and target account IDs")
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		// First, list transfers to get a valid ID
-		listReq := &banking.ListTransfersRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		listResp, err := client.Banking.Transfers.List(ctx, listReq)
+		listResp, err := client.Banking.Transfers.List(ctx, &banking.ListTransfersRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ Failed to list transfers: %v", err)
+			t.Logf("Failed to list transfers: %v", err)
 			return
 		}
-
 		if len(listResp.Data) == 0 {
-			t.Skip("⏭️  No transfers available to test Get operation")
+			t.Skip("No transfers available to test Get")
 		}
 
-		transferID := listResp.Data[0].TransferID
-		t.Logf("🔍 Getting transfer details for ID: %s", transferID)
-
-		resp, err := client.Banking.Transfers.Get(ctx, transferID)
+		id := listResp.Data[0].TransferID
+		resp, err := client.Banking.Transfers.Get(ctx, id)
 		if err != nil {
-			t.Fatalf("❌ Failed to get transfer: %v", err)
+			t.Fatalf("Failed to get transfer: %v", err)
 		}
 
-		t.Logf("✅ Transfer retrieved successfully")
-		t.Logf("💰 Transfer ID: %s", resp.TransferID)
-		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
-		t.Logf("   Status: %s", resp.TransferStatus)
-		t.Logf("   Source: %s", resp.SourceAccountID)
-		t.Logf("   Target: %s", resp.TargetAccountID)
-		t.Logf("   Reason: %s", resp.Reason)
-		t.Logf("   Created: %s", resp.CreateTime)
-		if resp.CompletedTime != "" {
-			t.Logf("   Completed: %s", resp.CompletedTime)
+		t.Logf("Get OK: ID=%s, Amount=%s %s, Status=%s",
+			resp.TransferID, resp.TransferAmount, resp.TransferCurrency, resp.TransferStatus)
+		t.Logf("  From=%s, To=%s, Ref=%s",
+			resp.SourceAccountName, resp.DestinationAccountName, resp.ShortReferenceID)
+		if resp.CompleteTime != "" {
+			t.Logf("  Completed: %s", resp.CompleteTime)
 		}
 	})
 }

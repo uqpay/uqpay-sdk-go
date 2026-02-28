@@ -14,17 +14,26 @@ type DepositsClient struct {
 
 // Deposit represents a deposit transaction
 type Deposit struct {
-	DepositID        string `json:"deposit_id"`
-	ShortReferenceID string `json:"short_reference_id"`
-	Currency         string `json:"currency"`
-	Amount           string `json:"amount"`
-	DepositStatus    string `json:"deposit_status"`
-	PaymentMethod    string `json:"payment_method"`
-	PayerName        string `json:"payer_name"`
-	PayerEmail       string `json:"payer_email"`
-	Description      string `json:"description"`
-	CreateTime       string `json:"create_time"`
-	CompletedTime    string `json:"completed_time"`
+	DepositID              string         `json:"deposit_id"`
+	ShortReferenceID       string         `json:"short_reference_id"`
+	Currency               string         `json:"currency"`
+	Amount                 string         `json:"amount"`
+	DepositFee             string         `json:"deposit_fee"`
+	DepositStatus          string         `json:"deposit_status"`
+	ReceiverAccountNumber  string         `json:"receiver_account_number"`
+	DepositReference       string         `json:"deposit_reference"`
+	Sender                 *DepositSender `json:"sender,omitempty"`
+	CreateTime             string         `json:"create_time"`
+	CompleteTime           string         `json:"complete_time"`
+}
+
+// DepositSender represents the sender information for a deposit
+type DepositSender struct {
+	SenderName          string `json:"sender_name"`
+	SenderCountry       string `json:"sender_country"`
+	SenderAccountNumber string `json:"sender_account_number"`
+	SenderSwiftCode     string `json:"sender_swift_code"`
+	SenderAddress       string `json:"sender_address"`
 }
 
 // ListDepositsRequest represents a deposit list request
