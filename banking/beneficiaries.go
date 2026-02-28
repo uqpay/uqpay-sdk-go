@@ -14,23 +14,32 @@ type BeneficiariesClient struct {
 
 // Address represents a beneficiary address
 type Address struct {
-	FirstLine  string `json:"first_line"`            // required
-	City       string `json:"city"`                  // required
-	PostCode   string `json:"post_code,omitempty"`   // optional
-	Country    string `json:"country"`               // required, ISO 3166-1 alpha-2
-	SecondLine string `json:"second_line,omitempty"` // optional
-	State      string `json:"state,omitempty"`       // optional, ISO 3166-2
+	StreetAddress string `json:"street_address"`          // required
+	City          string `json:"city"`                    // required
+	State         string `json:"state,omitempty"`         // optional, ISO 3166-2
+	PostalCode    string `json:"postal_code,omitempty"`   // optional
+	Country       string `json:"country"`                 // required, ISO 3166-1 alpha-2
+	CountryCode   string `json:"country_code,omitempty"`  // optional, ISO 3166-1 alpha-2
+	Nationality   string `json:"nationality,omitempty"`   // optional
 }
 
 // BankDetails represents beneficiary bank account details
 type BankDetails struct {
-	AccountNumber string `json:"account_number"`           // required
-	SortCode      string `json:"sort_code,omitempty"`      // optional, UK specific
-	IBAN          string `json:"iban,omitempty"`           // optional, SEPA specific
-	BIC           string `json:"bic,omitempty"`            // optional, SEPA specific
-	RoutingNumber string `json:"routing_number,omitempty"` // optional, US specific
-	BankName      string `json:"bank_name,omitempty"`      // optional
-	BankAddress   string `json:"bank_address,omitempty"`   // optional
+	AccountNumber       string `json:"account_number"`                  // required
+	AccountHolder       string `json:"account_holder"`                  // required
+	AccountCurrencyCode string `json:"account_currency_code"`           // required, ISO 4217
+	BankName            string `json:"bank_name"`                       // required
+	BankAddress         string `json:"bank_address"`                    // required
+	BankCountryCode     string `json:"bank_country_code"`               // required, ISO 3166-1 alpha-2
+	SwiftCode           string `json:"swift_code"`                      // required
+	ClearingSystem      string `json:"clearing_system"`                 // required, e.g. ACH, FEDWIRE, FASTER_PAYMENTS, SEPA
+	RoutingCodeType1    string `json:"routing_code_type1,omitempty"`    // e.g. ach, sort_code, iban
+	RoutingCodeValue1   string `json:"routing_code_value1,omitempty"`   // routing code value
+	RoutingCodeType2    string `json:"routing_code_type2,omitempty"`    // optional second routing code
+	RoutingCodeValue2   string `json:"routing_code_value2,omitempty"`   // optional second routing value
+	IBAN                string `json:"iban,omitempty"`                  // optional, SEPA specific
+	SortCode            string `json:"sort_code,omitempty"`             // optional, UK specific
+	BIC                 string `json:"bic,omitempty"`                   // optional, SEPA specific
 }
 
 // Beneficiary represents a beneficiary
@@ -71,8 +80,9 @@ type BeneficiaryCreationRequest struct {
 
 // BeneficiaryCreationResponse represents a beneficiary creation response
 type BeneficiaryCreationResponse struct {
-	BeneficiaryID string `json:"beneficiary_id"`
-	Status        string `json:"status"`
+	BeneficiaryID    string `json:"beneficiary_id"`
+	ShortReferenceID string `json:"short_reference_id,omitempty"`
+	Status           string `json:"status,omitempty"`
 }
 
 // ListBeneficiariesRequest represents a beneficiary list request
@@ -102,14 +112,16 @@ type BeneficiaryCheckRequest struct {
 
 // PaymentMethod represents an available payment method
 type PaymentMethod struct {
-	PaymentMethodID   string   `json:"payment_method_id"`
-	PaymentMethodName string   `json:"payment_method_name"`
-	Currency          string   `json:"currency"`
-	Country           string   `json:"country"`
-	RequiredFields    []string `json:"required_fields"`
-	OptionalFields    []string `json:"optional_fields"`
-	MinAmount         string   `json:"min_amount,omitempty"`
-	MaxAmount         string   `json:"max_amount,omitempty"`
+	ClearingSystems string   `json:"clearing_systems"`
+	Currency        string   `json:"currency"`
+	Country         string   `json:"country"`
+	PaymentMethod   string   `json:"payment_method"`
+	ValidationField []string `json:"validation_field"`
+}
+
+// ListPaymentMethodsResponse wraps the payment methods list response
+type ListPaymentMethodsResponse struct {
+	Data []PaymentMethod `json:"data"`
 }
 
 // Create creates a new beneficiary
@@ -176,12 +188,12 @@ func (c *BeneficiariesClient) Delete(ctx context.Context, beneficiaryID string) 
 
 // ListPaymentMethods retrieves available payment methods for a currency and country
 func (c *BeneficiariesClient) ListPaymentMethods(ctx context.Context, currency, country string) ([]PaymentMethod, error) {
-	var methods []PaymentMethod
+	var resp ListPaymentMethodsResponse
 	path := fmt.Sprintf("/v1/beneficiaries/paymentmethods?currency=%s&country=%s", currency, country)
-	if err := c.client.Get(ctx, path, &methods); err != nil {
+	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list payment methods: %w", err)
 	}
-	return methods, nil
+	return resp.Data, nil
 }
 
 // Check validates beneficiary details before creation

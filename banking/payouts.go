@@ -14,17 +14,26 @@ type PayoutsClient struct {
 
 // Payout represents a payout transaction
 type Payout struct {
-	PayoutID         string            `json:"payout_id"`
-	ShortReferenceID string            `json:"short_reference_id"`
-	Currency         string            `json:"currency"`
-	Amount           string            `json:"amount"`
-	Fee              string            `json:"fee"`
-	PayoutPurpose    string            `json:"payout_purpose"`
-	PayoutStatus     string            `json:"payout_status"` // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
-	Beneficiary      PayoutBeneficiary `json:"beneficiary"`
-	CreateTime       string            `json:"create_time"`
-	CompletedTime    string            `json:"completed_time,omitempty"`
-	FailureReason    string            `json:"failure_reason,omitempty"`
+	PayoutID              string  `json:"payout_id"`
+	ShortReferenceID      string  `json:"short_reference_id"`
+	UniqueRequestID       string  `json:"unique_request_id,omitempty"`
+	PayoutCurrency        string  `json:"payout_currency"`
+	PayoutAmount          string  `json:"payout_amount"`
+	FeeAmount             string  `json:"fee_amount"`
+	FeePaidBy             string  `json:"fee_paid_by"`
+	FeeCurrency           string  `json:"fee_currency"`
+	PayoutDate            string  `json:"payout_date"`
+	PayoutMethod          string  `json:"payout_method"`
+	PayoutReason          string  `json:"payout_reason"`
+	PayoutReference       string  `json:"payout_reference"`
+	PayoutStatus          string  `json:"payout_status"` // PENDING, READY_TO_SEND, COMPLETED, FAILED, CANCELLED
+	FailureReturnedAmount string  `json:"failure_returned_amount,omitempty"`
+	FailureReason         string  `json:"failure_reason,omitempty"`
+	QuoteID               string  `json:"quote_id,omitempty"`
+	PurposeCode           string  `json:"purpose_code,omitempty"`
+	CreateTime            string  `json:"create_time"`
+	UpdateTime            string  `json:"update_time,omitempty"`
+	CompleteTime          *string `json:"complete_time"` // nullable
 }
 
 // PayoutBeneficiary represents a payout beneficiary

@@ -16,15 +16,16 @@ type ConversionClient struct {
 type Conversion struct {
 	ConversionID     string `json:"conversion_id"`
 	ShortReferenceID string `json:"short_reference_id"`
-	CurrencyFrom     string `json:"currency_from"`
-	CurrencyTo       string `json:"currency_to"`
-	AmountFrom       string `json:"amount_from"`
-	AmountTo         string `json:"amount_to"`
-	Rate             string `json:"rate"`
-	ConversionStatus string `json:"conversion_status"` // COMPLETED, PENDING, FAILED
+	AccountName      string `json:"account_name,omitempty"`
+	Creator          string `json:"creator,omitempty"`
+	SellCurrency     string `json:"sell_currency"`
+	BuyCurrency      string `json:"buy_currency"`
+	SellAmount       string `json:"sell_amount"`
+	BuyAmount        string `json:"buy_amount"`
+	ClientRate       string `json:"client_rate"`
+	ConversionStatus string `json:"conversion_status"` // FUNDS_ARRIVED, TRADE_SETTLED, PENDING, etc.
 	CreateTime       string `json:"create_time"`
-	CompletedTime    string `json:"completed_time,omitempty"`
-	SettlementDate   string `json:"settlement_date,omitempty"`
+	SettleTime       string `json:"settle_time,omitempty"`
 }
 
 // CreateConversionRequest represents a conversion creation request
@@ -55,11 +56,11 @@ type CreateConversionResponse struct {
 type ListConversionsRequest struct {
 	PageSize         int    `json:"page_size"`         // required, 10-100
 	PageNumber       int    `json:"page_number"`       // required, >=1
-	StartTime        string `json:"start_time"`        // optional, ISO8601
-	EndTime          string `json:"end_time"`          // optional, ISO8601
-	ConversionStatus string `json:"conversion_status"` // optional: COMPLETED, PENDING, FAILED
-	CurrencyFrom     string `json:"currency_from"`     // optional
-	CurrencyTo       string `json:"currency_to"`       // optional
+	StartTime        int64  `json:"start_time"`        // optional, Unix timestamp in milliseconds
+	EndTime          int64  `json:"end_time"`          // optional, Unix timestamp in milliseconds
+	ConversionStatus string `json:"conversion_status"` // optional: FUNDS_ARRIVED, TRADE_SETTLED, etc.
+	SellCurrency     string `json:"sell_currency"`     // optional
+	BuyCurrency      string `json:"buy_currency"`      // optional
 }
 
 // ListConversionsResponse represents a conversion list response
@@ -105,10 +106,8 @@ type CreateQuoteResponse struct {
 
 // ConversionDate represents available conversion dates for a currency pair
 type ConversionDate struct {
-	Date          string `json:"date"`           // format: YYYY-MM-DD
-	FirstCutoff   string `json:"first_cutoff"`   // ISO8601 timestamp
-	SecondCutoff  string `json:"second_cutoff"`  // ISO8601 timestamp
-	OptimizedDate bool   `json:"optimized_date"` // whether this is the optimal conversion date
+	Date  string `json:"date"`  // format: YYYY-MM-DD
+	Valid bool   `json:"valid"` // whether this date is available for conversion
 }
 
 // List lists conversions
@@ -116,20 +115,20 @@ func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest
 	var resp ListConversionsResponse
 	path := fmt.Sprintf("/v1/conversion?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
 
-	if req.StartTime != "" {
-		path += fmt.Sprintf("&start_time=%s", req.StartTime)
+	if req.StartTime != 0 {
+		path += fmt.Sprintf("&start_time=%d", req.StartTime)
 	}
-	if req.EndTime != "" {
-		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+	if req.EndTime != 0 {
+		path += fmt.Sprintf("&end_time=%d", req.EndTime)
 	}
 	if req.ConversionStatus != "" {
 		path += fmt.Sprintf("&conversion_status=%s", req.ConversionStatus)
 	}
-	if req.CurrencyFrom != "" {
-		path += fmt.Sprintf("&currency_from=%s", req.CurrencyFrom)
+	if req.SellCurrency != "" {
+		path += fmt.Sprintf("&sell_currency=%s", req.SellCurrency)
 	}
-	if req.CurrencyTo != "" {
-		path += fmt.Sprintf("&currency_to=%s", req.CurrencyTo)
+	if req.BuyCurrency != "" {
+		path += fmt.Sprintf("&buy_currency=%s", req.BuyCurrency)
 	}
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {

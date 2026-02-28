@@ -89,9 +89,10 @@ func (c *APIClient) Do(ctx context.Context, method, path string, body, response 
 
 	// Check for errors
 	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
 		var apiErr APIError
-		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
-			return fmt.Errorf("request failed with status %d", resp.StatusCode)
+		if err := json.Unmarshal(body, &apiErr); err != nil || apiErr.Message == "" {
+			return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
 		}
 		apiErr.StatusCode = resp.StatusCode
 		return &apiErr
@@ -161,9 +162,10 @@ func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body
 
 	// Check for errors
 	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
 		var apiErr APIError
-		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
-			return fmt.Errorf("request failed with status %d", resp.StatusCode)
+		if err := json.Unmarshal(body, &apiErr); err != nil || apiErr.Message == "" {
+			return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
 		}
 		apiErr.StatusCode = resp.StatusCode
 		return &apiErr
@@ -238,9 +240,10 @@ func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
 
 	// Check for errors
 	if resp.StatusCode >= 400 {
+		body, _ := io.ReadAll(resp.Body)
 		var apiErr APIError
-		if err := json.NewDecoder(resp.Body).Decode(&apiErr); err != nil {
-			return nil, fmt.Errorf("request failed with status %d", resp.StatusCode)
+		if err := json.Unmarshal(body, &apiErr); err != nil || apiErr.Message == "" {
+			return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(body))
 		}
 		apiErr.StatusCode = resp.StatusCode
 		return nil, &apiErr

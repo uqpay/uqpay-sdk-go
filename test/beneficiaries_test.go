@@ -2,10 +2,42 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/uqpay/uqpay-sdk-go/banking"
 )
+
+// newUSBankDetails creates a standard US ACH beneficiary bank details for testing
+func newUSBankDetails(accountHolder string) *banking.BankDetails {
+	// Use timestamp-based account number to avoid "beneficiary repeat addition" errors
+	acctNum := fmt.Sprintf("99%d", time.Now().UnixNano()%100000000)
+	return &banking.BankDetails{
+		AccountNumber:       acctNum,
+		AccountHolder:       accountHolder,
+		AccountCurrencyCode: "USD",
+		BankName:            "JPMorgan Chase",
+		BankAddress:         "383 Madison Avenue, New York, NY 10179",
+		BankCountryCode:     "US",
+		SwiftCode:           "CHASUS33",
+		ClearingSystem:      "ACH",
+		RoutingCodeType1:    "ach",
+		RoutingCodeValue1:   "021000021",
+	}
+}
+
+// newUSAddress creates a standard US address for testing
+func newUSAddress() *banking.Address {
+	return &banking.Address{
+		StreetAddress: "100 Test Street",
+		City:          "New York",
+		State:         "NY",
+		PostalCode:    "10001",
+		Country:       "US",
+		CountryCode:   "US",
+	}
+}
 
 func TestBeneficiaries(t *testing.T) {
 	if testing.Short() {
@@ -23,51 +55,20 @@ func TestBeneficiaries(t *testing.T) {
 
 		resp, err := client.Banking.Beneficiaries.List(ctx, req)
 		if err != nil {
-			t.Logf("❌ List beneficiaries returned error: %v", err)
+			t.Logf("List beneficiaries returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d beneficiaries (total: %d)", len(resp.Data), resp.TotalItems)
-		t.Logf("📊 Total pages: %d", resp.TotalPages)
+		t.Logf("Found %d beneficiaries (total: %d)", len(resp.Data), resp.TotalItems)
+		t.Logf("Total pages: %d", resp.TotalPages)
 
 		if len(resp.Data) > 0 {
-			beneficiary := resp.Data[0]
-			t.Logf("🔍 First beneficiary:")
-			t.Logf("   ID: %s", beneficiary.BeneficiaryID)
-			t.Logf("   Type: %s", beneficiary.EntityType)
-
-			if beneficiary.EntityType == "INDIVIDUAL" {
-				t.Logf("   Name: %s %s", beneficiary.FirstName, beneficiary.LastName)
-			} else {
-				t.Logf("   Company: %s", beneficiary.CompanyName)
+			b := resp.Data[0]
+			t.Logf("First beneficiary: ID=%s, Type=%s, PaymentMethod=%s",
+				b.BeneficiaryID, b.EntityType, b.PaymentMethod)
+			if b.BankDetails != nil {
+				t.Logf("  Bank: %s (%s)", b.BankDetails.BankName, b.BankDetails.AccountNumber)
 			}
-
-			t.Logf("   Currency: %s", beneficiary.Currency)
-			t.Logf("   Country: %s", beneficiary.Country)
-			t.Logf("   Payment Method: %s", beneficiary.PaymentMethod)
-			t.Logf("   Status: %s", beneficiary.Status)
-
-			if beneficiary.BankDetails != nil {
-				t.Logf("   Bank Account: %s", beneficiary.BankDetails.AccountNumber)
-				if beneficiary.BankDetails.BankName != "" {
-					t.Logf("   Bank Name: %s", beneficiary.BankDetails.BankName)
-				}
-				if beneficiary.BankDetails.IBAN != "" {
-					t.Logf("   IBAN: %s", beneficiary.BankDetails.IBAN)
-				}
-			}
-
-			if beneficiary.Email != "" {
-				t.Logf("   Email: %s", beneficiary.Email)
-			}
-			if beneficiary.PhoneNumber != "" {
-				t.Logf("   Phone: %s", beneficiary.PhoneNumber)
-			}
-
-			t.Logf("   Created: %s", beneficiary.CreateTime)
-			t.Logf("   Updated: %s", beneficiary.UpdateTime)
-		} else {
-			t.Logf("ℹ️  No beneficiaries found")
 		}
 	})
 
@@ -75,80 +76,29 @@ func TestBeneficiaries(t *testing.T) {
 		req := &banking.ListBeneficiariesRequest{
 			PageSize:   10,
 			PageNumber: 1,
-			Currency:   "USD",
-			Status:     "active",
 			EntityType: "INDIVIDUAL",
 		}
 
 		resp, err := client.Banking.Beneficiaries.List(ctx, req)
 		if err != nil {
-			t.Logf("❌ List beneficiaries with filters returned error: %v", err)
+			t.Logf("List beneficiaries with filters returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d active individual USD beneficiaries (total: %d)",
-			len(resp.Data), resp.TotalItems)
-
-		if len(resp.Data) > 0 {
-			for i, beneficiary := range resp.Data {
-				t.Logf("💰 Beneficiary %d: %s %s (%s)",
-					i+1, beneficiary.FirstName, beneficiary.LastName, beneficiary.Currency)
-			}
-		}
-	})
-
-	t.Run("ListByCountry", func(t *testing.T) {
-		countries := []string{"US", "GB", "KE", "UG"}
-
-		for _, country := range countries {
-			req := &banking.ListBeneficiariesRequest{
-				PageSize:   10,
-				PageNumber: 1,
-				Country:    country,
-			}
-
-			resp, err := client.Banking.Beneficiaries.List(ctx, req)
-			if err != nil {
-				t.Logf("❌ List %s beneficiaries returned error: %v", country, err)
-				continue
-			}
-
-			t.Logf("📊 %s beneficiaries: %d found", country, resp.TotalItems)
-		}
+		t.Logf("Found %d individual beneficiaries (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("ListPaymentMethods", func(t *testing.T) {
-		// Test for USD in United States
-		currency := "USD"
-		country := "US"
-
-		methods, err := client.Banking.Beneficiaries.ListPaymentMethods(ctx, currency, country)
+		methods, err := client.Banking.Beneficiaries.ListPaymentMethods(ctx, "USD", "US")
 		if err != nil {
-			t.Logf("❌ List payment methods for %s/%s returned error: %v", currency, country, err)
+			t.Logf("List payment methods returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d payment methods for %s in %s", len(methods), currency, country)
-
-		for i, method := range methods {
-			t.Logf("🔍 Method %d:", i+1)
-			t.Logf("   ID: %s", method.PaymentMethodID)
-			t.Logf("   Name: %s", method.PaymentMethodName)
-			t.Logf("   Currency: %s", method.Currency)
-			t.Logf("   Country: %s", method.Country)
-
-			if len(method.RequiredFields) > 0 {
-				t.Logf("   Required Fields: %v", method.RequiredFields)
-			}
-			if len(method.OptionalFields) > 0 {
-				t.Logf("   Optional Fields: %v", method.OptionalFields)
-			}
-			if method.MinAmount != "" {
-				t.Logf("   Min Amount: %s", method.MinAmount)
-			}
-			if method.MaxAmount != "" {
-				t.Logf("   Max Amount: %s", method.MaxAmount)
-			}
+		t.Logf("Found %d payment methods for USD/US", len(methods))
+		for i, m := range methods {
+			t.Logf("  Method %d: clearing=%s, payment_method=%s, currency=%s, country=%s",
+				i+1, m.ClearingSystems, m.PaymentMethod, m.Currency, m.Country)
 		}
 	})
 
@@ -160,97 +110,127 @@ func TestBeneficiaries(t *testing.T) {
 			{"USD", "US"},
 			{"GBP", "GB"},
 			{"EUR", "DE"},
-			{"KES", "KE"},
-			{"UGX", "UG"},
+			{"SGD", "SG"},
 		}
 
 		for _, tc := range testCases {
 			methods, err := client.Banking.Beneficiaries.ListPaymentMethods(ctx, tc.currency, tc.country)
 			if err != nil {
-				t.Logf("❌ %s/%s: %v", tc.currency, tc.country, err)
+				t.Logf("%s/%s: %v", tc.currency, tc.country, err)
 				continue
 			}
-
-			t.Logf("📊 %s/%s: %d payment methods available", tc.currency, tc.country, len(methods))
+			t.Logf("%s/%s: %d payment methods available", tc.currency, tc.country, len(methods))
 		}
 	})
 
-	t.Run("Check", func(t *testing.T) {
-		// This test validates beneficiary details without creating them
-		req := &banking.BeneficiaryCheckRequest{
+	t.Run("Create", func(t *testing.T) {
+		req := &banking.BeneficiaryCreationRequest{
+			EntityType:    "INDIVIDUAL",
+			FirstName:     "SDK",
+			LastName:      "Test",
 			Currency:      "USD",
 			Country:       "US",
-			PaymentMethod: "ACH",
-			BankDetails: &banking.BankDetails{
-				AccountNumber: "1234567890",
-				RoutingNumber: "021000021",
-			},
+			PaymentMethod: "LOCAL",
+			BankDetails:   newUSBankDetails("SDK Test"),
+			Address:       newUSAddress(),
+			Email:         "sdk-test@example.com",
 		}
 
-		resp, err := client.Banking.Beneficiaries.Check(ctx, req)
+		resp, err := client.Banking.Beneficiaries.Create(ctx, req)
 		if err != nil {
-			t.Logf("❌ Check beneficiary returned error: %v", err)
-			// This is expected if validation fails
-			return
+			t.Fatalf("Create beneficiary failed: %v", err)
 		}
 
-		t.Logf("✅ Beneficiary validation successful")
-		t.Logf("🔍 Validation result:")
-		t.Logf("   Currency: %s", resp.Currency)
-		t.Logf("   Country: %s", resp.Country)
-		t.Logf("   Payment Method: %s", resp.PaymentMethod)
-
-		if resp.BankDetails != nil {
-			if resp.BankDetails.BankName != "" {
-				t.Logf("   Bank Name: %s", resp.BankDetails.BankName)
-			}
-			if resp.BankDetails.AccountNumber != "" {
-				t.Logf("   Account Number: %s", resp.BankDetails.AccountNumber)
-			}
+		if resp.BeneficiaryID == "" {
+			t.Error("BeneficiaryID should not be empty")
 		}
+
+		t.Logf("Beneficiary created: ID=%s, Ref=%s", resp.BeneficiaryID, resp.ShortReferenceID)
 	})
 
-	t.Run("CheckUKBeneficiary", func(t *testing.T) {
-		req := &banking.BeneficiaryCheckRequest{
-			Currency:      "GBP",
-			Country:       "GB",
-			PaymentMethod: "FASTER_PAYMENTS",
-			BankDetails: &banking.BankDetails{
-				AccountNumber: "12345678",
-				SortCode:      "123456",
-			},
-		}
-
-		resp, err := client.Banking.Beneficiaries.Check(ctx, req)
+	t.Run("Get", func(t *testing.T) {
+		listResp, err := client.Banking.Beneficiaries.List(ctx, &banking.ListBeneficiariesRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ Check UK beneficiary returned error: %v", err)
-			return
+			t.Fatalf("List beneficiaries failed: %v", err)
+		}
+		if len(listResp.Data) == 0 {
+			t.Skip("No beneficiaries available to test Get")
 		}
 
-		t.Logf("✅ UK beneficiary validation successful")
-		t.Logf("🔍 Currency: %s, Country: %s, Method: %s",
-			resp.Currency, resp.Country, resp.PaymentMethod)
+		id := listResp.Data[0].BeneficiaryID
+		resp, err := client.Banking.Beneficiaries.Get(ctx, id)
+		if err != nil {
+			t.Fatalf("Get beneficiary failed: %v", err)
+		}
+
+		if resp.BeneficiaryID != id {
+			t.Errorf("ID mismatch: got %s, want %s", resp.BeneficiaryID, id)
+		}
+
+		t.Logf("Get OK: ID=%s, Type=%s, PaymentMethod=%s", resp.BeneficiaryID, resp.EntityType, resp.PaymentMethod)
 	})
 
-	t.Run("CheckSEPABeneficiary", func(t *testing.T) {
-		req := &banking.BeneficiaryCheckRequest{
-			Currency:      "EUR",
-			Country:       "DE",
-			PaymentMethod: "SEPA",
-			BankDetails: &banking.BankDetails{
-				IBAN: "DE89370400440532013000",
-				BIC:  "COBADEFFXXX",
-			},
-		}
-
-		resp, err := client.Banking.Beneficiaries.Check(ctx, req)
+	t.Run("Delete", func(t *testing.T) {
+		// Create one to delete
+		created, err := client.Banking.Beneficiaries.Create(ctx, &banking.BeneficiaryCreationRequest{
+			EntityType:    "INDIVIDUAL",
+			FirstName:     "Delete",
+			LastName:      "Test",
+			Currency:      "USD",
+			Country:       "US",
+			PaymentMethod: "LOCAL",
+			BankDetails:   newUSBankDetails("Delete Test"),
+			Address:       newUSAddress(),
+		})
 		if err != nil {
-			t.Logf("❌ Check SEPA beneficiary returned error: %v", err)
-			return
+			t.Fatalf("Create for delete test failed: %v", err)
 		}
 
-		t.Logf("✅ SEPA beneficiary validation successful")
-		t.Logf("🔍 Currency: %s, Country: %s, Method: %s",
-			resp.Currency, resp.Country, resp.PaymentMethod)
+		t.Logf("Created beneficiary for delete: %s", created.BeneficiaryID)
+
+		err = client.Banking.Beneficiaries.Delete(ctx, created.BeneficiaryID)
+		if err != nil {
+			t.Fatalf("Delete beneficiary failed: %v", err)
+		}
+
+		t.Logf("Deleted: %s", created.BeneficiaryID)
+	})
+
+	t.Run("FullLifecycle", func(t *testing.T) {
+		// Step 1: Create
+		created, err := client.Banking.Beneficiaries.Create(ctx, &banking.BeneficiaryCreationRequest{
+			EntityType:    "INDIVIDUAL",
+			FirstName:     "Lifecycle",
+			LastName:      "Test",
+			Currency:      "USD",
+			Country:       "US",
+			PaymentMethod: "LOCAL",
+			BankDetails:   newUSBankDetails("Lifecycle Test"),
+			Address:       newUSAddress(),
+			Email:         "lifecycle@example.com",
+		})
+		if err != nil {
+			t.Fatalf("Step 1 - Create failed: %v", err)
+		}
+		t.Logf("Step 1 - Created: %s", created.BeneficiaryID)
+
+		// Step 2: Get
+		fetched, err := client.Banking.Beneficiaries.Get(ctx, created.BeneficiaryID)
+		if err != nil {
+			t.Fatalf("Step 2 - Get failed: %v", err)
+		}
+		if fetched.BeneficiaryID != created.BeneficiaryID {
+			t.Errorf("ID mismatch: got %s, want %s", fetched.BeneficiaryID, created.BeneficiaryID)
+		}
+		t.Logf("Step 2 - Get verified: %s %s", fetched.FirstName, fetched.LastName)
+
+		// Step 3: Delete
+		err = client.Banking.Beneficiaries.Delete(ctx, created.BeneficiaryID)
+		if err != nil {
+			t.Fatalf("Step 3 - Delete failed: %v", err)
+		}
+		t.Logf("Step 3 - Deleted: %s", created.BeneficiaryID)
 	})
 }

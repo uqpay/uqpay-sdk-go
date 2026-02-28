@@ -16,193 +16,123 @@ func TestDeposits(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("List", func(t *testing.T) {
-		req := &banking.ListDepositsRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		resp, err := client.Banking.Deposits.List(ctx, req)
+		resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ List deposits returned error: %v", err)
+			t.Logf("List deposits returned error: %v", err)
 			return
 		}
 
-		t.Logf("✅ Found %d deposits (total: %d)", len(resp.Data), resp.TotalItems)
-		t.Logf("📊 Total pages: %d", resp.TotalPages)
-
+		t.Logf("Found %d deposits (total: %d, pages: %d)", len(resp.Data), resp.TotalItems, resp.TotalPages)
 		if len(resp.Data) > 0 {
-			deposit := resp.Data[0]
-			t.Logf("🔍 First deposit:")
-			t.Logf("   ID: %s", deposit.DepositID)
-			t.Logf("   Reference: %s", deposit.ShortReferenceID)
-			t.Logf("   Amount: %s %s", deposit.Amount, deposit.Currency)
-			t.Logf("   Status: %s", deposit.DepositStatus)
-			t.Logf("   Payment Method: %s", deposit.PaymentMethod)
-			t.Logf("   Payer: %s (%s)", deposit.PayerName, deposit.PayerEmail)
-			t.Logf("   Description: %s", deposit.Description)
-			t.Logf("   Created: %s", deposit.CreateTime)
-			if deposit.CompletedTime != "" {
-				t.Logf("   Completed: %s", deposit.CompletedTime)
+			d := resp.Data[0]
+			t.Logf("  First: ID=%s, Amount=%s %s, Status=%s, Fee=%s",
+				d.DepositID, d.Amount, d.Currency, d.DepositStatus, d.DepositFee)
+			if d.Sender != nil {
+				t.Logf("    Sender: %s (%s)", d.Sender.SenderName, d.Sender.SenderCountry)
 			}
-		} else {
-			t.Logf("ℹ️  No deposits found")
 		}
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
-		req := &banking.ListDepositsRequest{
-			PageSize:      10,
-			PageNumber:    1,
-			DepositStatus: "COMPLETED",
-			Currency:      "USD",
-		}
-
-		resp, err := client.Banking.Deposits.List(ctx, req)
+		resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+			PageSize: 10, PageNumber: 1, DepositStatus: "COMPLETED",
+		})
 		if err != nil {
-			t.Logf("❌ List deposits with filters returned error: %v", err)
+			t.Logf("List with filters returned error: %v", err)
 			return
 		}
-
-		t.Logf("✅ Found %d completed USD deposits (total: %d)", len(resp.Data), resp.TotalItems)
-
-		if len(resp.Data) > 0 {
-			for i, deposit := range resp.Data {
-				t.Logf("💰 Deposit %d: %s %s from %s, Status: %s",
-					i+1, deposit.Amount, deposit.Currency,
-					deposit.PayerName, deposit.DepositStatus)
-			}
-		}
+		t.Logf("Found %d completed deposits (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("ListByStatus", func(t *testing.T) {
-		statuses := []string{"PENDING", "COMPLETED", "FAILED"}
-
-		for _, status := range statuses {
-			req := &banking.ListDepositsRequest{
-				PageSize:      10,
-				PageNumber:    1,
-				DepositStatus: status,
-			}
-
-			resp, err := client.Banking.Deposits.List(ctx, req)
+		for _, status := range []string{"PENDING", "COMPLETED", "FAILED"} {
+			resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+				PageSize: 10, PageNumber: 1, DepositStatus: status,
+			})
 			if err != nil {
-				t.Logf("❌ List %s deposits returned error: %v", status, err)
+				t.Logf("  %s: error - %v", status, err)
 				continue
 			}
-
-			t.Logf("📊 %s deposits: %d found", status, resp.TotalItems)
+			t.Logf("  %s: %d found", status, resp.TotalItems)
 		}
 	})
 
 	t.Run("ListByCurrency", func(t *testing.T) {
-		currencies := []string{"USD", "EUR", "GBP", "KES", "UGX"}
-
-		for _, currency := range currencies {
-			req := &banking.ListDepositsRequest{
-				PageSize:   10,
-				PageNumber: 1,
-				Currency:   currency,
-			}
-
-			resp, err := client.Banking.Deposits.List(ctx, req)
+		for _, currency := range []string{"USD", "SGD", "EUR"} {
+			resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+				PageSize: 10, PageNumber: 1, Currency: currency,
+			})
 			if err != nil {
-				t.Logf("❌ List %s deposits returned error: %v", currency, err)
+				t.Logf("  %s: error - %v", currency, err)
 				continue
 			}
-
-			t.Logf("📊 %s deposits: %d found", currency, resp.TotalItems)
+			t.Logf("  %s: %d found", currency, resp.TotalItems)
 		}
 	})
 
 	t.Run("ListWithTimeRange", func(t *testing.T) {
-		// Example: List deposits from the last 30 days
-		// Note: Adjust these dates as needed for your testing
-		req := &banking.ListDepositsRequest{
-			PageSize:   10,
-			PageNumber: 1,
-			// StartTime: "2024-01-01T00:00:00Z",  // Uncomment and adjust as needed
-			// EndTime:   "2024-01-31T23:59:59Z",  // Uncomment and adjust as needed
-		}
-
-		resp, err := client.Banking.Deposits.List(ctx, req)
+		resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ List deposits with time range returned error: %v", err)
+			t.Logf("List deposits returned error: %v", err)
 			return
 		}
-
-		t.Logf("✅ Found %d deposits in time range (total: %d)", len(resp.Data), resp.TotalItems)
+		t.Logf("Found %d deposits (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("Get", func(t *testing.T) {
-		// First, list deposits to get a valid ID
-		listReq := &banking.ListDepositsRequest{
-			PageSize:   10,
-			PageNumber: 1,
-		}
-
-		listResp, err := client.Banking.Deposits.List(ctx, listReq)
+		listResp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+			PageSize: 10, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ Failed to list deposits: %v", err)
+			t.Logf("Failed to list deposits: %v", err)
 			return
 		}
-
 		if len(listResp.Data) == 0 {
-			t.Skip("⏭️  No deposits available to test Get operation")
+			t.Skip("No deposits available to test Get")
 		}
 
-		depositID := listResp.Data[0].DepositID
-		t.Logf("🔍 Getting deposit details for ID: %s", depositID)
-
-		resp, err := client.Banking.Deposits.Get(ctx, depositID)
+		id := listResp.Data[0].DepositID
+		resp, err := client.Banking.Deposits.Get(ctx, id)
 		if err != nil {
-			t.Fatalf("❌ Failed to get deposit: %v", err)
+			t.Fatalf("Failed to get deposit: %v", err)
 		}
 
-		t.Logf("✅ Deposit retrieved successfully")
-		t.Logf("💰 Deposit ID: %s", resp.DepositID)
-		t.Logf("   Reference: %s", resp.ShortReferenceID)
-		t.Logf("   Amount: %s %s", resp.Amount, resp.Currency)
-		t.Logf("   Status: %s", resp.DepositStatus)
-		t.Logf("   Payment Method: %s", resp.PaymentMethod)
-		t.Logf("   Payer Name: %s", resp.PayerName)
-		t.Logf("   Payer Email: %s", resp.PayerEmail)
-		t.Logf("   Description: %s", resp.Description)
-		t.Logf("   Created: %s", resp.CreateTime)
-		if resp.CompletedTime != "" {
-			t.Logf("   Completed: %s", resp.CompletedTime)
+		t.Logf("Get OK: ID=%s, Amount=%s %s, Status=%s",
+			resp.DepositID, resp.Amount, resp.Currency, resp.DepositStatus)
+		t.Logf("  Fee=%s, Receiver=%s, Ref=%s",
+			resp.DepositFee, resp.ReceiverAccountNumber, resp.ShortReferenceID)
+		if resp.Sender != nil {
+			t.Logf("  Sender: %s from %s, Account=%s",
+				resp.Sender.SenderName, resp.Sender.SenderCountry, resp.Sender.SenderAccountNumber)
+		}
+		if resp.CompleteTime != "" {
+			t.Logf("  Completed: %s", resp.CompleteTime)
 		}
 	})
 
 	t.Run("GetMultipleDeposits", func(t *testing.T) {
-		// List deposits
-		listReq := &banking.ListDepositsRequest{
-			PageSize:   5,
-			PageNumber: 1,
-		}
-
-		listResp, err := client.Banking.Deposits.List(ctx, listReq)
+		listResp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
+			PageSize: 5, PageNumber: 1,
+		})
 		if err != nil {
-			t.Logf("❌ Failed to list deposits: %v", err)
+			t.Logf("Failed to list deposits: %v", err)
 			return
 		}
-
 		if len(listResp.Data) == 0 {
-			t.Skip("⏭️  No deposits available")
+			t.Skip("No deposits available")
 		}
 
-		// Get details for each deposit
-		t.Logf("🔍 Retrieving details for %d deposits", len(listResp.Data))
-
-		for i, deposit := range listResp.Data {
-			resp, err := client.Banking.Deposits.Get(ctx, deposit.DepositID)
+		for i, d := range listResp.Data {
+			resp, err := client.Banking.Deposits.Get(ctx, d.DepositID)
 			if err != nil {
-				t.Logf("❌ Failed to get deposit %s: %v", deposit.DepositID, err)
+				t.Logf("  %d: Failed to get %s: %v", i+1, d.DepositID, err)
 				continue
 			}
-
-			t.Logf("💰 Deposit %d: %s %s - %s (Status: %s)",
-				i+1, resp.Amount, resp.Currency,
-				resp.PayerName, resp.DepositStatus)
+			t.Logf("  %d: %s %s - Status=%s", i+1, resp.Amount, resp.Currency, resp.DepositStatus)
 		}
 	})
 }
