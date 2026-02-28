@@ -14,26 +14,28 @@ type VirtualAccountsClient struct {
 
 // VirtualAccount represents a virtual account
 type VirtualAccount struct {
-	VirtualAccountID   string               `json:"virtual_account_id"`
-	VirtualAccountName string               `json:"virtual_account_name"`
-	Status             string               `json:"status"`
-	CreateTime         string               `json:"create_time"`
-	CurrencyBankDetail []CurrencyBankDetail `json:"currency_bank_detail"`
+	AccountBankID  string                      `json:"account_bank_id"`
+	AccountHolder  string                      `json:"account_holder"`
+	AccountNumber  string                      `json:"account_number"`
+	Currency       string                      `json:"currency"`
+	CountryCode    string                      `json:"country_code"`
+	BankName       string                      `json:"bank_name"`
+	BankAddress    string                      `json:"bank_address"`
+	Capability     *VirtualAccountCapability   `json:"capability,omitempty"`
+	ClearingSystem *VirtualAccountClearing     `json:"clearing_system,omitempty"`
+	Status         string                      `json:"status"`
+	CloseReason    string                      `json:"close_reason,omitempty"`
 }
 
-// CurrencyBankDetail represents bank details for a specific currency
-type CurrencyBankDetail struct {
-	Currency        string `json:"currency"`
-	BankName        string `json:"bank_name"`
-	BankAddress     string `json:"bank_address"`
-	BankCountryCode string `json:"bank_country_code"`
-	AccountName     string `json:"account_name"`
-	AccountNumber   string `json:"account_number"`
-	SwiftCode       string `json:"swift_code"`
-	RoutingNumber   string `json:"routing_number"`
-	IBAN            string `json:"iban"`
-	SortCode        string `json:"sort_code"`
-	IFSCCode        string `json:"ifsc_code"`
+// VirtualAccountCapability represents the payment capability
+type VirtualAccountCapability struct {
+	PaymentMethod string `json:"payment_method"`
+}
+
+// VirtualAccountClearing represents clearing system details
+type VirtualAccountClearing struct {
+	Type  string `json:"type"`  // e.g., "bic_swift"
+	Value string `json:"value"` // e.g., "SGBDBHB2XXX"
 }
 
 // ListVirtualAccountsRequest represents a virtual account list request

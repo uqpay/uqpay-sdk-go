@@ -16,13 +16,13 @@ type BalancesClient struct {
 type Balance struct {
 	BalanceID        string `json:"balance_id"`
 	Currency         string `json:"currency"`
-	AvailableBalance string `json:"available_balance"` // API returns string
+	AvailableBalance string `json:"available_balance"`
 	PrepaidBalance   string `json:"prepaid_balance"`
 	MarginBalance    string `json:"margin_balance"`
 	FrozenBalance    string `json:"frozen_balance"`
 	BalanceStatus    string `json:"balance_status"`
 	CreateTime       string `json:"create_time"`
-	UpdateTime       string `json:"update_time"`
+	LastTradeTime    string `json:"last_trade_time"`
 }
 
 // ListBalancesRequest represents a balance list request
@@ -41,15 +41,18 @@ type ListBalancesResponse struct {
 // BalanceTransaction represents a balance transaction
 type BalanceTransaction struct {
 	TransactionID     string `json:"transaction_id"`
+	AccountID         string `json:"account_id"`
+	BalanceID         string `json:"balance_id"`
 	Currency          string `json:"currency"`
 	Amount            string `json:"amount"`
-	TransactionType   string `json:"transaction_type"`   // PAYIN, DEPOSIT, PAYOUT, TRANSFER, CONVERSION, FEE, REFUND, ADJUSTMENT
-	TransactionStatus string `json:"transaction_status"` // COMPLETED, PENDING, FAILED
-	BalanceBefore     string `json:"balance_before"`
-	BalanceAfter      string `json:"balance_after"`
-	Description       string `json:"description"`
+	CreditDebitType   string `json:"credit_debit_type"`   // C (credit) or D (debit)
+	TransactionType   string `json:"transaction_type"`    // CONVERSION, DEPOSIT, PAYOUT, TRANSFER, FEE, etc.
+	TransactionStatus string `json:"transaction_status"`  // COMPLETED, PENDING, FAILED
+	TransactionWay    string `json:"transaction_way"`     // API, WEB, etc.
+	PayoutWay         string `json:"payout_way,omitempty"`
+	ReferenceID       string `json:"reference_id"`
 	CreateTime        string `json:"create_time"`
-	ReferenceID       string `json:"reference_id"` // Related resource ID
+	CompleteTime      string `json:"complete_time"`
 }
 
 // ListBalanceTransactionsRequest represents a balance transaction list request
