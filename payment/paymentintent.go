@@ -20,11 +20,14 @@ type PaymentIntentsClient struct {
 type CreatePaymentIntentRequest struct {
 	Amount          string            `json:"amount"`
 	Currency        string            `json:"currency"`
-	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	ReturnURL       string            `json:"return_url,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
+	MerchantOrderID string            `json:"merchant_order_id"`
+	Description     string            `json:"description"`              // Max 32 characters
+	ReturnURL       string            `json:"return_url"`
 	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
+	IPAddress       string            `json:"ip_address,omitempty"`
+	PaymentOrders   *PaymentOrders    `json:"payment_orders,omitempty"`
+	BrowserInfo     *BrowserInfo      `json:"browser_info,omitempty"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
 }
 
 // ============================================================================
@@ -92,6 +95,78 @@ type Address struct {
 	City        string `json:"city,omitempty"`
 	Street      string `json:"street,omitempty"`
 	Postcode    string `json:"postcode,omitempty"`
+}
+
+// ============================================================================
+// Customer
+// ============================================================================
+
+// CustomerRequest represents customer details for a payment
+type CustomerRequest struct {
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	Email       string   `json:"email"`
+	PhoneNumber string   `json:"phone_number,omitempty"`
+	Description string   `json:"description,omitempty"` // Max 255 characters
+	Address     *Address `json:"address,omitempty"`
+	Metadata    map[string]string `json:"metadata,omitempty"`
+}
+
+// ============================================================================
+// Payment Orders
+// ============================================================================
+
+// PaymentOrders represents purchase order information
+type PaymentOrders struct {
+	Type     string           `json:"type,omitempty"`     // Industry category, e.g., "physical_goods"
+	Products []PaymentProduct `json:"products,omitempty"`
+}
+
+// PaymentProduct represents a product in a payment order
+type PaymentProduct struct {
+	Name     string `json:"name"`              // Product name (max 255 chars)
+	Price    string `json:"price"`             // Price per unit
+	Quantity int    `json:"quantity"`           // Quantity
+	ImageURL string `json:"image_url,omitempty"` // Product thumbnail URL
+}
+
+// ============================================================================
+// Browser Info (3DS / Risk)
+// ============================================================================
+
+// BrowserInfo represents browser information for risk and fraud prevention
+// Required when three_ds_action=enforce_3ds
+type BrowserInfo struct {
+	AcceptHeader     string          `json:"accept_header,omitempty"`
+	Browser          *BrowserDetail  `json:"browser,omitempty"`
+	DeviceID         string          `json:"device_id,omitempty"`
+	Language         string          `json:"language,omitempty"`          // ISO language code, e.g., "en-US"
+	Location         *GeoLocation    `json:"location,omitempty"`
+	Mobile           *MobileInfo     `json:"mobile,omitempty"`           // Required for mobile transactions
+	ScreenColorDepth int             `json:"screen_color_depth,omitempty"` // 1-48
+	ScreenHeight     int             `json:"screen_height,omitempty"`     // 1-9999
+	ScreenWidth      int             `json:"screen_width,omitempty"`      // 1-9999
+	Timezone         string          `json:"timezone,omitempty"`          // UTC offset, e.g., "-2" or "8"
+}
+
+// BrowserDetail represents browser-specific information
+type BrowserDetail struct {
+	JavaEnabled       bool   `json:"java_enabled,omitempty"`
+	JavascriptEnabled bool   `json:"javascript_enabled,omitempty"`
+	UserAgent         string `json:"user_agent,omitempty"`
+}
+
+// GeoLocation represents device geolocation
+type GeoLocation struct {
+	Lat string `json:"lat,omitempty"` // Latitude coordinate
+	Lon string `json:"lon,omitempty"` // Longitude coordinate
+}
+
+// MobileInfo represents mobile device information
+type MobileInfo struct {
+	DeviceModel string `json:"device_model,omitempty"` // e.g., "Apple IPHONE 7"
+	OSType      string `json:"os_type,omitempty"`      // IOS, ANDROID
+	OSVersion   string `json:"os_version,omitempty"`   // e.g., "IOS 14.5"
 }
 
 // ============================================================================
@@ -165,21 +240,28 @@ type GrabPay struct {
 
 // UpdatePaymentIntentRequest represents a payment intent update request
 type UpdatePaymentIntentRequest struct {
-	Description   string            `json:"description,omitempty"`
-	ReturnURL     string            `json:"return_url,omitempty"`
-	Metadata      map[string]string `json:"metadata,omitempty"`
-	PaymentMethod *PaymentMethod    `json:"payment_method,omitempty"`
+	Amount          string            `json:"amount,omitempty"`
+	Currency        string            `json:"currency,omitempty"`
+	Customer        *CustomerRequest  `json:"customer,omitempty"`         // Omit when customer_id is specified
+	CustomerID      string            `json:"customer_id,omitempty"`      // Required for recurring payments
+	PaymentOrders   *PaymentOrders    `json:"payment_orders,omitempty"`
+	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
+	Description     string            `json:"description,omitempty"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
+	ReturnURL       string            `json:"return_url,omitempty"`
 }
 
 // ConfirmPaymentIntentRequest represents a payment intent confirmation request
 type ConfirmPaymentIntentRequest struct {
 	PaymentMethod *PaymentMethod `json:"payment_method,omitempty"`
+	IPAddress     string         `json:"ip_address,omitempty"`
+	BrowserInfo   *BrowserInfo   `json:"browser_info,omitempty"`
 	ReturnURL     string         `json:"return_url,omitempty"`
 }
 
 // CapturePaymentIntentRequest represents a payment intent capture request
 type CapturePaymentIntentRequest struct {
-	Amount string `json:"amount,omitempty"` // Optional: for partial capture, specify amount less than authorized
+	AmountToCapture float64 `json:"amount_to_capture,omitempty"` // Optional: amount to capture, if different from original amount
 }
 
 // CancelPaymentIntentRequest represents a payment intent cancellation request
@@ -189,12 +271,11 @@ type CancelPaymentIntentRequest struct {
 
 // ListPaymentIntentsRequest represents a payment intents list request
 type ListPaymentIntentsRequest struct {
-	PageSize   int    `json:"page_size"`   // Number of items per page (default: 10)
-	PageNumber int    `json:"page_number"` // Page number (1-based)
-	Status     string `json:"status"`      // Filter by status: requires_payment_method, requires_confirmation, requires_action, processing, requires_capture, succeeded, canceled
-	StartTime  string `json:"start_time"`  // Filter by creation time (ISO8601)
-	EndTime    string `json:"end_time"`    // Filter by creation time (ISO8601)
-	Currency   string `json:"currency"`    // Filter by currency
+	PageSize             int    `json:"page_size"`              // Number of items per page (1-100)
+	PageNumber           int    `json:"page_number"`            // Page number (1-based)
+	PaymentIntentStatus  string `json:"payment_intent_status"`  // Filter by status: REQUIRES_PAYMENT_METHOD, REQUIRES_CUSTOMER_ACTION, REQUIRES_CAPTURE, PENDING, SUCCEEDED, CANCELLED, FAILED
+	StartTime            string `json:"start_time"`             // Exclusive start time (ISO8601)
+	EndTime              string `json:"end_time"`               // Exclusive end time (ISO8601)
 }
 
 // ============================================================================
@@ -213,6 +294,7 @@ type PaymentIntent struct {
 	Metadata                    map[string]string      `json:"metadata,omitempty"`
 	AvailablePaymentMethodTypes []string               `json:"available_payment_method_types,omitempty"`
 	CapturedAmount              string                 `json:"captured_amount,omitempty"`
+	Customer                    *CustomerRequest       `json:"customer,omitempty"`
 	ClientSecret                string                 `json:"client_secret,omitempty"`
 	CancellationReason          string                 `json:"cancellation_reason,omitempty"`
 	LatestPaymentAttempt        map[string]interface{} `json:"latest_payment_attempt,omitempty"`
@@ -325,8 +407,8 @@ func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntents
 		path += fmt.Sprintf("%spage_number=%d", separator, req.PageNumber)
 		separator = "&"
 	}
-	if req.Status != "" {
-		path += fmt.Sprintf("%sstatus=%s", separator, req.Status)
+	if req.PaymentIntentStatus != "" {
+		path += fmt.Sprintf("%spayment_intent_status=%s", separator, req.PaymentIntentStatus)
 		separator = "&"
 	}
 	if req.StartTime != "" {
@@ -336,9 +418,6 @@ func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntents
 	if req.EndTime != "" {
 		path += fmt.Sprintf("%send_time=%s", separator, req.EndTime)
 		separator = "&"
-	}
-	if req.Currency != "" {
-		path += fmt.Sprintf("%scurrency=%s", separator, req.Currency)
 	}
 
 	opts := &common.RequestOptions{

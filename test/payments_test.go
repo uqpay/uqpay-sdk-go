@@ -185,13 +185,22 @@ func TestPaymentIntents(t *testing.T) {
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
-		statuses := []string{"requires_payment_method", "requires_confirmation", "succeeded", "canceled"}
+		// Status values per spec enum
+		statuses := []string{
+			"REQUIRES_PAYMENT_METHOD",
+			"REQUIRES_CUSTOMER_ACTION",
+			"REQUIRES_CAPTURE",
+			"PENDING",
+			"SUCCEEDED",
+			"CANCELLED",
+			"FAILED",
+		}
 
 		for _, status := range statuses {
 			req := &payment.ListPaymentIntentsRequest{
-				PageSize:   5,
-				PageNumber: 1,
-				Status:     status,
+				PageSize:            5,
+				PageNumber:          1,
+				PaymentIntentStatus: status,
 			}
 
 			resp, err := client.Payment.PaymentIntents.List(ctx, req)
@@ -266,6 +275,270 @@ func TestPaymentIntents(t *testing.T) {
 		t.Logf("   ID: %s", resp.PaymentIntentID)
 		t.Logf("   Status: %s", resp.IntentStatus)
 	})
+}
+
+// ============================================================================
+// Capture Payment Intent Test
+// ============================================================================
+
+func TestCapturePaymentIntent(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	// Step 1: Create a payment intent
+	createReq := &payment.CreatePaymentIntentRequest{
+		Amount:          "50.00",
+		Currency:        "USD",
+		MerchantOrderID: "test-capture-001",
+		Description:     "Test capture flow",
+		ReturnURL:       "https://example.com/return",
+	}
+
+	intent, err := client.Payment.PaymentIntents.Create(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Create payment intent failed: %v", err)
+	}
+
+	t.Logf("Created intent for capture: %s", intent.PaymentIntentID)
+
+	// Step 2: Confirm with a card that supports manual capture
+	confirmReq := &payment.ConfirmPaymentIntentRequest{
+		PaymentMethod: &payment.PaymentMethod{
+			Type: "card",
+			Card: &payment.Card{
+				CardNumber:        "4176660000000027",
+				ExpiryMonth:       "12",
+				ExpiryYear:        "33",
+				CVC:               "303",
+				CardName:          "Test User",
+				AutoCapture:       boolPtr(false),
+				AuthorizationType: "authorization",
+				ThreeDSAction:     "skip_3ds",
+				Billing: &payment.Billing{
+					FirstName:   "Test",
+					LastName:    "User",
+					Email:       "test@example.com",
+					PhoneNumber: "+10000000000",
+					Address: &payment.Address{
+						CountryCode: "SG",
+						City:        "Singapore",
+						Street:      "444 Orchard Rd",
+						Postcode:    "924011",
+					},
+				},
+			},
+		},
+		ReturnURL: "https://example.com/return",
+	}
+
+	confirmed, err := client.Payment.PaymentIntents.Confirm(ctx, intent.PaymentIntentID, confirmReq)
+	if err != nil {
+		t.Fatalf("Confirm payment intent failed: %v", err)
+	}
+
+	t.Logf("Confirmed intent: %s, status: %s", confirmed.PaymentIntentID, confirmed.IntentStatus)
+
+	// Step 3: Capture if status allows
+	if confirmed.IntentStatus != "REQUIRES_CAPTURE" {
+		t.Skipf("Intent status is %s, not REQUIRES_CAPTURE - skipping capture", confirmed.IntentStatus)
+	}
+
+	captureReq := &payment.CapturePaymentIntentRequest{
+		AmountToCapture: 50.00,
+	}
+
+	captured, err := client.Payment.PaymentIntents.Capture(ctx, intent.PaymentIntentID, captureReq)
+	if err != nil {
+		t.Fatalf("Capture payment intent failed: %v", err)
+	}
+
+	// Assertions
+	if captured.PaymentIntentID == "" {
+		t.Error("PaymentIntentID should not be empty")
+	}
+
+	t.Logf("Payment intent captured successfully")
+	t.Logf("   ID: %s", captured.PaymentIntentID)
+	t.Logf("   Status: %s", captured.IntentStatus)
+	t.Logf("   Captured Amount: %s", captured.CapturedAmount)
+}
+
+// boolPtr returns a pointer to a bool value
+func boolPtr(b bool) *bool {
+	return &b
+}
+
+// ============================================================================
+// Confirm with BrowserInfo and IPAddress Test
+// ============================================================================
+
+func TestConfirmWithBrowserInfo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	// Step 1: Create a payment intent with PaymentOrders
+	createReq := &payment.CreatePaymentIntentRequest{
+		Amount:          "100.00",
+		Currency:        "USD",
+		MerchantOrderID: "test-3ds-browser-001",
+		Description:     "Test 3DS with browser info",
+		ReturnURL:       "https://example.com/return",
+		IPAddress:       "203.0.113.50",
+		PaymentOrders: &payment.PaymentOrders{
+			Type: "physical_goods",
+			Products: []payment.PaymentProduct{
+				{
+					Name:     "Test Product",
+					Price:    "100.00",
+					Quantity: 1,
+				},
+			},
+		},
+	}
+
+	intent, err := client.Payment.PaymentIntents.Create(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Create payment intent failed: %v", err)
+	}
+
+	if intent.PaymentIntentID == "" {
+		t.Fatal("PaymentIntentID should not be empty")
+	}
+
+	t.Logf("Created intent with PaymentOrders: %s", intent.PaymentIntentID)
+
+	// Step 2: Confirm with BrowserInfo and IPAddress
+	confirmReq := &payment.ConfirmPaymentIntentRequest{
+		PaymentMethod: &payment.PaymentMethod{
+			Type: "card",
+			Card: &payment.Card{
+				CardNumber:    "4176660000000027",
+				ExpiryMonth:   "12",
+				ExpiryYear:    "33",
+				CVC:           "303",
+				CardName:      "Test User",
+				ThreeDSAction: "enforce_3ds",
+				Billing: &payment.Billing{
+					FirstName:   "Test",
+					LastName:    "User",
+					Email:       "test@example.com",
+					PhoneNumber: "+10000000000",
+					Address: &payment.Address{
+						CountryCode: "SG",
+						City:        "Singapore",
+						Street:      "444 Orchard Rd",
+						Postcode:    "924011",
+					},
+				},
+			},
+		},
+		IPAddress: "203.0.113.50",
+		BrowserInfo: &payment.BrowserInfo{
+			AcceptHeader:     "text/html",
+			Language:         "en-US",
+			ScreenColorDepth: 24,
+			ScreenHeight:     1080,
+			ScreenWidth:      1920,
+			Timezone:         "8",
+			Browser: &payment.BrowserDetail{
+				JavaEnabled:       false,
+				JavascriptEnabled: true,
+				UserAgent:         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+			},
+		},
+		ReturnURL: "https://example.com/return",
+	}
+
+	resp, err := client.Payment.PaymentIntents.Confirm(ctx, intent.PaymentIntentID, confirmReq)
+	if err != nil {
+		t.Fatalf("Confirm with browser info failed: %v", err)
+	}
+
+	// Assertions
+	if resp.PaymentIntentID == "" {
+		t.Error("PaymentIntentID should not be empty")
+	}
+	if resp.IntentStatus == "" {
+		t.Error("IntentStatus should not be empty")
+	}
+
+	t.Logf("Confirmed with BrowserInfo successfully")
+	t.Logf("   ID: %s", resp.PaymentIntentID)
+	t.Logf("   Status: %s", resp.IntentStatus)
+
+	if resp.NextAction != nil {
+		t.Logf("   Next Action: %v", resp.NextAction)
+	}
+}
+
+// ============================================================================
+// Update with Customer and PaymentOrders Test
+// ============================================================================
+
+func TestUpdatePaymentIntentWithCustomer(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	// Step 1: Create a payment intent
+	createReq := &payment.CreatePaymentIntentRequest{
+		Amount:          "75.00",
+		Currency:        "USD",
+		MerchantOrderID: "test-update-customer-001",
+		Description:     "Test update with customer",
+		ReturnURL:       "https://example.com/return",
+	}
+
+	intent, err := client.Payment.PaymentIntents.Create(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Create payment intent failed: %v", err)
+	}
+
+	t.Logf("Created intent: %s", intent.PaymentIntentID)
+
+	// Step 2: Update with customer details and payment orders
+	updateReq := &payment.UpdatePaymentIntentRequest{
+		Customer: &payment.CustomerRequest{
+			FirstName:   "John",
+			LastName:    "Doe",
+			Email:       "john.doe@example.com",
+			PhoneNumber: "+6591234567",
+			Description: "Test customer",
+		},
+		MerchantOrderID: "test-update-customer-002",
+		Description:     "Updated with customer info",
+	}
+
+	resp, err := client.Payment.PaymentIntents.Update(ctx, intent.PaymentIntentID, updateReq)
+	if err != nil {
+		t.Fatalf("Update with customer failed: %v", err)
+	}
+
+	// Assertions
+	if resp.PaymentIntentID == "" {
+		t.Error("PaymentIntentID should not be empty")
+	}
+	if resp.Description != "Updated with customer info" {
+		t.Errorf("Description mismatch: got %s", resp.Description)
+	}
+
+	t.Logf("Updated with customer successfully")
+	t.Logf("   ID: %s", resp.PaymentIntentID)
+	t.Logf("   Description: %s", resp.Description)
+	if resp.Customer != nil {
+		t.Logf("   Customer: %s %s (%s)", resp.Customer.FirstName, resp.Customer.LastName, resp.Customer.Email)
+	}
 }
 
 // ============================================================================
@@ -756,14 +1029,20 @@ func TestPaymentAttempts(t *testing.T) {
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
-		// Test filtering by status
-		statuses := []string{"pending", "succeeded", "failed"}
+		// Status values per spec enum
+		statuses := []string{
+			"INITIATED",
+			"AUTHORIZED",
+			"SUCCEEDED",
+			"CANCELLED",
+			"FAILED",
+		}
 
 		for _, status := range statuses {
 			req := &payment.ListPaymentAttemptsRequest{
-				PageSize:   5,
-				PageNumber: 1,
-				Status:     status,
+				PageSize:      5,
+				PageNumber:    1,
+				AttemptStatus: status,
 			}
 
 			resp, err := client.Payment.PaymentAttempts.List(ctx, req)
@@ -778,6 +1057,33 @@ func TestPaymentAttempts(t *testing.T) {
 			}
 
 			t.Logf("%s attempts: %d found", status, resp.TotalItems)
+		}
+	})
+
+	t.Run("ListByPaymentIntent", func(t *testing.T) {
+		// Filter by payment intent ID
+		req := &payment.ListPaymentAttemptsRequest{
+			PageSize:        5,
+			PageNumber:      1,
+			PaymentIntentID: "PI2014290195662245888",
+		}
+
+		resp, err := client.Payment.PaymentAttempts.List(ctx, req)
+		if err != nil {
+			t.Fatalf("List attempts by PI failed: %v", err)
+		}
+
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
+		}
+
+		t.Logf("Attempts for PI: %d found", resp.TotalItems)
+		for i, attempt := range resp.Data {
+			if i >= 3 {
+				break
+			}
+			t.Logf("   Attempt %d: ID=%s, Status=%s, Amount=%s %s",
+				i+1, attempt.AttemptID, attempt.AttemptStatus, attempt.Amount, attempt.Currency)
 		}
 	})
 }
@@ -795,7 +1101,12 @@ func TestPaymentBalances(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("List", func(t *testing.T) {
-		resp, err := client.Payment.Balances.List(ctx)
+		req := &payment.ListBalancesRequest{
+			PageSize:   10,
+			PageNumber: 1,
+		}
+
+		resp, err := client.Payment.Balances.List(ctx, req)
 		if err != nil {
 			t.Fatalf("List payment balances failed: %v", err)
 		}
@@ -805,7 +1116,8 @@ func TestPaymentBalances(t *testing.T) {
 			t.Error("Data should not be nil")
 		}
 
-		t.Logf("Found %d payment balances", len(resp.Data))
+		t.Logf("Found %d payment balances (total: %d)", len(resp.Data), resp.TotalItems)
+		t.Logf("Total pages: %d", resp.TotalPages)
 
 		if len(resp.Data) > 0 {
 			for i, balance := range resp.Data {
@@ -861,6 +1173,47 @@ func TestPaymentBalances(t *testing.T) {
 
 			t.Logf("%s: Available=%s, Payable=%s",
 				currency, resp.AvailableBalance, resp.PayableBalance)
+		}
+	})
+
+	t.Run("ListPagination", func(t *testing.T) {
+		// Test with small page size to verify pagination
+		req := &payment.ListBalancesRequest{
+			PageSize:   2,
+			PageNumber: 1,
+		}
+
+		resp, err := client.Payment.Balances.List(ctx, req)
+		if err != nil {
+			t.Fatalf("List balances page 1 failed: %v", err)
+		}
+
+		// Assertions
+		if resp.TotalItems < 0 {
+			t.Error("TotalItems should be >= 0")
+		}
+		if resp.TotalPages < 0 {
+			t.Error("TotalPages should be >= 0")
+		}
+		if len(resp.Data) > 2 {
+			t.Errorf("Data length should be <= page_size(2), got %d", len(resp.Data))
+		}
+
+		t.Logf("Page 1: %d items, total: %d, pages: %d", len(resp.Data), resp.TotalItems, resp.TotalPages)
+
+		// If there are more pages, test page 2
+		if resp.TotalPages > 1 {
+			req2 := &payment.ListBalancesRequest{
+				PageSize:   2,
+				PageNumber: 2,
+			}
+
+			resp2, err := client.Payment.Balances.List(ctx, req2)
+			if err != nil {
+				t.Fatalf("List balances page 2 failed: %v", err)
+			}
+
+			t.Logf("Page 2: %d items", len(resp2.Data))
 		}
 	})
 }
@@ -949,13 +1302,20 @@ func TestPaymentPayouts(t *testing.T) {
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
-		statuses := []string{"pending", "processing", "completed", "failed"}
+		// Status values per spec enum
+		statuses := []string{
+			"INITIATED",
+			"PROCESSING",
+			"COMPLETED",
+			"FAILED",
+			"FAILED_REFUNDED",
+		}
 
 		for _, status := range statuses {
 			req := &payment.ListPayoutsRequest{
-				PageSize:   5,
-				PageNumber: 1,
-				Status:     status,
+				PageSize:     5,
+				PageNumber:   1,
+				PayoutStatus: status,
 			}
 
 			resp, err := client.Payment.Payouts.List(ctx, req)
@@ -971,6 +1331,72 @@ func TestPaymentPayouts(t *testing.T) {
 
 			t.Logf("%s payouts: %d found", status, resp.TotalItems)
 		}
+	})
+
+	t.Run("ListWithDateRange", func(t *testing.T) {
+		req := &payment.ListPayoutsRequest{
+			PageSize:   10,
+			PageNumber: 1,
+			StartTime:  "2024-01-01T00:00:00Z",
+			EndTime:    "2024-12-31T23:59:59Z",
+		}
+
+		resp, err := client.Payment.Payouts.List(ctx, req)
+		if err != nil {
+			t.Fatalf("List payouts with date range failed: %v", err)
+		}
+
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
+		}
+
+		t.Logf("Payouts in date range: %d found (total: %d)", len(resp.Data), resp.TotalItems)
+	})
+}
+
+// TestPayoutCreate tests payout creation
+func TestPayoutCreate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client := GetPaymentTestClient(t)
+	ctx := context.Background()
+
+	t.Run("Create", func(t *testing.T) {
+		req := &payment.CreatePayoutRequest{
+			PayoutCurrency:      "SGD",
+			PayoutAmount:        "10.00",
+			StatementDescriptor: "TestPayout",
+			InternalNote:        "SDK integration test payout",
+		}
+
+		resp, err := client.Payment.Payouts.Create(ctx, req)
+		if err != nil {
+			t.Fatalf("Create payout failed: %v", err)
+		}
+
+		// Assertions
+		if resp.PayoutID == "" {
+			t.Error("PayoutID should not be empty")
+		}
+		if resp.PayoutStatus == "" {
+			t.Error("PayoutStatus should not be empty")
+		}
+		if resp.PayoutAmount != "10.00" && resp.PayoutAmount != "10" {
+			t.Errorf("PayoutAmount mismatch: got %s", resp.PayoutAmount)
+		}
+		if resp.PayoutCurrency != "SGD" {
+			t.Errorf("PayoutCurrency mismatch: got %s, want SGD", resp.PayoutCurrency)
+		}
+
+		t.Logf("Payout created successfully")
+		t.Logf("   ID: %s", resp.PayoutID)
+		t.Logf("   Amount: %s %s", resp.PayoutAmount, resp.PayoutCurrency)
+		t.Logf("   Status: %s", resp.PayoutStatus)
+		t.Logf("   Descriptor: %s", resp.StatementDescriptor)
+		t.Logf("   Note: %s", resp.InternalNote)
+		t.Logf("   Created: %s", resp.CreateTime)
 	})
 }
 
@@ -1057,29 +1483,43 @@ func TestPaymentRefunds(t *testing.T) {
 		t.Logf("   Status: %s", resp.RefundStatus)
 	})
 
-	t.Run("ListWithFilters", func(t *testing.T) {
-		statuses := []string{"pending", "succeeded", "failed"}
-
-		for _, status := range statuses {
-			req := &payment.ListRefundsRequest{
-				PageSize:   5,
-				PageNumber: 1,
-				Status:     status,
-			}
-
-			resp, err := client.Payment.Refunds.List(ctx, req)
-			if err != nil {
-				t.Errorf("%s refunds: failed - %v", status, err)
-				continue
-			}
-
-			// Assertion
-			if resp.Data == nil {
-				t.Errorf("%s refunds: Data should not be nil", status)
-			}
-
-			t.Logf("%s refunds: %d found", status, resp.TotalItems)
+	t.Run("ListWithDateRange", func(t *testing.T) {
+		req := &payment.ListRefundsRequest{
+			PageSize:   10,
+			PageNumber: 1,
+			StartTime:  "2024-01-01T00:00:00Z",
+			EndTime:    "2024-12-31T23:59:59Z",
 		}
+
+		resp, err := client.Payment.Refunds.List(ctx, req)
+		if err != nil {
+			t.Fatalf("List refunds with date range failed: %v", err)
+		}
+
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
+		}
+
+		t.Logf("Refunds in date range: %d found (total: %d)", len(resp.Data), resp.TotalItems)
+	})
+
+	t.Run("ListByPaymentIntent", func(t *testing.T) {
+		req := &payment.ListRefundsRequest{
+			PageSize:        5,
+			PageNumber:      1,
+			PaymentIntentID: "PI2014290195662245888",
+		}
+
+		resp, err := client.Payment.Refunds.List(ctx, req)
+		if err != nil {
+			t.Fatalf("List refunds by PI failed: %v", err)
+		}
+
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
+		}
+
+		t.Logf("Refunds for PI: %d found (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 }
 
@@ -1188,6 +1628,25 @@ func TestPaymentReports(t *testing.T) {
 		} else {
 			t.Log("No settlements found")
 		}
+	})
+
+	t.Run("ListSettlementsByPaymentIntent", func(t *testing.T) {
+		req := &payment.ListSettlementsRequest{
+			PaymentIntentID: "PI2014290195662245888",
+			PageSize:        10,
+			PageNumber:      1,
+		}
+
+		resp, err := client.Payment.Reports.ListSettlements(ctx, req)
+		if err != nil {
+			t.Fatalf("List settlements by PI failed: %v", err)
+		}
+
+		if resp.Data == nil {
+			t.Error("Data should not be nil")
+		}
+
+		t.Logf("Settlements for PI: %d found (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("ListSettlementsWithDateRange", func(t *testing.T) {

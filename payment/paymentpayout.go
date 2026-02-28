@@ -18,19 +18,17 @@ type PaymentPayoutsClient struct {
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	Amount          string            `json:"amount"`
-	Currency        string            `json:"currency"`
-	BeneficiaryID   string            `json:"beneficiary_id,omitempty"`
-	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
+	PayoutCurrency      string `json:"payout_currency"`                // Required: Three-letter currency code (e.g., "SGD")
+	PayoutAmount        string `json:"payout_amount"`                  // Required: The amount to be withdrawn
+	StatementDescriptor string `json:"statement_descriptor"`           // Required: Max 15 characters
+	InternalNote        string `json:"internal_note,omitempty"`        // Optional: Internal note for the payout
 }
 
 // ListPayoutsRequest represents a payouts list request
 type ListPayoutsRequest struct {
 	PageSize   int    `json:"page_size"`   // Number of items per page
 	PageNumber int    `json:"page_number"` // Page number (1-based)
-	Status     string `json:"status"`      // Filter by status
+	PayoutStatus string `json:"payout_status"` // Filter by status: INITIATED, PROCESSING, COMPLETED, FAILED, FAILED_REFUNDED
 	StartTime  string `json:"start_time"`  // Filter by creation time (ISO8601)
 	EndTime    string `json:"end_time"`    // Filter by creation time (ISO8601)
 }
@@ -100,8 +98,8 @@ func (c *PaymentPayoutsClient) List(ctx context.Context, req *ListPayoutsRequest
 		path += fmt.Sprintf("%spage_number=%d", separator, req.PageNumber)
 		separator = "&"
 	}
-	if req.Status != "" {
-		path += fmt.Sprintf("%sstatus=%s", separator, req.Status)
+	if req.PayoutStatus != "" {
+		path += fmt.Sprintf("%spayout_status=%s", separator, req.PayoutStatus)
 		separator = "&"
 	}
 	if req.StartTime != "" {

@@ -28,6 +28,9 @@ type RequestOptions struct {
 	// ClientID is the client identifier for requests that require it.
 	// When set, it will be sent as the x-client-id header.
 	ClientID string
+	// OnBehalfOf is the connected account ID for requests on behalf of a sub-account.
+	// When set, it will be sent as the x-on-behalf-of header.
+	OnBehalfOf string
 }
 
 // APIClient handles HTTP requests to UQPAY API
@@ -151,6 +154,11 @@ func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body
 	// Set x-client-id header if provided
 	if opts != nil && opts.ClientID != "" {
 		req.Header.Set("x-client-id", opts.ClientID)
+	}
+
+	// Set x-on-behalf-of header if provided
+	if opts != nil && opts.OnBehalfOf != "" {
+		req.Header.Set("x-on-behalf-of", opts.OnBehalfOf)
 	}
 
 	// Execute request

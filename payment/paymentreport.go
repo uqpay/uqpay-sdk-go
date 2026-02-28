@@ -18,9 +18,11 @@ type PaymentReportsClient struct {
 
 // ListSettlementsRequest represents a settlements list request
 type ListSettlementsRequest struct {
-	SettledStartTime string `json:"settled_start_time"` // Start of settlement date range (ISO8601)
-	SettledEndTime   string `json:"settled_end_time"`   // End of settlement date range (ISO8601)
-	PageSize         int    `json:"page_size"`          // Number of items per page
+	PaymentIntentID  string `json:"payment_intent_id"`  // Filter by payment intent ID
+	SettlementBatchID string `json:"settlement_batch_id"` // Filter by settlement batch ID
+	SettledStartTime string `json:"settled_start_time"` // Start of settlement date range (YYYY-MM-DD)
+	SettledEndTime   string `json:"settled_end_time"`   // End of settlement date range (YYYY-MM-DD)
+	PageSize         int    `json:"page_size"`          // Number of items per page (1-1000)
 	PageNumber       int    `json:"page_number"`        // Page number (1-based)
 }
 
@@ -77,6 +79,14 @@ func (c *PaymentReportsClient) ListSettlements(ctx context.Context, req *ListSet
 	path := "/v2/payment/settlements"
 	separator := "?"
 
+	if req.PaymentIntentID != "" {
+		path += fmt.Sprintf("%spayment_intent_id=%s", separator, req.PaymentIntentID)
+		separator = "&"
+	}
+	if req.SettlementBatchID != "" {
+		path += fmt.Sprintf("%ssettlement_batch_id=%s", separator, req.SettlementBatchID)
+		separator = "&"
+	}
 	if req.SettledStartTime != "" {
 		path += fmt.Sprintf("%ssettled_start_time=%s", separator, req.SettledStartTime)
 		separator = "&"
