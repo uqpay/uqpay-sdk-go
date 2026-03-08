@@ -14,13 +14,12 @@ type BeneficiariesClient struct {
 
 // Address represents a beneficiary address
 type Address struct {
-	StreetAddress string `json:"street_address"`          // required
-	City          string `json:"city"`                    // required
-	State         string `json:"state,omitempty"`         // optional, ISO 3166-2
-	PostalCode    string `json:"postal_code,omitempty"`   // optional
-	Country       string `json:"country"`                 // required, ISO 3166-1 alpha-2
-	CountryCode   string `json:"country_code,omitempty"`  // optional, ISO 3166-1 alpha-2
-	Nationality   string `json:"nationality,omitempty"`   // optional
+	StreetAddress string `json:"street_address"`         // required
+	City          string `json:"city"`                   // required
+	State         string `json:"state"`                  // required
+	PostalCode    string `json:"postal_code"`            // required
+	Country       string `json:"country"`                // required, ISO 3166-1 alpha-2
+	Nationality   string `json:"nationality,omitempty"`  // optional, ISO 3166-1 alpha-2
 }
 
 // BankDetails represents beneficiary bank account details
@@ -37,45 +36,53 @@ type BankDetails struct {
 	RoutingCodeValue1   string `json:"routing_code_value1,omitempty"`   // routing code value
 	RoutingCodeType2    string `json:"routing_code_type2,omitempty"`    // optional second routing code
 	RoutingCodeValue2   string `json:"routing_code_value2,omitempty"`   // optional second routing value
-	IBAN                string `json:"iban,omitempty"`                  // optional, SEPA specific
-	SortCode            string `json:"sort_code,omitempty"`             // optional, UK specific
-	BIC                 string `json:"bic,omitempty"`                   // optional, SEPA specific
+	IBAN                string `json:"iban,omitempty"`                  // conditional, required for European countries
+}
+
+// AdditionalInfo represents extra beneficiary information
+type AdditionalInfo struct {
+	OrganizationCode string `json:"organization_code,omitempty"` // Unified Social Credit Identifier for China
+	ProxyID          string `json:"proxy_id,omitempty"`          // PayNow proxy identifier for SGD
+	IDType           string `json:"id_type,omitempty"`           // PASSPORT, NATIONAL_ID, or DRIVERS_LICENSE
+	IDNumber         string `json:"id_number,omitempty"`         // identification number for individuals
+	TaxID            string `json:"tax_id,omitempty"`            // tax ID for company beneficiaries
+	MSISDN           string `json:"msisdn,omitempty"`            // mobile number in +[code][number] format
 }
 
 // Beneficiary represents a beneficiary
 type Beneficiary struct {
-	BeneficiaryID string       `json:"beneficiary_id"`
-	EntityType    string       `json:"entity_type"`    // INDIVIDUAL or COMPANY
-	FirstName     string       `json:"first_name"`     // required if INDIVIDUAL
-	LastName      string       `json:"last_name"`      // required if INDIVIDUAL
-	CompanyName   string       `json:"company_name"`   // required if COMPANY
-	Currency      string       `json:"currency"`       // required
-	Country       string       `json:"country"`        // required, ISO 3166-1 alpha-2
-	PaymentMethod string       `json:"payment_method"` // required
-	BankDetails   *BankDetails `json:"bank_details"`   // required
-	Address       *Address     `json:"address"`        // required
-	Email         string       `json:"email,omitempty"`
-	PhoneNumber   string       `json:"phone_number,omitempty"`
-	Reference     string       `json:"reference,omitempty"`
-	CreateTime    string       `json:"create_time"`
-	UpdateTime    string       `json:"update_time"`
-	Status        string       `json:"status"` // active, inactive, deleted
+	BeneficiaryID  string          `json:"beneficiary_id"`
+	EntityType     string          `json:"entity_type"`              // INDIVIDUAL or COMPANY
+	FirstName      string          `json:"first_name,omitempty"`     // present if INDIVIDUAL
+	LastName       string          `json:"last_name,omitempty"`      // present if INDIVIDUAL
+	CompanyName    string          `json:"company_name,omitempty"`   // present if COMPANY
+	IDNumber       string          `json:"id_number,omitempty"`      // present when account currency = COP
+	Nickname       string          `json:"nickname,omitempty"`
+	PaymentMethod  string          `json:"payment_method"`
+	BankDetails    *BankDetails    `json:"bank_details"`
+	Address        *Address        `json:"address"`
+	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"`
+	Email          string          `json:"email,omitempty"`
+	CreateTime     string          `json:"created_time"`
+	UpdateTime     string          `json:"updated_time"`
+	Status         string          `json:"status"` // active, inactive, deleted
 }
 
 // BeneficiaryCreationRequest represents a beneficiary creation request
 type BeneficiaryCreationRequest struct {
-	EntityType    string       `json:"entity_type"`    // required: INDIVIDUAL or COMPANY
-	FirstName     string       `json:"first_name"`     // required if INDIVIDUAL
-	LastName      string       `json:"last_name"`      // required if INDIVIDUAL
-	CompanyName   string       `json:"company_name"`   // required if COMPANY
-	Currency      string       `json:"currency"`       // required
-	Country       string       `json:"country"`        // required, ISO 3166-1 alpha-2
-	PaymentMethod string       `json:"payment_method"` // required
-	BankDetails   *BankDetails `json:"bank_details"`   // required
-	Address       *Address     `json:"address"`        // required
-	Email         string       `json:"email,omitempty"`
-	PhoneNumber   string       `json:"phone_number,omitempty"`
-	Reference     string       `json:"reference,omitempty"`
+	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
+	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
+	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
+	IDNumber       string          `json:"id_number,omitempty"`       // required when account currency = COP
+	Nickname       string          `json:"nickname,omitempty"`        // optional, max 120 chars
+	Currency       string          `json:"currency,omitempty"`        // optional
+	Country        string          `json:"country,omitempty"`         // optional, ISO 3166-1 alpha-2
+	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
+	BankDetails    *BankDetails    `json:"bank_details"`              // required
+	Address        *Address        `json:"address"`                   // required
+	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
+	Email          string          `json:"email,omitempty"`           // optional
 }
 
 // BeneficiaryCreationResponse represents a beneficiary creation response
@@ -104,10 +111,17 @@ type ListBeneficiariesResponse struct {
 
 // BeneficiaryCheckRequest represents a beneficiary check request
 type BeneficiaryCheckRequest struct {
-	Currency      string       `json:"currency"`       // required
-	Country       string       `json:"country"`        // required, ISO 3166-1 alpha-2
-	PaymentMethod string       `json:"payment_method"` // required
-	BankDetails   *BankDetails `json:"bank_details"`   // required
+	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
+	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
+	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
+	IDNumber       string          `json:"id_number,omitempty"`       // required when account currency = COP
+	Nickname       string          `json:"nickname,omitempty"`        // optional, max 120 chars
+	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
+	BankDetails    *BankDetails    `json:"bank_details"`              // required
+	Address        *Address        `json:"address"`                   // required
+	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
+	Email          string          `json:"email,omitempty"`           // optional
 }
 
 // PaymentMethod represents an available payment method

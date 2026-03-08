@@ -35,7 +35,6 @@ func newUSAddress() *banking.Address {
 		State:         "NY",
 		PostalCode:    "10001",
 		Country:       "US",
-		CountryCode:   "US",
 	}
 }
 
