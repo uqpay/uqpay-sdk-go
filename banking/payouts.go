@@ -70,6 +70,7 @@ type CreatePayoutRequest struct {
 	PayoutDate      string                   `json:"payout_date"`               // required, YYYY-MM-DD
 	BeneficiaryID   string                   `json:"beneficiary_id,omitempty"`  // conditional, either this or beneficiary
 	Beneficiary     *PayoutInlineBeneficiary `json:"beneficiary,omitempty"`     // conditional, inline beneficiary
+	IsPayer         string                   `json:"is_payer,omitempty"`        // optional, "Y" or "N"
 	Documentation   []PayoutDocumentation    `json:"documentation,omitempty"`   // optional
 }
 
