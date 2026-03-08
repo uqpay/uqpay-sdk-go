@@ -13,7 +13,7 @@ import (
 	"github.com/uqpay/uqpay-sdk-go/supporting"
 )
 
-// Client is the main UQPAY SDK client
+// Client is the main UQPAY SDK client.
 type Client struct {
 	Issuing    *issuing.Client
 	Banking    *banking.Client
