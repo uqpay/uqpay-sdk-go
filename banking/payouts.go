@@ -36,61 +36,41 @@ type Payout struct {
 	CompleteTime          *string `json:"complete_time"` // nullable
 }
 
-// PayoutBeneficiary represents a payout beneficiary
-type PayoutBeneficiary struct {
-	BeneficiaryID   string                `json:"beneficiary_id,omitempty"`
-	BeneficiaryName string                `json:"beneficiary_name,omitempty"`
-	BankDetails     *PayoutBankDetails    `json:"bank_details,omitempty"`
-	WalletDetails   *WalletDetails        `json:"wallet_details,omitempty"`
-	ContactDetails  *PayoutContactDetails `json:"contact_details,omitempty"`
+// PayoutInlineBeneficiary represents an inline beneficiary for payout creation
+type PayoutInlineBeneficiary struct {
+	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
+	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
+	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
+	IDNumber       string          `json:"id_number,omitempty"`       // required when account currency = COP
+	Nickname       string          `json:"nickname,omitempty"`        // optional
+	Email          string          `json:"email,omitempty"`           // optional
+	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
+	BankDetails    *BankDetails    `json:"bank_details"`              // required (uses BankDetails from beneficiaries.go)
+	Address        *Address        `json:"address"`                   // required (uses Address from beneficiaries.go)
+	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
 }
 
-// PayoutBankDetails represents bank account information for payouts
-type PayoutBankDetails struct {
-	AccountNumber string `json:"account_number"`
-	AccountName   string `json:"account_name"`
-	BankCode      string `json:"bank_code"`
-	BankName      string `json:"bank_name,omitempty"`
-	BranchCode    string `json:"branch_code,omitempty"`
-	RoutingNumber string `json:"routing_number,omitempty"`
-	SwiftCode     string `json:"swift_code,omitempty"`
-	IBAN          string `json:"iban,omitempty"`
-	AccountType   string `json:"account_type,omitempty"` // SAVINGS, CHECKING, BUSINESS
-}
-
-// WalletDetails represents mobile wallet information
-type WalletDetails struct {
-	WalletProvider string `json:"wallet_provider"` // MPESA, AIRTEL_MONEY, MTN_MONEY, etc.
-	WalletNumber   string `json:"wallet_number"`
-	WalletName     string `json:"wallet_name,omitempty"`
-}
-
-// PayoutContactDetails represents beneficiary contact information for payouts
-type PayoutContactDetails struct {
-	Email       string `json:"email,omitempty"`
-	PhoneNumber string `json:"phone_number,omitempty"`
-	Address     string `json:"address,omitempty"`
-	City        string `json:"city,omitempty"`
-	Country     string `json:"country,omitempty"`
-	PostalCode  string `json:"postal_code,omitempty"`
+// PayoutDocumentation represents documentation attached to a payout
+type PayoutDocumentation struct {
+	File   string `json:"file,omitempty"`    // base64-encoded file
+	FileID string `json:"file_id,omitempty"` // file ID from upload API
 }
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	// Option 1: Reference existing beneficiary
-	BeneficiaryID string `json:"beneficiary_id,omitempty"`
-
-	// Option 2: Provide full beneficiary details inline
-	Beneficiary *PayoutBeneficiary `json:"beneficiary,omitempty"`
-
-	// Required fields
-	Currency      string `json:"currency"`       // required, e.g., "USD", "KES", "UGX"
-	Amount        string `json:"amount"`         // required, decimal string
-	PayoutPurpose string `json:"payout_purpose"` // required, e.g., "salary", "vendor_payment", "refund"
-
-	// Optional fields
-	Description string `json:"description,omitempty"`
-	Reference   string `json:"reference,omitempty"` // Client's internal reference
+	Currency        string                   `json:"currency"`                  // required, ISO 4217
+	Amount          string                   `json:"amount"`                    // required
+	QuoteID         string                   `json:"quote_id,omitempty"`        // optional, UUID
+	PayoutCurrency  string                   `json:"payout_currency,omitempty"` // conditional, required when quote_id specified
+	PayoutAmount    string                   `json:"payout_amount,omitempty"`   // conditional, required when quote_id specified
+	PurposeCode     string                   `json:"purpose_code"`              // required
+	PayoutReference string                   `json:"payout_reference"`          // required, max 100 chars
+	FeePaidBy       string                   `json:"fee_paid_by"`               // required, "OURS"
+	PayoutDate      string                   `json:"payout_date"`               // required, YYYY-MM-DD
+	BeneficiaryID   string                   `json:"beneficiary_id,omitempty"`  // conditional, either this or beneficiary
+	Beneficiary     *PayoutInlineBeneficiary `json:"beneficiary,omitempty"`     // conditional, inline beneficiary
+	Documentation   []PayoutDocumentation    `json:"documentation,omitempty"`   // optional
 }
 
 // CreatePayoutResponse represents a payout creation response

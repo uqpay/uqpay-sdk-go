@@ -37,6 +37,8 @@ const (
 	EventNameConversion  = "CONVERSION"
 	EventNameIssuing     = "ISSUING"
 	EventNameBeneficiary = "BENEFICIARY"
+	EventNamePayout      = "PAYOUT"
+	EventNameDeposit     = "DEPOSIT"
 )
 
 // Event types for onboarding
@@ -95,6 +97,21 @@ const (
 // Event types for issuing (card transaction events)
 const (
 	EventTypeIssuingFeeCard = "issuing.fee.card"
+)
+
+// Event types for payout
+const (
+	EventTypePayoutReadySend          = "payout.ready.send"
+	EventTypePayoutComplianceRejected = "payout.compliance.rejected"
+	EventTypePayoutCompleted          = "payout.completed"
+	EventTypePayoutFailed             = "payout.failed"
+)
+
+// Event types for deposit
+const (
+	EventTypeDepositPending            = "deposit.pending"
+	EventTypeDepositComplianceRejected = "deposit.compliance.rejected"
+	EventTypeDepositCompleted          = "deposit.completed"
 )
 
 // Event types for beneficiary
@@ -504,6 +521,34 @@ func (e *Event) MustParseCardTransactionData() *CardTransactionData {
 	return data
 }
 
+// IsPayoutEvent returns true if this is a payout-related event
+func (e *Event) IsPayoutEvent() bool {
+	return e.EventName == EventNamePayout
+}
+
+// ParsePayoutData parses the event data as a PayoutData struct.
+// Returns an error if the event type is not a payout event or if parsing fails.
+func (e *Event) ParsePayoutData() (*PayoutData, error) {
+	if !e.IsPayoutEvent() {
+		return nil, fmt.Errorf("event type %s is not a payout event", e.EventType)
+	}
+	var data PayoutData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse payout data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParsePayoutData is like ParsePayoutData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParsePayoutData() *PayoutData {
+	data, err := e.ParsePayoutData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 // IsBeneficiaryEvent returns true if this is a beneficiary-related event
 func (e *Event) IsBeneficiaryEvent() bool {
 	return e.EventName == EventNameBeneficiary
@@ -537,6 +582,34 @@ func (e *Event) ParseBeneficiaryData() (*BeneficiaryData, error) {
 // Use this only when you are certain the event type is correct.
 func (e *Event) MustParseBeneficiaryData() *BeneficiaryData {
 	data, err := e.ParseBeneficiaryData()
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+// IsDepositEvent returns true if this is a deposit-related event
+func (e *Event) IsDepositEvent() bool {
+	return e.EventName == EventNameDeposit
+}
+
+// ParseDepositData parses the event data as a DepositData struct.
+// Returns an error if the event type is not a deposit event or if parsing fails.
+func (e *Event) ParseDepositData() (*DepositData, error) {
+	if !e.IsDepositEvent() {
+		return nil, fmt.Errorf("event type %s is not a deposit event", e.EventType)
+	}
+	var data DepositData
+	if err := json.Unmarshal(e.Data, &data); err != nil {
+		return nil, fmt.Errorf("failed to parse deposit data: %w", err)
+	}
+	return &data, nil
+}
+
+// MustParseDepositData is like ParseDepositData but panics on error.
+// Use this only when you are certain the event type is correct.
+func (e *Event) MustParseDepositData() *DepositData {
+	data, err := e.ParseDepositData()
 	if err != nil {
 		panic(err)
 	}
