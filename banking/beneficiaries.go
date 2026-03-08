@@ -109,19 +109,23 @@ type ListBeneficiariesResponse struct {
 	Data       []Beneficiary `json:"data"`
 }
 
+// BeneficiaryCheckAdditionalInfo represents additional info for beneficiary check
+type BeneficiaryCheckAdditionalInfo struct {
+	ProxyID string `json:"proxy_id,omitempty"` // PayNow proxy identifier (SGD), supports UEN, phone number, or VPA
+}
+
 // BeneficiaryCheckRequest represents a beneficiary check request
 type BeneficiaryCheckRequest struct {
-	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
-	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
-	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
-	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
-	IDNumber       string          `json:"id_number,omitempty"`       // required when account currency = COP
-	Nickname       string          `json:"nickname,omitempty"`        // optional, max 120 chars
-	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
-	BankDetails    *BankDetails    `json:"bank_details"`              // required
-	Address        *Address        `json:"address"`                   // required
-	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
-	Email          string          `json:"email,omitempty"`           // optional
+	EntityType     string                           `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	PaymentMethod  string                           `json:"payment_method"`             // required: LOCAL or SWIFT
+	AccountNumber  string                           `json:"account_number"`             // required
+	Currency       string                           `json:"currency"`                   // required, ISO 4217
+	FirstName      string                           `json:"first_name,omitempty"`       // required if INDIVIDUAL
+	LastName       string                           `json:"last_name,omitempty"`        // required if INDIVIDUAL
+	CompanyName    string                           `json:"company_name,omitempty"`     // required if COMPANY
+	ClearingSystem string                           `json:"clearing_system,omitempty"`  // e.g. LOCAL, ACH, FEDWIRE
+	IBAN           string                           `json:"iban,omitempty"`             // conditional, e.g. country code for validation
+	AdditionalInfo *BeneficiaryCheckAdditionalInfo  `json:"additional_info,omitempty"`  // optional
 }
 
 // PaymentMethod represents an available payment method
