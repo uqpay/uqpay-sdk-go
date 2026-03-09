@@ -36,7 +36,7 @@ func TestFullIntegration(t *testing.T) {
 		}
 
 		t.Logf("✅ Cardholder created: ID=%s", cardholder.CardholderID)
-		t.Logf("   Status: %s", cardholder.Status)
+		t.Logf("   Status: %s", cardholder.CardholderStatus)
 
 		// Store for next steps
 		cardholderID := cardholder.CardholderID
@@ -54,7 +54,7 @@ func TestFullIntegration(t *testing.T) {
 			t.Logf("   ID: %s", ch.CardholderID)
 			t.Logf("   Name: %s %s", ch.FirstName, ch.LastName)
 			t.Logf("   Email: %s", ch.Email)
-			t.Logf("   Status: %s", ch.Status)
+			t.Logf("   Status: %s", ch.CardholderStatus)
 		})
 
 		// Step 3: Create Card for this Cardholder

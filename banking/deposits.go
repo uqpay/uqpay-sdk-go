@@ -14,17 +14,17 @@ type DepositsClient struct {
 
 // Deposit represents a deposit transaction
 type Deposit struct {
-	DepositID              string         `json:"deposit_id"`
-	ShortReferenceID       string         `json:"short_reference_id"`
-	Currency               string         `json:"currency"`
-	Amount                 string         `json:"amount"`
-	DepositFee             string         `json:"deposit_fee"`
-	DepositStatus          string         `json:"deposit_status"`
-	ReceiverAccountNumber  string         `json:"receiver_account_number"`
-	DepositReference       string         `json:"deposit_reference"`
-	Sender                 *DepositSender `json:"sender,omitempty"`
-	CreateTime             string         `json:"create_time"`
-	CompleteTime           string         `json:"complete_time"`
+	DepositID             string         `json:"deposit_id"`
+	ShortReferenceID      string         `json:"short_reference_id"`
+	Currency              string         `json:"currency"`
+	Amount                string         `json:"amount"`
+	DepositFee            string         `json:"deposit_fee,omitempty"`
+	DepositStatus         string         `json:"deposit_status"`
+	DepositReference      string         `json:"deposit_reference,omitempty"`
+	ReceiverAccountNumber string         `json:"receiver_account_number,omitempty"`
+	Sender                *DepositSender `json:"sender,omitempty"`
+	CreateTime            string         `json:"create_time"`
+	CompleteTime          string         `json:"complete_time,omitempty"`
 }
 
 // DepositSender represents the sender information for a deposit
@@ -65,7 +65,7 @@ func (c *DepositsClient) List(ctx context.Context, req *ListDepositsRequest) (*L
 		path += fmt.Sprintf("&end_time=%s", req.EndTime)
 	}
 	if req.DepositStatus != "" {
-		path += fmt.Sprintf("&deposit_status=%s", req.DepositStatus)
+		path += fmt.Sprintf("&status=%s", req.DepositStatus)
 	}
 	if req.Currency != "" {
 		path += fmt.Sprintf("&currency=%s", req.Currency)

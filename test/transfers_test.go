@@ -46,7 +46,28 @@ func TestTransfers(t *testing.T) {
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		t.Skip("Skipping create test - requires valid source and target account IDs")
+		createResp, err := client.Banking.Transfers.Create(ctx, &banking.CreateTransferRequest{
+			SourceAccountID: "2b9efe32-0e7a-43ff-813f-5d69ea8dbfae",
+			TargetAccountID: "6691861a-da21-4d49-b3f8-10314c4bc574",
+			Currency:        "USD",
+			Amount:          "100",
+			Reason:          "test transfer",
+		})
+		if err != nil {
+			t.Fatalf("Failed to create transfer: %v", err)
+		}
+
+		t.Logf("Created transfer: ID=%s, ShortRef=%s", createResp.TransferID, createResp.ShortReferenceID)
+
+		// Verify by retrieving the created transfer
+		transfer, err := client.Banking.Transfers.Get(ctx, createResp.TransferID)
+		if err != nil {
+			t.Fatalf("Failed to retrieve created transfer: %v", err)
+		}
+
+		t.Logf("Verified: Amount=%s %s, Status=%s, From=%s, To=%s",
+			transfer.TransferAmount, transfer.TransferCurrency, transfer.TransferStatus,
+			transfer.SourceAccountName, transfer.DestinationAccountName)
 	})
 
 	t.Run("Get", func(t *testing.T) {

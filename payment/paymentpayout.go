@@ -18,19 +18,19 @@ type PaymentPayoutsClient struct {
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	PayoutCurrency      string `json:"payout_currency"`                // Required: Three-letter currency code (e.g., "SGD")
-	PayoutAmount        string `json:"payout_amount"`                  // Required: The amount to be withdrawn
-	StatementDescriptor string `json:"statement_descriptor"`           // Required: Max 15 characters
-	InternalNote        string `json:"internal_note,omitempty"`        // Optional: Internal note for the payout
+	PayoutCurrency      string `json:"payout_currency"`         // Required: Three-letter currency code (e.g., "SGD")
+	PayoutAmount        string `json:"payout_amount"`           // Required: The amount to be withdrawn
+	StatementDescriptor string `json:"statement_descriptor"`    // Required: Max 15 characters
+	InternalNote        string `json:"internal_note,omitempty"` // Optional: Internal note for the payout
 }
 
 // ListPayoutsRequest represents a payouts list request
 type ListPayoutsRequest struct {
-	PageSize   int    `json:"page_size"`   // Number of items per page
-	PageNumber int    `json:"page_number"` // Page number (1-based)
+	PageSize     int    `json:"page_size"`     // Number of items per page
+	PageNumber   int    `json:"page_number"`   // Page number (1-based)
 	PayoutStatus string `json:"payout_status"` // Filter by status: INITIATED, PROCESSING, COMPLETED, FAILED, FAILED_REFUNDED
-	StartTime  string `json:"start_time"`  // Filter by creation time (ISO8601)
-	EndTime    string `json:"end_time"`    // Filter by creation time (ISO8601)
+	StartTime    string `json:"start_time"`    // Filter by creation time (ISO8601)
+	EndTime      string `json:"end_time"`      // Filter by creation time (ISO8601)
 }
 
 // ============================================================================
@@ -39,17 +39,14 @@ type ListPayoutsRequest struct {
 
 // Payout represents a payout response
 type Payout struct {
-	PayoutID            string            `json:"payout_id"`
-	PayoutAmount        string            `json:"payout_amount,omitempty"`
-	PayoutCurrency      string            `json:"payout_currency,omitempty"`
-	PayoutStatus        string            `json:"payout_status,omitempty"`
-	InternalNote        string            `json:"internal_note,omitempty"`
-	StatementDescriptor string            `json:"statement_descriptor,omitempty"`
-	BeneficiaryID       string            `json:"beneficiary_id,omitempty"`
-	MerchantOrderID     string            `json:"merchant_order_id,omitempty"`
-	Metadata            map[string]string `json:"metadata,omitempty"`
-	CreateTime          string            `json:"create_time,omitempty"`
-	CompletedTime       string            `json:"completed_time,omitempty"`
+	PayoutID            string `json:"payout_id"`
+	PayoutAmount        string `json:"payout_amount,omitempty"`
+	PayoutCurrency      string `json:"payout_currency,omitempty"`
+	PayoutStatus        string `json:"payout_status,omitempty"`
+	InternalNote        string `json:"internal_note,omitempty"`
+	StatementDescriptor string `json:"statement_descriptor,omitempty"`
+	CreateTime          string `json:"create_time,omitempty"`
+	CompletedTime       string `json:"completed_time,omitempty"`
 }
 
 // ListPayoutsResponse represents a paginated list of payouts

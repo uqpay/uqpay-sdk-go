@@ -38,7 +38,7 @@ type PaymentAttempt struct {
 	AttemptStatus      string            `json:"attempt_status,omitempty"`
 	CancellationReason string            `json:"cancellation_reason,omitempty"`
 	FailureCode        string            `json:"failure_code,omitempty"`
-	PaymentMethod      *PaymentMethod    `json:"payment_method,omitempty"`
+	PaymentMethod      string            `json:"payment_method,omitempty"`
 	Metadata           map[string]string `json:"metadata,omitempty"`
 	CreateTime         string            `json:"create_time,omitempty"`
 	UpdateTime         string            `json:"update_time,omitempty"`

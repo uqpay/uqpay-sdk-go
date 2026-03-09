@@ -110,6 +110,11 @@ type ConversionDate struct {
 	Valid bool   `json:"valid"` // whether this date is available for conversion
 }
 
+// ListConversionDatesResponse represents a response for listing available conversion dates
+type ListConversionDatesResponse struct {
+	Data []ConversionDate `json:"data"`
+}
+
 // List lists conversions
 func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest) (*ListConversionsResponse, error) {
 	var resp ListConversionsResponse
@@ -157,13 +162,13 @@ func (c *ConversionClient) Get(ctx context.Context, conversionID string) (*Conve
 }
 
 // ListConversionDates retrieves available conversion dates for a currency pair
-func (c *ConversionClient) ListConversionDates(ctx context.Context, currencyFrom, currencyTo string) ([]ConversionDate, error) {
-	var resp []ConversionDate
+func (c *ConversionClient) ListConversionDates(ctx context.Context, currencyFrom, currencyTo string) (*ListConversionDatesResponse, error) {
+	var resp ListConversionDatesResponse
 	path := fmt.Sprintf("/v1/conversion/conversion_dates?currency_from=%s&currency_to=%s", currencyFrom, currencyTo)
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list conversion dates: %w", err)
 	}
-	return resp, nil
+	return &resp, nil
 }
 
 // CreateQuote creates a new conversion quote

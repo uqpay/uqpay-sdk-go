@@ -15,14 +15,18 @@ type BalancesClient struct {
 // Balance represents account balance information
 type Balance struct {
 	BalanceID        string `json:"balance_id"`
+	AccountID        string `json:"account_id,omitempty"`
 	Currency         string `json:"currency"`
 	AvailableBalance string `json:"available_balance"`
-	PrepaidBalance   string `json:"prepaid_balance"`
-	MarginBalance    string `json:"margin_balance"`
-	FrozenBalance    string `json:"frozen_balance"`
-	BalanceStatus    string `json:"balance_status"`
-	CreateTime       string `json:"create_time"`
-	LastTradeTime    string `json:"last_trade_time"`
+	ReservedBalance  string `json:"reserved_balance,omitempty"`
+	TotalBalance     string `json:"total_balance,omitempty"`
+	PrepaidBalance   string `json:"prepaid_balance,omitempty"`
+	MarginBalance    string `json:"margin_balance,omitempty"`
+	FrozenBalance    string `json:"frozen_balance,omitempty"`
+	BalanceStatus    string `json:"balance_status,omitempty"`
+	CreateTime       string `json:"create_time,omitempty"`
+	LastTradeTime    string `json:"last_trade_time,omitempty"`
+	LastUpdated      string `json:"last_updated,omitempty"`
 }
 
 // ListBalancesRequest represents a balance list request
@@ -41,18 +45,20 @@ type ListBalancesResponse struct {
 // BalanceTransaction represents a balance transaction
 type BalanceTransaction struct {
 	TransactionID     string `json:"transaction_id"`
-	AccountID         string `json:"account_id"`
-	BalanceID         string `json:"balance_id"`
+	AccountID         string `json:"account_id,omitempty"`
+	BalanceID         string `json:"balance_id,omitempty"`
 	Currency          string `json:"currency"`
 	Amount            string `json:"amount"`
-	CreditDebitType   string `json:"credit_debit_type"`   // C (credit) or D (debit)
-	TransactionType   string `json:"transaction_type"`    // CONVERSION, DEPOSIT, PAYOUT, TRANSFER, FEE, etc.
-	TransactionStatus string `json:"transaction_status"`  // COMPLETED, PENDING, FAILED
-	TransactionWay    string `json:"transaction_way"`     // API, WEB, etc.
+	BalanceImpact     string `json:"balance_impact,omitempty"`
+	Description       string `json:"description,omitempty"`
+	CreditDebitType   string `json:"credit_debit_type,omitempty"`
+	TransactionType   string `json:"transaction_type"`
+	TransactionStatus string `json:"transaction_status,omitempty"`
+	TransactionWay    string `json:"transaction_way,omitempty"`
 	PayoutWay         string `json:"payout_way,omitempty"`
 	ReferenceID       string `json:"reference_id"`
 	CreateTime        string `json:"create_time"`
-	CompleteTime      string `json:"complete_time"`
+	CompleteTime      string `json:"complete_time,omitempty"`
 }
 
 // ListBalanceTransactionsRequest represents a balance transaction list request

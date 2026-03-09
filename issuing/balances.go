@@ -29,10 +29,14 @@ type ListBalancesRequest struct {
 
 // ListBalanceTransactionsRequest represents a request to list issuing balance transactions
 type ListBalanceTransactionsRequest struct {
-	PageSize   int    `json:"page_size"`   // required, 10-100
-	PageNumber int    `json:"page_number"` // required, >=1
-	StartTime  string `json:"start_time"`  // optional, max 90 days interval
-	EndTime    string `json:"end_time"`    // optional, max 90 days interval
+	PageSize          int    `json:"page_size"`                    // required, 10-100
+	PageNumber        int    `json:"page_number"`                  // required, >=1
+	StartTime         string `json:"start_time,omitempty"`         // optional, max 90 days interval
+	EndTime           string `json:"end_time,omitempty"`           // optional, max 90 days interval
+	Currency          string `json:"currency,omitempty"`           // optional, filter by currency
+	TransactionType   string `json:"transaction_type,omitempty"`   // optional, filter by transaction type
+	TransactionStatus string `json:"transaction_status,omitempty"` // optional, filter by transaction status
+	TransactionID     string `json:"transaction_id,omitempty"`     // optional, filter by transaction ID
 }
 
 // ============================================================================
@@ -63,13 +67,14 @@ type IssuingBalanceTransaction struct {
 	TransactionID      string `json:"transaction_id"`
 	ShortTransactionID string `json:"short_transaction_id"`
 	AccountID          string `json:"account_id"`
+	AccountName        string `json:"account_name"`
 	BalanceID          string `json:"balance_id"`
 	TransactionType    string `json:"transaction_type"` // DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
 	Currency           string `json:"currency"`
 	Amount             string `json:"amount"`
 	CreateTime         string `json:"create_time"`
 	CompleteTime       string `json:"complete_time"`
-	TransactionStatus  string `json:"transaction_status"` // FAILED, PENDING, COMPLETED, CANCELLED
+	TransactionStatus  string `json:"transaction_status"` // FAILED, PENDING, COMPLETED
 	EndingBalance      string `json:"ending_balance"`
 	Description        string `json:"description"`
 }
@@ -114,6 +119,18 @@ func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceT
 	}
 	if req.EndTime != "" {
 		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+	}
+	if req.Currency != "" {
+		path += fmt.Sprintf("&currency=%s", req.Currency)
+	}
+	if req.TransactionType != "" {
+		path += fmt.Sprintf("&transaction_type=%s", req.TransactionType)
+	}
+	if req.TransactionStatus != "" {
+		path += fmt.Sprintf("&transaction_status=%s", req.TransactionStatus)
+	}
+	if req.TransactionID != "" {
+		path += fmt.Sprintf("&transaction_id=%s", req.TransactionID)
 	}
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {

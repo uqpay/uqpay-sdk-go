@@ -21,7 +21,7 @@ type CreatePaymentIntentRequest struct {
 	Amount          string            `json:"amount"`
 	Currency        string            `json:"currency"`
 	MerchantOrderID string            `json:"merchant_order_id"`
-	Description     string            `json:"description"`              // Max 32 characters
+	Description     string            `json:"description"` // Max 32 characters
 	ReturnURL       string            `json:"return_url"`
 	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
 	IPAddress       string            `json:"ip_address,omitempty"`
@@ -37,13 +37,20 @@ type CreatePaymentIntentRequest struct {
 // PaymentMethod represents the payment method details
 // Only one payment method type should be set based on the Type field
 type PaymentMethod struct {
-	Type string `json:"type"` // card, card_present, alipaycn, alipayhk, unionpay, wechatpay, grabpay, paynow, truemoney, tng, gcash, dana, kakaopay, toss, naverpay
+	Type string `json:"type"` // card, card_present, applepay, googlepay, crypto, alipaycn, alipayhk, unionpay, wechatpay, grabpay, paynow, truemoney, tng, gcash, dana, kakaopay, toss, naverpay
 
 	// Card payments (online)
 	Card *Card `json:"card,omitempty"`
 
 	// Card present payments (POS terminal)
 	CardPresent *CardPresent `json:"card_present,omitempty"`
+
+	// Digital wallet token payments
+	ApplePay  *ApplePay  `json:"applepay,omitempty"`
+	GooglePay *GooglePay `json:"googlepay,omitempty"`
+
+	// Cryptocurrency payments
+	Crypto *Crypto `json:"crypto,omitempty"`
 
 	// E-wallet and QR code payments
 	AlipayCN  *WalletPayment `json:"alipaycn,omitempty"`
@@ -103,12 +110,12 @@ type Address struct {
 
 // CustomerRequest represents customer details for a payment
 type CustomerRequest struct {
-	FirstName   string   `json:"first_name"`
-	LastName    string   `json:"last_name"`
-	Email       string   `json:"email"`
-	PhoneNumber string   `json:"phone_number,omitempty"`
-	Description string   `json:"description,omitempty"` // Max 255 characters
-	Address     *Address `json:"address,omitempty"`
+	FirstName   string            `json:"first_name"`
+	LastName    string            `json:"last_name"`
+	Email       string            `json:"email"`
+	PhoneNumber string            `json:"phone_number,omitempty"`
+	Description string            `json:"description,omitempty"` // Max 255 characters
+	Address     *Address          `json:"address,omitempty"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
@@ -118,15 +125,15 @@ type CustomerRequest struct {
 
 // PaymentOrders represents purchase order information
 type PaymentOrders struct {
-	Type     string           `json:"type,omitempty"`     // Industry category, e.g., "physical_goods"
+	Type     string           `json:"type,omitempty"` // Industry category, e.g., "physical_goods"
 	Products []PaymentProduct `json:"products,omitempty"`
 }
 
 // PaymentProduct represents a product in a payment order
 type PaymentProduct struct {
-	Name     string `json:"name"`              // Product name (max 255 chars)
-	Price    string `json:"price"`             // Price per unit
-	Quantity int    `json:"quantity"`           // Quantity
+	Name     string `json:"name"`                // Product name (max 255 chars)
+	Price    string `json:"price"`               // Price per unit
+	Quantity int    `json:"quantity"`            // Quantity
 	ImageURL string `json:"image_url,omitempty"` // Product thumbnail URL
 }
 
@@ -137,16 +144,16 @@ type PaymentProduct struct {
 // BrowserInfo represents browser information for risk and fraud prevention
 // Required when three_ds_action=enforce_3ds
 type BrowserInfo struct {
-	AcceptHeader     string          `json:"accept_header,omitempty"`
-	Browser          *BrowserDetail  `json:"browser,omitempty"`
-	DeviceID         string          `json:"device_id,omitempty"`
-	Language         string          `json:"language,omitempty"`          // ISO language code, e.g., "en-US"
-	Location         *GeoLocation    `json:"location,omitempty"`
-	Mobile           *MobileInfo     `json:"mobile,omitempty"`           // Required for mobile transactions
-	ScreenColorDepth int             `json:"screen_color_depth,omitempty"` // 1-48
-	ScreenHeight     int             `json:"screen_height,omitempty"`     // 1-9999
-	ScreenWidth      int             `json:"screen_width,omitempty"`      // 1-9999
-	Timezone         string          `json:"timezone,omitempty"`          // UTC offset, e.g., "-2" or "8"
+	AcceptHeader     string         `json:"accept_header,omitempty"`
+	Browser          *BrowserDetail `json:"browser,omitempty"`
+	DeviceID         string         `json:"device_id,omitempty"`
+	Language         string         `json:"language,omitempty"` // ISO language code, e.g., "en-US"
+	Location         *GeoLocation   `json:"location,omitempty"`
+	Mobile           *MobileInfo    `json:"mobile,omitempty"`             // Required for mobile transactions
+	ScreenColorDepth int            `json:"screen_color_depth,omitempty"` // 1-48
+	ScreenHeight     int            `json:"screen_height,omitempty"`      // 1-9999
+	ScreenWidth      int            `json:"screen_width,omitempty"`       // 1-9999
+	Timezone         string         `json:"timezone,omitempty"`           // UTC offset, e.g., "-2" or "8"
 }
 
 // BrowserDetail represents browser-specific information
@@ -238,12 +245,75 @@ type GrabPay struct {
 	ShopperName string `json:"shopper_name,omitempty"` // Name of the shopper
 }
 
+// ============================================================================
+// Apple Pay
+// ============================================================================
+
+// ApplePay represents Apple Pay payment details
+type ApplePay struct {
+	Flow           string          `json:"flow"`                 // redirect, mobile_web, mobile_app, contactless
+	OSType         string          `json:"os_type,omitempty"`    // ios (required for mobile_web, mobile_app)
+	IsPresent      bool            `json:"is_present,omitempty"` // Customer physically present during payment
+	Network        string          `json:"network"`              // visa, mastercard, amex, discover, jcb
+	CardType       string          `json:"card_type,omitempty"`  // debit, credit
+	TokenType      string          `json:"token_type"`           // decrypted, encrypted
+	AuthMethod     string          `json:"auth_method"`          // cryptogram_3ds, pan_only
+	NetworkToken   *NetworkToken   `json:"network_token"`
+	BillingContact *BillingContact `json:"billing_contact,omitempty"`
+}
+
+// ============================================================================
+// Google Pay
+// ============================================================================
+
+// GooglePay represents Google Pay payment details
+type GooglePay struct {
+	Flow           string          `json:"flow"`                 // redirect, mobile_web, mobile_app, contactless
+	OSType         string          `json:"os_type,omitempty"`    // ios, android (required for mobile_web, mobile_app)
+	IsPresent      bool            `json:"is_present,omitempty"` // Customer physically present during payment
+	Network        string          `json:"network"`              // visa, mastercard, amex, discover, jcb
+	CardType       string          `json:"card_type,omitempty"`  // debit, credit
+	TokenType      string          `json:"token_type"`           // decrypted, encrypted
+	AuthMethod     string          `json:"auth_method"`          // cryptogram_3ds, pan_only
+	NetworkToken   *NetworkToken   `json:"network_token"`
+	BillingAddress *BillingContact `json:"billing_address,omitempty"`
+}
+
+// NetworkToken represents the DPAN token details for Apple Pay and Google Pay
+type NetworkToken struct {
+	Number      string `json:"number"`               // DPAN, 12-52 characters
+	ExpiryMonth string `json:"expiry_month"`         // 2-digit month
+	ExpiryYear  string `json:"expiry_year"`          // 4-digit year
+	Cryptogram  string `json:"cryptogram,omitempty"` // Base64 encoded, required for cryptogram_3ds
+	ECI         string `json:"eci,omitempty"`        // Required for cryptogram_3ds
+}
+
+// BillingContact represents billing contact information for Apple Pay and Google Pay
+type BillingContact struct {
+	FirstName string   `json:"first_name,omitempty"`
+	LastName  string   `json:"last_name,omitempty"`
+	Email     string   `json:"email,omitempty"`
+	Phone     string   `json:"phone,omitempty"`
+	Address   *Address `json:"address,omitempty"`
+}
+
+// ============================================================================
+// Cryptocurrency
+// ============================================================================
+
+// Crypto represents cryptocurrency payment details
+type Crypto struct {
+	Flow      string `json:"flow"`              // redirect, qrcode
+	Network   string `json:"network,omitempty"` // ETH, TRON (required when flow is qrcode)
+	IsPresent bool   `json:"is_present"`        // Must be false for crypto payments
+}
+
 // UpdatePaymentIntentRequest represents a payment intent update request
 type UpdatePaymentIntentRequest struct {
 	Amount          string            `json:"amount,omitempty"`
 	Currency        string            `json:"currency,omitempty"`
-	Customer        *CustomerRequest  `json:"customer,omitempty"`         // Omit when customer_id is specified
-	CustomerID      string            `json:"customer_id,omitempty"`      // Required for recurring payments
+	Customer        *CustomerRequest  `json:"customer,omitempty"`    // Omit when customer_id is specified
+	CustomerID      string            `json:"customer_id,omitempty"` // Required for recurring payments
 	PaymentOrders   *PaymentOrders    `json:"payment_orders,omitempty"`
 	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
 	Description     string            `json:"description,omitempty"`
@@ -271,11 +341,11 @@ type CancelPaymentIntentRequest struct {
 
 // ListPaymentIntentsRequest represents a payment intents list request
 type ListPaymentIntentsRequest struct {
-	PageSize             int    `json:"page_size"`              // Number of items per page (1-100)
-	PageNumber           int    `json:"page_number"`            // Page number (1-based)
-	PaymentIntentStatus  string `json:"payment_intent_status"`  // Filter by status: REQUIRES_PAYMENT_METHOD, REQUIRES_CUSTOMER_ACTION, REQUIRES_CAPTURE, PENDING, SUCCEEDED, CANCELLED, FAILED
-	StartTime            string `json:"start_time"`             // Exclusive start time (ISO8601)
-	EndTime              string `json:"end_time"`               // Exclusive end time (ISO8601)
+	PageSize            int    `json:"page_size"`             // Number of items per page (1-100)
+	PageNumber          int    `json:"page_number"`           // Page number (1-based)
+	PaymentIntentStatus string `json:"payment_intent_status"` // Filter by status: REQUIRES_PAYMENT_METHOD, REQUIRES_CUSTOMER_ACTION, REQUIRES_CAPTURE, PENDING, SUCCEEDED, CANCELLED, FAILED
+	StartTime           string `json:"start_time"`            // Exclusive start time (ISO8601)
+	EndTime             string `json:"end_time"`              // Exclusive end time (ISO8601)
 }
 
 // ============================================================================
@@ -359,7 +429,10 @@ func (c *PaymentIntentsClient) Update(ctx context.Context, paymentIntentID strin
 func (c *PaymentIntentsClient) Confirm(ctx context.Context, paymentIntentID string, req *ConfirmPaymentIntentRequest) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/confirm", paymentIntentID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	opts := &common.RequestOptions{
+		ClientID: c.client.Config.ClientID,
+	}
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
 		return nil, fmt.Errorf("failed to confirm payment intent: %w", err)
 	}
 	return &resp, nil

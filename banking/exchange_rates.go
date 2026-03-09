@@ -16,8 +16,10 @@ type ExchangeRatesClient struct {
 // RateItem represents an exchange rate for a currency pair
 type RateItem struct {
 	CurrencyPair string `json:"currency_pair"` // e.g., "USDEUR"
-	BuyPrice     string `json:"buy_price"`
-	SellPrice    string `json:"sell_price"`
+	Rate         string `json:"rate,omitempty"`
+	BuyPrice     string `json:"buy_price,omitempty"`
+	SellPrice    string `json:"sell_price,omitempty"`
+	Timestamp    string `json:"timestamp,omitempty"`
 }
 
 // ListRatesRequest represents a request to list exchange rates

@@ -32,18 +32,21 @@ func TestPayouts(t *testing.T) {
 				p.PayoutStatus, p.FeeAmount, p.FeeCurrency)
 			t.Logf("    Reason=%s, PurposeCode=%s, Date=%s",
 				p.PayoutReason, p.PurposeCode, p.PayoutDate)
+			if p.Conversion != nil {
+				t.Logf("    Conversion: %s @ %s", p.Conversion.CurrencyPair, p.Conversion.ClientRate)
+			}
 		}
 	})
 
 	t.Run("ListWithFilters", func(t *testing.T) {
 		resp, err := client.Banking.Payouts.List(ctx, &banking.ListPayoutsRequest{
-			PageSize: 10, PageNumber: 1, PayoutStatus: "COMPLETED", Currency: "USD",
+			PageSize: 10, PageNumber: 1, PayoutStatus: "COMPLETED",
 		})
 		if err != nil {
 			t.Logf("List with filters returned error: %v", err)
 			return
 		}
-		t.Logf("Found %d completed USD payouts (total: %d)", len(resp.Data), resp.TotalItems)
+		t.Logf("Found %d completed payouts (total: %d)", len(resp.Data), resp.TotalItems)
 	})
 
 	t.Run("ListByStatus", func(t *testing.T) {
@@ -90,6 +93,19 @@ func TestPayouts(t *testing.T) {
 		t.Logf("  Fee=%s %s, Reason=%s, PurposeCode=%s",
 			resp.FeeAmount, resp.FeeCurrency, resp.PayoutReason, resp.PurposeCode)
 		t.Logf("  Created=%s, Ref=%s", resp.CreateTime, resp.ShortReferenceID)
+		if resp.SourceCurrency != "" {
+			t.Logf("  Source=%s %s, AmountPayerPays=%s, AmountBeneficiaryReceives=%s",
+				resp.SourceAmount, resp.SourceCurrency, resp.AmountPayerPays, resp.AmountBeneficiaryReceives)
+		}
+		if resp.Conversion != nil {
+			t.Logf("  Conversion: %s @ %s", resp.Conversion.CurrencyPair, resp.Conversion.ClientRate)
+		}
+		if resp.Payer != nil {
+			t.Logf("  Payer: ID=%s, Type=%s", resp.Payer.PayerID, resp.Payer.EntityType)
+		}
+		if resp.Beneficiary != nil {
+			t.Logf("  Beneficiary: ID=%s, Type=%s", resp.Beneficiary.BeneficiaryID, resp.Beneficiary.EntityType)
+		}
 		if resp.CompleteTime != nil && *resp.CompleteTime != "" {
 			t.Logf("  Completed: %s", *resp.CompleteTime)
 		}

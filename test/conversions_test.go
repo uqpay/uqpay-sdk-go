@@ -17,7 +17,7 @@ func getAvailableConversionDate(t *testing.T, client *uqpay.Client, ctx context.
 	if err != nil {
 		t.Fatalf("Failed to get conversion dates for %s->%s: %v", from, to, err)
 	}
-	for _, d := range dates {
+	for _, d := range dates.Data {
 		if d.Valid {
 			return d.Date
 		}
@@ -198,8 +198,8 @@ func TestConversionListWithFilters(t *testing.T) {
 	ctx := context.Background()
 
 	req := &banking.ListConversionsRequest{
-		PageSize:   10,
-		PageNumber: 1,
+		PageSize:     10,
+		PageNumber:   1,
 		SellCurrency: "USD",
 	}
 
@@ -252,17 +252,17 @@ func TestConversionDates(t *testing.T) {
 		t.Fatalf("Failed to get conversion dates: %v", err)
 	}
 
-	if len(dates) == 0 {
+	if len(dates.Data) == 0 {
 		t.Error("Expected at least one conversion date")
 	}
 
-	t.Logf("Available conversion dates for USD->EUR: %d", len(dates))
-	for i, d := range dates {
+	t.Logf("Available conversion dates for USD->EUR: %d", len(dates.Data))
+	for i, d := range dates.Data {
 		t.Logf("  %d: %s (valid=%t)", i+1, d.Date, d.Valid)
 	}
 
 	// Verify date format (YYYY-MM-DD)
-	for _, d := range dates {
+	for _, d := range dates.Data {
 		if len(d.Date) != 10 {
 			t.Errorf("Expected date format YYYY-MM-DD, got %s", d.Date)
 		}
@@ -292,12 +292,12 @@ func TestConversionDatesMultipleCurrencyPairs(t *testing.T) {
 				return
 			}
 			validCount := 0
-			for _, d := range dates {
+			for _, d := range dates.Data {
 				if d.Valid {
 					validCount++
 				}
 			}
-			t.Logf("%s->%s: %d dates (%d valid)", p.from, p.to, len(dates), validCount)
+			t.Logf("%s->%s: %d dates (%d valid)", p.from, p.to, len(dates.Data), validCount)
 		})
 	}
 }
@@ -317,7 +317,7 @@ func TestConversionFullFlow(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get conversion dates: %v", err)
 		}
-		for _, d := range dates {
+		for _, d := range dates.Data {
 			if d.Valid {
 				convDate = d.Date
 				t.Logf("Using conversion date: %s", convDate)
