@@ -18,83 +18,83 @@ type CardsClient struct {
 
 // CreateCardRequest represents a card creation request
 type CreateCardRequest struct {
-	CardLimit        *float64          `json:"card_limit,omitempty"`
-	CardCurrency     string            `json:"card_currency"`
-	CardholderID     string            `json:"cardholder_id"`
-	CardProductID    string            `json:"card_product_id"`
-	SpendingControls []SpendingControl `json:"spending_controls,omitempty"`
-	RiskControls     *RiskControls     `json:"risk_controls,omitempty"`
-	Metadata         map[string]string `json:"metadata,omitempty"`
+	CardLimit        *string           `json:"card_limit,omitempty"`        // Optional. Total credit limit for the card, min 0.01 for some BINs
+	CardCurrency     string            `json:"card_currency"`               // Required. Card currency, e.g. SGD, USD
+	CardholderID     string            `json:"cardholder_id"`               // Required. UUID of the cardholder
+	CardProductID    string            `json:"card_product_id"`             // Required. UUID of the card product
+	SpendingControls []SpendingControl `json:"spending_controls,omitempty"` // Optional. Rules that control spending for this card
+	RiskControls     *RiskControls     `json:"risk_controls,omitempty"`     // Optional. User-customized risk control settings
+	Metadata         map[string]string `json:"metadata,omitempty"`          // Optional. Key-value pairs, max 3200 bytes
 }
 
 // SpendingControl represents spending control rules for a card
 type SpendingControl struct {
-	Amount   float64 `json:"amount"`
-	Interval string  `json:"interval"` // PER_TRANSACTION
+	Amount   string `json:"amount"`   // Required. Maximum amount allowed per interval, min 0
+	Interval string `json:"interval"` // Required. Interval type: PER_TRANSACTION
 }
 
 // RiskControls represents user-customized risk control settings
 type RiskControls struct {
-	Allow3DSTransactions *string  `json:"allow_3ds_transactions,omitempty"` // Y or N
-	AllowedMCC           []string `json:"allowed_mcc,omitempty"`
-	BlockedMCC           []string `json:"blocked_mcc,omitempty"`
+	Allow3DSTransactions *string  `json:"allow_3ds_transactions,omitempty"` // Optional. Y or N, defaults to Y
+	AllowedMCC           []string `json:"allowed_mcc,omitempty"`            // Optional. Whitelist of Merchant Category Codes
+	BlockedMCC           []string `json:"blocked_mcc,omitempty"`            // Optional. Blacklist of Merchant Category Codes
 }
 
 // CardUpdateRequest represents a card update request
 type CardUpdateRequest struct {
-	CardLimit           *float64          `json:"card_limit,omitempty"`
-	NoPINPaymentAmount  *float64          `json:"no_pin_payment_amount,omitempty"`
-	SpendingControls    []SpendingControl `json:"spending_controls,omitempty"`
-	RiskControls        *RiskControls     `json:"risk_controls,omitempty"`
-	Metadata            map[string]string `json:"metadata,omitempty"`
+	CardLimit          *string           `json:"card_limit,omitempty"`            // Optional. Credit limit for the card, min 0, up to 2 decimals
+	NoPINPaymentAmount *string           `json:"no_pin_payment_amount,omitempty"` // Optional. Max amount for transactions without PIN, default 200 SGD
+	SpendingControls   []SpendingControl `json:"spending_controls,omitempty"`     // Optional. Rules controlling card spending
+	RiskControls       *RiskControls     `json:"risk_controls,omitempty"`         // Optional. User-customized risk control settings
+	Metadata           map[string]string `json:"metadata,omitempty"`              // Optional. Key-value pairs, max 3200 bytes
 }
 
 // UpdateCardStatusRequest represents a card status update request
 type UpdateCardStatusRequest struct {
-	CardStatus   string  `json:"card_status"` // ACTIVE, FROZEN, CANCELLED
-	UpdateReason *string `json:"update_reason,omitempty"`
+	CardStatus   string  `json:"card_status"`             // Required. Target status: ACTIVE, FROZEN, or CANCELLED
+	UpdateReason *string `json:"update_reason,omitempty"` // Optional. Reason for the status change, max 100 chars
 }
 
 // CardOrderRequest represents a card recharge/withdraw request
 type CardOrderRequest struct {
-	Amount float64 `json:"amount"`
+	Amount string `json:"amount"` // Required. Recharge or withdraw amount, must be > 0
 }
 
 // ActivateCardRequest represents a card activation request
 type ActivateCardRequest struct {
-	CardID             string   `json:"card_id"`
-	ActivationCode     string   `json:"activation_code"`
-	PIN                string   `json:"pin"`
-	NoPINPaymentAmount *float64 `json:"no_pin_payment_amount,omitempty"`
+	CardID             string  `json:"card_id"`                         // Required. UUID of the card to activate
+	ActivationCode     string  `json:"activation_code"`                 // Required. Activation code for the card
+	PIN                string  `json:"pin"`                             // Required. 6-digit numeric PIN for the card
+	NoPINPaymentAmount *string `json:"no_pin_payment_amount,omitempty"` // Optional. Max amount without PIN verification, default 200 SGD
 }
 
 // SetPINRequest represents a card PIN reset request
 type SetPINRequest struct {
-	CardID string `json:"card_id"`
-	PIN    string `json:"pin"`
+	CardID string `json:"card_id"` // Required. UUID of the card
+	PIN    string `json:"pin"`     // Required. New 6-digit numeric PIN
 }
 
 // AssignCardRequest represents a card assignment request
 type AssignCardRequest struct {
-	CardholderID string `json:"cardholder_id"`
-	CardNumber   string `json:"card_number"`
-	CardCurrency string `json:"card_currency"`
-	CardMode     string `json:"card_mode"` // SINGLE or SHARE
+	CardholderID string `json:"cardholder_id"` // Required. UUID of the cardholder to assign to
+	CardNumber   string `json:"card_number"`   // Required. Card number to assign
+	CardCurrency string `json:"card_currency"` // Required. Currency for the card, e.g. SGD, USD
+	CardMode     string `json:"card_mode"`     // Required. SINGLE (prepaid) or SHARE (debit/prepaid)
 }
 
 // BulkCardCreationRequest represents a bulk card creation request
 type BulkCardCreationRequest struct {
-	CardBIN string `json:"card_bin"`
-	Numbers int    `json:"numbers"` // 1-5000
+	CardBIN string `json:"card_bin"` // Required. Card BIN (Bank Identification Number) prefix
+	Numbers int    `json:"numbers"`  // Required. Number of cards to create, range 1-5000
 }
 
 // ListCardsRequest represents a card list request
 type ListCardsRequest struct {
-	PageSize     int     `json:"page_size"`
-	PageNumber   int     `json:"page_number"`
-	CardNumber   *string `json:"card_number,omitempty"`
-	CardStatus   *string `json:"card_status,omitempty"`
-	CardholderID *string `json:"cardholder_id,omitempty"`
+	PageSize     int     `json:"page_size"`               // Required. Items per page, min 10, max 100, default 10
+	PageNumber   int     `json:"page_number"`             // Required. Page to retrieve, min 1, default 1
+	CardNumber   *string `json:"card_number,omitempty"`   // Optional. Filter by full card number
+	CardStatus   *string `json:"card_status,omitempty"`   // Optional. PENDING|ACTIVE|FROZEN|BLOCKED|CANCELLED|LOST|STOLEN|FAILED
+	CardholderID *string `json:"cardholder_id,omitempty"` // Optional. Filter by cardholder UUID
 }
 
 // ============================================================================
@@ -103,115 +103,120 @@ type ListCardsRequest struct {
 
 // CardCreationResponse represents the response after creating a card
 type CardCreationResponse struct {
-	CardID      string `json:"card_id"`
-	CardOrderID string `json:"card_order_id"`
-	CreateTime  string `json:"create_time"`
-	CardStatus  string `json:"card_status"`
-	OrderStatus string `json:"order_status"`
+	CardID      string `json:"card_id"`       // UUID of the created card
+	CardOrderID string `json:"card_order_id"` // UUID of the card order
+	CreateTime  string `json:"create_time"`   // ISO 8601 creation timestamp
+	CardStatus  string `json:"card_status"`   // PENDING|ACTIVE|FROZEN|BLOCKED|CANCELLED|LOST|STOLEN|FAILED
+	OrderStatus string `json:"order_status"`  // PENDING|PROCESSING|SUCCESS|FAILED
 }
 
 // CardUpdatedResponse represents the response after updating a card
 type CardUpdatedResponse struct {
-	CardID      string `json:"card_id"`
-	CardOrderID string `json:"card_order_id"`
-	CardStatus  string `json:"card_status"`
-	OrderStatus string `json:"order_status"`
+	CardID      string `json:"card_id"`       // UUID of the updated card
+	CardOrderID string `json:"card_order_id"` // UUID of the card order
+	CardStatus  string `json:"card_status"`   // PENDING|ACTIVE|FROZEN|BLOCKED|CANCELLED|LOST|STOLEN|FAILED
+	OrderStatus string `json:"order_status"`  // PENDING|PROCESSING|SUCCESS|FAILED
 }
 
 // CardStatusResponse represents the response after updating card status
 type CardStatusResponse struct {
-	CardID       string  `json:"card_id"`
-	CardOrderID  string  `json:"card_order_id"`
-	OrderStatus  string  `json:"order_status"`
-	UpdateReason *string `json:"update_reason,omitempty"`
+	CardID       string  `json:"card_id"`                 // UUID of the card
+	CardOrderID  string  `json:"card_order_id"`           // UUID of the card order
+	OrderStatus  string  `json:"order_status"`            // PENDING|PROCESSING|SUCCESS|FAILED
+	UpdateReason *string `json:"update_reason,omitempty"` // Reason provided for the status change
 }
 
 // RetrieveCardResponse represents detailed card information
 type RetrieveCardResponse struct {
-	CardID              string                  `json:"card_id"`
-	CardBIN             string                  `json:"card_bin"`
-	CardScheme          string                  `json:"card_scheme"`
-	CardCurrency        string                  `json:"card_currency"`
-	CardNumber          string                  `json:"card_number"`
-	FormFactor          string                  `json:"form_factor"`
-	ModeType            string                  `json:"mode_type"`
-	CardProductID       string                  `json:"card_product_id"`
-	CardLimit           float64                 `json:"card_limit"`
-	AvailableBalance    string                  `json:"available_balance"`
-	Cardholder          CardholderInfo          `json:"cardholder"`
-	SpendingControls    []SpendingControl       `json:"spending_controls,omitempty"`
-	NoPINPaymentAmount  string                  `json:"no_pin_payment_amount"`
-	RiskControls        *RiskControls           `json:"risk_controls,omitempty"`
-	Metadata            map[string]string       `json:"metadata,omitempty"`
-	CardStatus          string                  `json:"card_status"`
-	UpdateReason        *string                 `json:"update_reason,omitempty"`
-	ConsumedAmount      *string                 `json:"consumed_amount,omitempty"`
+	CardID             string            `json:"card_id"`                     // UUID of the card
+	CardBIN            string            `json:"card_bin"`                    // Card number prefix (BIN)
+	CardScheme         string            `json:"card_scheme"`                 // Payment scheme, e.g. VISA
+	CardCurrency       string            `json:"card_currency"`               // Card currency, e.g. SGD, USD
+	CardNumber         string            `json:"card_number"`                 // Masked card number
+	FormFactor         string            `json:"form_factor"`                 // VIRTUAL or PHYSICAL
+	ModeType           string            `json:"mode_type"`                   // SINGLE (prepaid) or SHARE (debit/prepaid)
+	CardProductID      string            `json:"card_product_id"`             // UUID of the associated card product
+	CardLimit          string            `json:"card_limit"`                  // Credit limit assigned to the card
+	AvailableBalance   string            `json:"available_balance"`           // Current available balance
+	Cardholder         CardholderInfo    `json:"cardholder"`                  // Associated cardholder details
+	SpendingControls   []SpendingControl `json:"spending_controls,omitempty"` // Transaction spending limit rules
+	NoPINPaymentAmount string            `json:"no_pin_payment_amount"`       // Max amount allowed without PIN verification
+	RiskControls       *RiskControls     `json:"risk_controls,omitempty"`     // User-customized risk control settings
+	Metadata           interface{}       `json:"metadata,omitempty"`          // Key-value pairs, max 3200 bytes. May be object or empty string.
+	CardStatus         string            `json:"card_status"`                 // PENDING|ACTIVE|FROZEN|BLOCKED|CANCELLED|LOST|STOLEN|FAILED
+	UpdateReason       *string           `json:"update_reason,omitempty"`     // Reason for card status change
+	ConsumedAmount     *string           `json:"consumed_amount,omitempty"`   // Cumulative amount already used against card limit
 }
 
 // CardholderInfo represents cardholder information in card response
 type CardholderInfo struct {
-	CardholderID     string  `json:"cardholder_id"`
-	Email            string  `json:"email"`
-	NumberOfCards    int     `json:"number_of_cards"`
-	FirstName        string  `json:"first_name"`
-	LastName         string  `json:"last_name"`
-	CreateTime       string  `json:"create_time"`
-	CardholderStatus string  `json:"cardholder_status"`
-	DateOfBirth      *string `json:"date_of_birth,omitempty"`
-	CountryCode      *string `json:"country_code,omitempty"`
-	PhoneNumber      *string `json:"phone_number,omitempty"`
+	CardholderID     string  `json:"cardholder_id"`           // UUID of the cardholder
+	Email            string  `json:"email"`                   // Cardholder email address
+	NumberOfCards    int     `json:"number_of_cards"`         // Total cards associated with this cardholder
+	FirstName        string  `json:"first_name"`              // Cardholder first name
+	LastName         string  `json:"last_name"`               // Cardholder last name
+	CreateTime       string  `json:"create_time"`             // Creation timestamp
+	CardholderStatus string  `json:"cardholder_status"`       // FAILED|PENDING|SUCCESS|INCOMPLETE
+	DateOfBirth      *string `json:"date_of_birth,omitempty"` // Format: yyyy-mm-dd
+	CountryCode      *string `json:"country_code,omitempty"`  // ISO 3166-1 alpha-2 country code
+	PhoneNumber      *string `json:"phone_number,omitempty"`  // Contact phone number
 }
 
 // SecureCardInfo represents secure card information
 type SecureCardInfo struct {
-	CVV        string `json:"cvv"`
-	ExpireDate string `json:"expire_date"`
-	CardNumber string `json:"card_number"`
+	CVV        string `json:"cvv"`         // 3-digit Card Verification Value
+	ExpireDate string `json:"expire_date"` // Card expiry date in MM/YY format
+	CardNumber string `json:"card_number"` // Full 16-digit Primary Account Number
 }
 
 // CardOrder represents a card order
 type CardOrder struct {
-	CardID       string  `json:"card_id"`
-	CardOrderID  string  `json:"card_order_id"`
-	OrderType    string  `json:"order_type"`
-	Amount       float64 `json:"amount"`
-	CardCurrency string  `json:"card_currency"`
-	CreateTime   string  `json:"create_time"`
-	UpdateTime   string  `json:"update_time"`
-	CompleteTime string  `json:"complete_time"`
-	OrderStatus  string  `json:"order_status"`
+	CardID       string `json:"card_id"`       // UUID of the card
+	CardOrderID  string `json:"card_order_id"` // UUID of the card order
+	OrderType    string `json:"order_type"`    // CARD_CREATE|CARD_RECHARGE|CARD_WITHDRAW|CARD_UPDATE
+	Amount       string `json:"amount"`        // Transaction amount
+	CardCurrency string `json:"card_currency"` // Currency code, e.g. SGD, USD
+	CreateTime   string `json:"create_time"`   // ISO 8601 creation timestamp
+	UpdateTime   string `json:"update_time"`   // ISO 8601 last update timestamp
+	CompleteTime string `json:"complete_time"` // ISO 8601 completion timestamp
+	OrderStatus  string `json:"order_status"`  // PENDING|PROCESSING|SUCCESS|FAILED
 }
 
 // ActivateCardResponse represents the response after activating a card
 type ActivateCardResponse struct {
-	RequestStatus string `json:"request_status"`
+	RequestStatus string `json:"request_status"` // Request completion status, e.g. SUCCESS
 }
 
 // SetPINResponse represents the response after resetting PIN
 type SetPINResponse struct {
-	RequestStatus string `json:"request_status"`
+	RequestStatus string `json:"request_status"` // Request completion status, e.g. SUCCESS
 }
 
 // AssignCardResponse represents the response after assigning a card
 type AssignCardResponse struct {
-	CardID      string `json:"card_id"`
-	CardOrderID string `json:"card_order_id"`
-	CreateTime  string `json:"create_time"`
-	CardStatus  string `json:"card_status"`
-	OrderStatus string `json:"order_status"`
+	CardID      string `json:"card_id"`       // UUID of the assigned card
+	CardOrderID string `json:"card_order_id"` // UUID of the card order
+	CreateTime  string `json:"create_time"`   // ISO 8601 creation timestamp
+	CardStatus  string `json:"card_status"`   // PENDING|ACTIVE|FROZEN|BLOCKED|CANCELLED|LOST|STOLEN|FAILED
+	OrderStatus string `json:"order_status"`  // PENDING|PROCESSING|SUCCESS|FAILED
 }
 
 // BulkCardCreationResponse represents the response after bulk card creation
 type BulkCardCreationResponse struct {
-	ReportID   string  `json:"report_id"`
-	ExpireDate *string `json:"expire_date,omitempty"`
+	ReportID   string  `json:"report_id"`             // UUID of the bulk creation report
+	ExpireDate *string `json:"expire_date,omitempty"` // Report expiration date
+}
+
+// CreatePANTokenResponse represents the response after creating a PAN token
+type CreatePANTokenResponse struct {
+	Token string `json:"token"` // One-time PAN token, expires after 60 seconds
 }
 
 // ListCardsResponse represents a card list response
 type ListCardsResponse struct {
-	TotalPages int                    `json:"total_pages"`
-	TotalItems int                    `json:"total_items"`
-	Data       []RetrieveCardResponse `json:"data"`
+	TotalPages int                    `json:"total_pages"` // Total number of pages available
+	TotalItems int                    `json:"total_items"` // Total number of items available
+	Data       []RetrieveCardResponse `json:"data"`        // Array of card objects
 }
 
 // ============================================================================
@@ -350,6 +355,17 @@ func (c *CardsClient) BulkCreate(ctx context.Context, req *BulkCardCreationReque
 	var resp BulkCardCreationResponse
 	if err := c.client.Post(ctx, "/v1/issuing/cards/bulk", req, &resp); err != nil {
 		return nil, fmt.Errorf("failed to bulk create cards: %w", err)
+	}
+	return &resp, nil
+}
+
+// CreatePANToken creates a one-time PAN token for accessing sensitive card details
+// through a secure iframe. The token expires after 60 seconds and can only be used once.
+func (c *CardsClient) CreatePANToken(ctx context.Context, cardID string) (*CreatePANTokenResponse, error) {
+	var resp CreatePANTokenResponse
+	path := fmt.Sprintf("/v1/issuing/cards/%s/token", cardID)
+	if err := c.client.Post(ctx, path, nil, &resp); err != nil {
+		return nil, fmt.Errorf("failed to create PAN token: %w", err)
 	}
 	return &resp, nil
 }

@@ -22,7 +22,7 @@ func TestIssuingTransfers(t *testing.T) {
 			SourceAccountID:      "65087660-8d3d-428e-bd2e-9e56219c1512",
 			DestinationAccountID: "11db237e-1a2b-4449-9878-a9bf1f0df0c7",
 			Currency:             "SGD",
-			Amount:               100.00,
+			Amount:               "100.00",
 			Remark:               "Test transfer from SDK",
 		}
 

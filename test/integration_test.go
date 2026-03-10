@@ -36,7 +36,7 @@ func TestFullIntegration(t *testing.T) {
 		}
 
 		t.Logf("✅ Cardholder created: ID=%s", cardholder.CardholderID)
-		t.Logf("   Status: %s", cardholder.Status)
+		t.Logf("   Status: %s", cardholder.CardholderStatus)
 
 		// Store for next steps
 		cardholderID := cardholder.CardholderID
@@ -54,7 +54,7 @@ func TestFullIntegration(t *testing.T) {
 			t.Logf("   ID: %s", ch.CardholderID)
 			t.Logf("   Name: %s %s", ch.FirstName, ch.LastName)
 			t.Logf("   Email: %s", ch.Email)
-			t.Logf("   Status: %s", ch.Status)
+			t.Logf("   Status: %s", ch.CardholderStatus)
 		})
 
 		// Step 3: Create Card for this Cardholder
@@ -145,10 +145,10 @@ func TestFullIntegration(t *testing.T) {
 			// Step 6: Recharge Card
 			t.Run("RechargeCard", func(t *testing.T) {
 				rechargeReq := &issuing.CardOrderRequest{
-					Amount: 100.50,
+					Amount: "100.50",
 				}
 
-				t.Logf("💰 Recharging card %s with amount: %.2f", cardID, rechargeReq.Amount)
+				t.Logf("💰 Recharging card %s with amount: %s", cardID, rechargeReq.Amount)
 
 				order, err := client.Issuing.Cards.Recharge(ctx, cardID, rechargeReq)
 				if err != nil {
@@ -159,7 +159,7 @@ func TestFullIntegration(t *testing.T) {
 				t.Logf("✅ Recharge order created:")
 				t.Logf("   Order ID: %s", order.CardOrderID)
 				t.Logf("   Status: %s", order.OrderStatus)
-				t.Logf("   Amount: %.2f", order.Amount)
+				t.Logf("   Amount: %s", order.Amount)
 			})
 
 			// Step 7: Update Card Status

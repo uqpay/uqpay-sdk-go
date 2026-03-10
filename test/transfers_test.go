@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/uqpay/uqpay-sdk-go/banking"
+	"github.com/uqpay/uqpay-sdk-go/connect"
 )
 
 func TestTransfers(t *testing.T) {
@@ -29,8 +30,8 @@ func TestTransfers(t *testing.T) {
 			tr := resp.Data[0]
 			t.Logf("  First: ID=%s, Amount=%s %s, Status=%s",
 				tr.TransferID, tr.TransferAmount, tr.TransferCurrency, tr.TransferStatus)
-			t.Logf("    From=%s, To=%s, Reason=%s",
-				tr.SourceAccountName, tr.DestinationAccountName, tr.TransferReason)
+			t.Logf("    From=%s, To=%s",
+				tr.SourceAccountName, tr.DestinationAccountName)
 		}
 	})
 
@@ -46,7 +47,43 @@ func TestTransfers(t *testing.T) {
 	})
 
 	t.Run("Create", func(t *testing.T) {
-		t.Skip("Skipping create test - requires valid source and target account IDs")
+		// Fetch a sub-account to use as the target
+		accountsResp, err := client.Connect.Accounts.List(ctx, &connect.ListAccountsRequest{
+			PageSize: 1, PageNumber: 1,
+		})
+		if err != nil {
+			t.Fatalf("Failed to list accounts: %v", err)
+		}
+		if len(accountsResp.Data) == 0 {
+			t.Skip("No active sub-accounts available for transfer test")
+		}
+		subAccountID := accountsResp.Data[0].AccountID
+		masterAccountID := "65087660-8d3d-428e-bd2e-9e56219c1512"
+
+		t.Logf("Using master=%s, sub=%s", masterAccountID, subAccountID)
+
+		createResp, err := client.Banking.Transfers.Create(ctx, &banking.CreateTransferRequest{
+			SourceAccountID: masterAccountID,
+			TargetAccountID: subAccountID,
+			Currency:        "USD",
+			Amount:          "1",
+			Reason:          "sdk integration test transfer",
+		})
+		if err != nil {
+			t.Fatalf("Failed to create transfer: %v", err)
+		}
+
+		t.Logf("Created transfer: ID=%s, ShortRef=%s", createResp.TransferID, createResp.ShortReferenceID)
+
+		// Verify by retrieving the created transfer
+		transfer, err := client.Banking.Transfers.Get(ctx, createResp.TransferID)
+		if err != nil {
+			t.Fatalf("Failed to retrieve created transfer: %v", err)
+		}
+
+		t.Logf("Verified: Amount=%s %s, Status=%s, From=%s, To=%s",
+			transfer.TransferAmount, transfer.TransferCurrency, transfer.TransferStatus,
+			transfer.SourceAccountName, transfer.DestinationAccountName)
 	})
 
 	t.Run("Get", func(t *testing.T) {

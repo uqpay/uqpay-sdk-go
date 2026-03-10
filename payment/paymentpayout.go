@@ -18,19 +18,19 @@ type PaymentPayoutsClient struct {
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	PayoutCurrency      string `json:"payout_currency"`                // Required: Three-letter currency code (e.g., "SGD")
-	PayoutAmount        string `json:"payout_amount"`                  // Required: The amount to be withdrawn
-	StatementDescriptor string `json:"statement_descriptor"`           // Required: Max 15 characters
-	InternalNote        string `json:"internal_note,omitempty"`        // Optional: Internal note for the payout
+	PayoutCurrency      string `json:"payout_currency"`         // Required. ISO 4217 three-letter currency code (e.g., "SGD")
+	PayoutAmount        string `json:"payout_amount"`           // Required. Withdrawal amount (e.g., "100.00")
+	StatementDescriptor string `json:"statement_descriptor"`    // Required. Reference displayed to recipient's bank, max 15 characters
+	InternalNote        string `json:"internal_note,omitempty"` // Optional. Internal remark for the payout
 }
 
 // ListPayoutsRequest represents a payouts list request
 type ListPayoutsRequest struct {
-	PageSize   int    `json:"page_size"`   // Number of items per page
-	PageNumber int    `json:"page_number"` // Page number (1-based)
-	PayoutStatus string `json:"payout_status"` // Filter by status: INITIATED, PROCESSING, COMPLETED, FAILED, FAILED_REFUNDED
-	StartTime  string `json:"start_time"`  // Filter by creation time (ISO8601)
-	EndTime    string `json:"end_time"`    // Filter by creation time (ISO8601)
+	PageSize     int    `json:"page_size"`     // Required. Number of items per page (1-100)
+	PageNumber   int    `json:"page_number"`   // Required. Page number, 1-based
+	PayoutStatus string `json:"payout_status"` // Optional. Filter by status: INITIATED, PROCESSING, COMPLETED, FAILED, or FAILED_REFUNDED
+	StartTime    string `json:"start_time"`    // Optional. Payout creation start date, format: YYYY-MM-DD (inclusive, 00:00:00)
+	EndTime      string `json:"end_time"`      // Optional. Payout creation end date, format: YYYY-MM-DD (inclusive, 23:59:59)
 }
 
 // ============================================================================
@@ -39,24 +39,21 @@ type ListPayoutsRequest struct {
 
 // Payout represents a payout response
 type Payout struct {
-	PayoutID            string            `json:"payout_id"`
-	PayoutAmount        string            `json:"payout_amount,omitempty"`
-	PayoutCurrency      string            `json:"payout_currency,omitempty"`
-	PayoutStatus        string            `json:"payout_status,omitempty"`
-	InternalNote        string            `json:"internal_note,omitempty"`
-	StatementDescriptor string            `json:"statement_descriptor,omitempty"`
-	BeneficiaryID       string            `json:"beneficiary_id,omitempty"`
-	MerchantOrderID     string            `json:"merchant_order_id,omitempty"`
-	Metadata            map[string]string `json:"metadata,omitempty"`
-	CreateTime          string            `json:"create_time,omitempty"`
-	CompletedTime       string            `json:"completed_time,omitempty"`
+	PayoutID            string `json:"payout_id"`                      // Unique payout identifier (e.g., "PO1968582687224500224")
+	PayoutAmount        string `json:"payout_amount,omitempty"`        // Withdrawal amount (e.g., "100.00")
+	PayoutCurrency      string `json:"payout_currency,omitempty"`      // ISO 4217 three-letter currency code (e.g., "SGD")
+	PayoutStatus        string `json:"payout_status,omitempty"`        // INITIATED, PROCESSING, COMPLETED, FAILED, or FAILED_REFUNDED
+	InternalNote        string `json:"internal_note,omitempty"`        // Internal remark for the payout
+	StatementDescriptor string `json:"statement_descriptor,omitempty"` // Reference displayed to recipient's bank, max 15 characters
+	CreateTime          string `json:"create_time,omitempty"`          // Payout creation timestamp, ISO 8601 format
+	CompletedTime       string `json:"completed_time,omitempty"`       // Payout completion timestamp, ISO 8601 format; empty if not yet completed
 }
 
 // ListPayoutsResponse represents a paginated list of payouts
 type ListPayoutsResponse struct {
-	TotalPages int      `json:"total_pages"`
-	TotalItems int      `json:"total_items"`
-	Data       []Payout `json:"data"`
+	TotalPages int      `json:"total_pages"` // Total number of available result pages
+	TotalItems int      `json:"total_items"` // Total count of matching payouts
+	Data       []Payout `json:"data"`        // List of payout objects for the current page
 }
 
 // ============================================================================

@@ -17,8 +17,9 @@ func TestCreateSubAccount(t *testing.T) {
 
 	t.Run("Individual", func(t *testing.T) {
 		req := &connect.CreateSubAccountRequest{
-			EntityType: connect.EntityTypeIndividual,
-			Nickname:   "SDK Test Individual",
+			BusinessType: "BANKING",
+			EntityType:   connect.EntityTypeIndividual,
+			Nickname:     "SDK Test Individual",
 			IndividualInfo: &connect.SubAccountIndividualInfo{
 				FirstNameEnglish:   "John",
 				LastNameEnglish:    "Doe",
@@ -39,11 +40,11 @@ func TestCreateSubAccount(t *testing.T) {
 				FaceDocs:            []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			ExpectedActivity: &connect.SubAccountExpectedActivity{
-				AccountPurpose:      []string{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
-				BankingCountries:    []string{"GB", "US"},
-				BankingCurrencies:   []string{"GBP", "USD"},
-				Internationally:     1,
-				TurnoverMonthly:     connect.TurnoverMonthlyTM002,
+				AccountPurpose:          []string{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
+				BankingCountries:        []string{"GB", "US"},
+				BankingCurrencies:       []string{"GBP", "USD"},
+				Internationally:         1,
+				TurnoverMonthly:         connect.TurnoverMonthlyTM002,
 				TurnoverMonthlyCurrency: "GBP",
 			},
 			ProofDocuments: &connect.SubAccountProofDocuments{
@@ -79,20 +80,21 @@ func TestCreateSubAccount(t *testing.T) {
 	t.Run("Company", func(t *testing.T) {
 		inheritNo := -1
 		req := &connect.CreateSubAccountRequest{
-			EntityType: connect.EntityTypeCompany,
-			Nickname:   "SDK Test Company",
-			Inherit:    &inheritNo,
+			BusinessType: "BANKING",
+			EntityType:   connect.EntityTypeCompany,
+			Nickname:     "SDK Test Company",
+			Inherit:      &inheritNo,
 			CompanyInfo: &connect.SubAccountCompanyInfo{
-				LegalBusinessName:        "SDK Test Ltd",
-				LegalBusinessNameEnglish: "SDK Test Ltd",
-				CountryOfIncorporation:   "GB",
-				CompanyType:              connect.CompanyTypeLimitedCompany,
-				PhoneNumber:              "+442071234567",
-				EmailAddress:             "company.sdktest@example.com",
-				CompanyRegistrationNumber: "12345678",
-				TaxType:                  connect.TaxTypeVAT,
-				TaxNumber:               "GB123456789",
-				IncorporateDate:          "2020-06-15",
+				LegalBusinessName:            "SDK Test Ltd",
+				LegalBusinessNameEnglish:     "SDK Test Ltd",
+				CountryOfIncorporation:       "GB",
+				CompanyType:                  connect.CompanyTypeLimitedCompany,
+				PhoneNumber:                  "+442071234567",
+				EmailAddress:                 "company.sdktest@example.com",
+				CompanyRegistrationNumber:    "12345678",
+				TaxType:                      connect.TaxTypeVAT,
+				TaxNumber:                    "GB123456789",
+				IncorporateDate:              "2020-06-15",
 				CertificationOfIncorporation: []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			CompanyAddress: &connect.SubAccountAddress{
@@ -170,8 +172,9 @@ func TestCreateSubAccount(t *testing.T) {
 
 	t.Run("Validation_MissingTos", func(t *testing.T) {
 		req := &connect.CreateSubAccountRequest{
-			EntityType: connect.EntityTypeIndividual,
-			Nickname:   "Missing TOS Test",
+			BusinessType: "BANKING",
+			EntityType:   connect.EntityTypeIndividual,
+			Nickname:     "Missing TOS Test",
 			IndividualInfo: &connect.SubAccountIndividualInfo{
 				FirstNameEnglish:   "Test",
 				LastNameEnglish:    "User",
@@ -214,8 +217,9 @@ func TestCreateSubAccount(t *testing.T) {
 
 	t.Run("Validation_IndividualMissingFields", func(t *testing.T) {
 		req := &connect.CreateSubAccountRequest{
-			EntityType: connect.EntityTypeIndividual,
-			Nickname:   "Missing Fields Test",
+			BusinessType: "BANKING",
+			EntityType:   connect.EntityTypeIndividual,
+			Nickname:     "Missing Fields Test",
 			// Missing required fields for Individual
 			TosAcceptance: &connect.SubAccountTosAcceptance{
 				IP:   "192.168.1.1",

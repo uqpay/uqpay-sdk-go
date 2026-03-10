@@ -74,10 +74,10 @@ func TestExistingCards(t *testing.T) {
 		}
 
 		rechargeReq := &issuing.CardOrderRequest{
-			Amount: 50.00,
+			Amount: "50.00",
 		}
 
-		t.Logf("💰 Recharging card %s with %.2f %s", cardID, rechargeReq.Amount, testCard.CardCurrency)
+		t.Logf("💰 Recharging card %s with %s %s", cardID, rechargeReq.Amount, testCard.CardCurrency)
 
 		order, err := client.Issuing.Cards.Recharge(ctx, cardID, rechargeReq)
 		if err != nil {
@@ -88,7 +88,7 @@ func TestExistingCards(t *testing.T) {
 		t.Logf("✅ Recharge order created:")
 		t.Logf("   Order ID: %s", order.CardOrderID)
 		t.Logf("   Card ID: %s", order.CardID)
-		t.Logf("   Amount: %.2f", order.Amount)
+		t.Logf("   Amount: %s", order.Amount)
 		t.Logf("   Status: %s", order.OrderStatus)
 		t.Logf("   Create Time: %s", order.CreateTime)
 	})

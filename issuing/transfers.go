@@ -18,11 +18,11 @@ type TransfersClient struct {
 
 // CreateTransferRequest represents a request to create an issuing transfer
 type CreateTransferRequest struct {
-	SourceAccountID      string  `json:"source_account_id"`      // required - The account id that initiated the transfer
-	DestinationAccountID string  `json:"destination_account_id"` // required - The account id that received the transfer
-	Currency             string  `json:"currency"`               // required - Transfer currency
-	Amount               float64 `json:"amount"`                 // required - Transfer amount (precision limited to two decimal places)
-	Remark               string  `json:"remark,omitempty"`       // optional - The remark of the transfer
+	SourceAccountID      string `json:"source_account_id"`      // Required. UUID. The account ID that initiated the transfer
+	DestinationAccountID string `json:"destination_account_id"` // Required. UUID. The account ID that receives the transfer
+	Currency             string `json:"currency"`               // Required. ISO 4217 currency code, e.g. "SGD"
+	Amount               string `json:"amount"`                 // Required. Transfer amount, precision limited to two decimal places
+	Remark               string `json:"remark,omitempty"`       // Optional. Notation or description for the transfer
 }
 
 // ============================================================================
@@ -31,23 +31,23 @@ type CreateTransferRequest struct {
 
 // CreateTransferResponse represents a response from creating an issuing transfer
 type CreateTransferResponse struct {
-	TransferID string `json:"transfer_id"` // Unique identifier for transfer
+	TransferID string `json:"transfer_id"` // UUID. Unique identifier for the transfer
 }
 
 // Transfer represents the full details of an issuing transfer
 type Transfer struct {
-	TransferID           string `json:"transfer_id"`            // Unique identifier for transfer
-	ReferenceID          string `json:"reference_id"`           // Short reference id for the transfer
-	SourceAccountID      string `json:"source_account_id"`      // The account id that initiated the transfer
-	DestinationAccountID string `json:"destination_account_id"` // The account id that received the transfer
+	TransferID           string `json:"transfer_id"`            // UUID. Unique identifier for the transfer
+	ReferenceID          string `json:"reference_id"`           // UUID. Short reference ID for the transfer
+	SourceAccountID      string `json:"source_account_id"`      // UUID. The account ID that initiated the transfer
+	DestinationAccountID string `json:"destination_account_id"` // UUID. The account ID that received the transfer
 	Amount               string `json:"amount"`                 // Transfer amount
 	FeeAmount            string `json:"fee_amount"`             // Transaction fee amount
-	Currency             string `json:"currency"`               // Transfer currency
-	TransferStatus       string `json:"transfer_status"`        // Transfer status: pending, failed, completed
-	CreateTime           string `json:"create_time"`            // Transfer create time
-	CompleteTime         string `json:"complete_time"`          // Transfer complete time
-	CreatorID            string `json:"creator_id"`             // The account id that create the transfer
-	Remark               string `json:"remark"`                 // The remark of the transfer
+	Currency             string `json:"currency"`               // ISO 4217 currency code, e.g. "SGD"
+	TransferStatus       string `json:"transfer_status"`        // "pending", "failed", or "completed"
+	CreateTime           string `json:"create_time"`            // ISO 8601 timestamp. Transfer creation time
+	CompleteTime         string `json:"complete_time"`          // ISO 8601 timestamp. Transfer completion time
+	CreatorID            string `json:"creator_id"`             // UUID. The account ID that created the transfer
+	Remark               string `json:"remark"`                 // Notation or description for the transfer
 }
 
 // ============================================================================

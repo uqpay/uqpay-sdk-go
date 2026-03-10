@@ -41,7 +41,7 @@ func TestCards(t *testing.T) {
 
 		cardID := "test-card-id"
 		req := &issuing.CardOrderRequest{
-			Amount: 100.00,
+			Amount: "100.00",
 		}
 
 		order, err := client.Issuing.Cards.Recharge(ctx, cardID, req)
@@ -49,7 +49,7 @@ func TestCards(t *testing.T) {
 			t.Fatalf("Failed to recharge card: %v", err)
 		}
 
-		t.Logf("✅ Recharge order created: ID=%s, Status=%s, Amount=%.2f",
+		t.Logf("✅ Recharge order created: ID=%s, Status=%s, Amount=%s",
 			order.CardOrderID, order.OrderStatus, order.Amount)
 	})
 
@@ -58,7 +58,7 @@ func TestCards(t *testing.T) {
 
 		cardID := "test-card-id"
 		req := &issuing.CardOrderRequest{
-			Amount: 50.00,
+			Amount: "50.00",
 		}
 
 		order, err := client.Issuing.Cards.Withdraw(ctx, cardID, req)
@@ -66,7 +66,7 @@ func TestCards(t *testing.T) {
 			t.Fatalf("Failed to withdraw from card: %v", err)
 		}
 
-		t.Logf("✅ Withdraw order created: ID=%s, Status=%s, Amount=%.2f",
+		t.Logf("✅ Withdraw order created: ID=%s, Status=%s, Amount=%s",
 			order.CardOrderID, order.OrderStatus, order.Amount)
 	})
 }

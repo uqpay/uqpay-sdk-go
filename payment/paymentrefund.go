@@ -27,12 +27,12 @@ type CreateRefundRequest struct {
 
 // ListRefundsRequest represents a refunds list request
 type ListRefundsRequest struct {
-	PageSize        int    `json:"page_size"`         // Number of items per page
-	PageNumber      int    `json:"page_number"`       // Page number (1-based)
-	StartTime       string `json:"start_time"`        // Filter by creation time (ISO8601)
-	EndTime         string `json:"end_time"`          // Filter by creation time (ISO8601)
-	PaymentIntentID string `json:"payment_intent_id"` // Filter by payment intent ID
-	MerchantOrderID string `json:"merchant_order_id"` // Filter by merchant order ID
+	PageSize        int    `json:"page_size"`         // Required. Number of items per page (1-100)
+	PageNumber      int    `json:"page_number"`       // Required. Page number to retrieve (1-based)
+	StartTime       string `json:"start_time"`        // Optional. Filter start time, ISO 8601 format. Default range is 1 month
+	EndTime         string `json:"end_time"`          // Optional. Filter end time, ISO 8601 format. Max range is 3 months
+	PaymentIntentID string `json:"payment_intent_id"` // Optional. Filter by payment intent ID
+	MerchantOrderID string `json:"merchant_order_id"` // Optional. Filter by merchant reference ID from merchant's system
 }
 
 // ============================================================================
@@ -41,22 +41,22 @@ type ListRefundsRequest struct {
 
 // Refund represents a refund response
 type Refund struct {
-	PaymentRefundID  string            `json:"payment_refund_id"`
-	PaymentAttemptID string            `json:"payment_attempt_id,omitempty"`
-	Amount           string            `json:"amount,omitempty"`
-	Currency         string            `json:"currency,omitempty"`
-	RefundStatus     string            `json:"refund_status,omitempty"`
-	Reason           string            `json:"reason,omitempty"`
-	Metadata         map[string]string `json:"metadata,omitempty"`
-	CreateTime       string            `json:"create_time,omitempty"`
-	UpdateTime       string            `json:"update_time,omitempty"`
+	PaymentRefundID  string            `json:"payment_refund_id"`            // Unique identifier for the refund
+	PaymentAttemptID string            `json:"payment_attempt_id,omitempty"` // ID of the payment attempt that was refunded
+	Amount           string            `json:"amount,omitempty"`             // Refund amount as decimal string, e.g. "10.01"
+	Currency         string            `json:"currency,omitempty"`           // ISO 4217 three-letter currency code, e.g. "USD"
+	RefundStatus     string            `json:"refund_status,omitempty"`      // INITIATED, PROCESSING, SUCCEEDED, FAILED, REVERSAL_INITIATED, REVERSAL_PROCESSING, or REVERSAL_SUCCEEDED
+	Reason           string            `json:"reason,omitempty"`             // Reason for the refund
+	Metadata         map[string]string `json:"metadata,omitempty"`           // User-defined key-value pairs
+	CreateTime       string            `json:"create_time,omitempty"`        // Refund creation time, ISO 8601 format
+	UpdateTime       string            `json:"update_time,omitempty"`        // Last update time, ISO 8601 format
 }
 
 // ListRefundsResponse represents a paginated list of refunds
 type ListRefundsResponse struct {
-	TotalPages int      `json:"total_pages"`
-	TotalItems int      `json:"total_items"`
-	Data       []Refund `json:"data"`
+	TotalPages int      `json:"total_pages"` // Total number of available pages
+	TotalItems int      `json:"total_items"` // Total count of available items
+	Data       []Refund `json:"data"`        // Array of refund objects
 }
 
 // ============================================================================

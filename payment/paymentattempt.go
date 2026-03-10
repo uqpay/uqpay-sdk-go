@@ -18,10 +18,10 @@ type PaymentAttemptsClient struct {
 
 // ListPaymentAttemptsRequest represents a payment attempts list request
 type ListPaymentAttemptsRequest struct {
-	PageSize        int    `json:"page_size"`         // Number of items per page
-	PageNumber      int    `json:"page_number"`       // Page number (1-based)
-	PaymentIntentID string `json:"payment_intent_id"` // Filter by payment intent ID
-	AttemptStatus   string `json:"attempt_status"`    // Filter by status: INITIATED, AUTHENTICATION_REDIRECTED, PENDING_AUTHORIZATION, AUTHORIZED, CAPTURE_REQUESTED, SETTLED, SUCCEEDED, CANCELLED, EXPIRED, FAILED
+	PageSize        int    `json:"page_size"`         // Required. Number of items per page (1-100)
+	PageNumber      int    `json:"page_number"`       // Required. Page number, must be >= 1
+	PaymentIntentID string `json:"payment_intent_id"` // Optional. Filter by payment intent ID
+	AttemptStatus   string `json:"attempt_status"`    // Optional. Filter by status: INITIATED, AUTHENTICATION_REDIRECTED, PENDING_AUTHORIZATION, AUTHORIZED, CAPTURE_REQUESTED, SETTLED, SUCCEEDED, CANCELLED, EXPIRED, FAILED
 }
 
 // ============================================================================
@@ -30,26 +30,26 @@ type ListPaymentAttemptsRequest struct {
 
 // PaymentAttempt represents a payment attempt response
 type PaymentAttempt struct {
-	AttemptID          string            `json:"attempt_id"`
-	Amount             string            `json:"amount,omitempty"`
-	Currency           string            `json:"currency,omitempty"`
-	CapturedAmount     string            `json:"captured_amount,omitempty"`
-	RefundedAmount     string            `json:"refunded_amount,omitempty"`
-	AttemptStatus      string            `json:"attempt_status,omitempty"`
-	CancellationReason string            `json:"cancellation_reason,omitempty"`
-	FailureCode        string            `json:"failure_code,omitempty"`
-	PaymentMethod      *PaymentMethod    `json:"payment_method,omitempty"`
-	Metadata           map[string]string `json:"metadata,omitempty"`
-	CreateTime         string            `json:"create_time,omitempty"`
-	UpdateTime         string            `json:"update_time,omitempty"`
-	CompleteTime       string            `json:"complete_time,omitempty"`
+	AttemptID          string            `json:"attempt_id"`                    // Unique identifier for the attempt (UUID)
+	Amount             string            `json:"amount,omitempty"`              // Transaction amount
+	Currency           string            `json:"currency,omitempty"`            // ISO 4217 three-letter currency code
+	CapturedAmount     string            `json:"captured_amount,omitempty"`     // Funds successfully captured
+	RefundedAmount     string            `json:"refunded_amount,omitempty"`     // Funds returned to customer
+	AttemptStatus      string            `json:"attempt_status,omitempty"`      // INITIATED, AUTHENTICATION_REDIRECTED, PENDING_AUTHORIZATION, AUTHORIZED, CAPTURE_REQUESTED, SETTLED, SUCCEEDED, CANCELLED, EXPIRED, or FAILED
+	CancellationReason string            `json:"cancellation_reason,omitempty"` // Reason for cancelling the payment attempt
+	FailureCode        string            `json:"failure_code,omitempty"`        // Error code if payment failed; see Error Code Reference
+	PaymentMethod      string            `json:"payment_method,omitempty"`      // Payment method used, e.g. "card"
+	Metadata           map[string]string `json:"metadata,omitempty"`            // Key-value metadata pairs
+	CreateTime         string            `json:"create_time,omitempty"`         // ISO 8601 creation timestamp
+	UpdateTime         string            `json:"update_time,omitempty"`         // ISO 8601 last modification timestamp
+	CompleteTime       string            `json:"complete_time,omitempty"`       // ISO 8601 completion timestamp
 }
 
 // ListPaymentAttemptsResponse represents a paginated list of payment attempts
 type ListPaymentAttemptsResponse struct {
-	TotalPages int              `json:"total_pages"`
-	TotalItems int              `json:"total_items"`
-	Data       []PaymentAttempt `json:"data"`
+	TotalPages int              `json:"total_pages"` // Total number of available pages
+	TotalItems int              `json:"total_items"` // Total count of available items
+	Data       []PaymentAttempt `json:"data"`        // List of payment attempt records
 }
 
 // ============================================================================

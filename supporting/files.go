@@ -17,46 +17,47 @@ type FilesClient struct {
 
 // UploadFileParams represents file upload parameters
 type UploadFileParams struct {
-	File     io.Reader
-	FileName string
-	Notes    string
+	File     io.Reader // Required. Binary file content. Max 20MB. Supported: jpeg, png, jpg, doc, docx, pdf
+	FileName string    // Required. Original file name
+	Notes    string    // Optional. File annotations, max 50 characters
 }
 
 // UploadFileResponse represents file upload response
 type UploadFileResponse struct {
-	CreateTime string `json:"create_time"`
-	FileID     string `json:"file_id"`
-	FileName   string `json:"file_name"`
-	FileType   string `json:"file_type"`
-	Size       int    `json:"size"`
-	Notes      string `json:"notes"`
+	CreateTime string `json:"create_time"` // Timestamp when the file was created, e.g. "2024-08-22T17:12:58+08:00"
+	FileID     string `json:"file_id"`     // Unique file identifier, used in attachment references
+	FileName   string `json:"file_name"`   // Original file name
+	FileType   string `json:"file_type"`   // File extension, e.g. "png", "pdf"
+	Size       int    `json:"size"`        // File size in bytes
+	Notes      string `json:"notes"`       // File annotations
 }
 
 // DownloadLinksRequest represents download links request
 type DownloadLinksRequest struct {
-	FileIDs []string `json:"file_ids"` // required
+	FileIDs []string `json:"file_ids"` // Required. List of file IDs (UUID format) to generate download links for
 }
 
 // FileDownloadInfo represents file download information
 type FileDownloadInfo struct {
-	FileID   string `json:"file_id"`
-	FileType string `json:"file_type"`
-	FileName string `json:"file_name"`
-	Size     int    `json:"size"`
-	URL      string `json:"url"`
+	FileID   string `json:"file_id"`   // Unique file identifier (UUID)
+	FileType string `json:"file_type"` // File extension, e.g. "png"
+	FileName string `json:"file_name"` // Complete file name with extension
+	Size     int    `json:"size"`      // File size in bytes, max 20MB
+	URL      string `json:"url"`       // Direct download link for the file
 }
 
 // DownloadLinksResponse represents download links response
 type DownloadLinksResponse struct {
-	Files       []FileDownloadInfo `json:"files"`
-	AbsentFiles []string           `json:"absent_files"`
+	Files       []FileDownloadInfo `json:"files"`        // List of file download details
+	AbsentFiles []string           `json:"absent_files"` // File IDs that were not found in the system
 }
 
 // Upload uploads a file to UQPAY
 // POST /v1/files/upload
 // Maximum file size: 20MB
 // Supported types: jpeg, png, jpg, doc, docx, pdf
-func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams) (*UploadFileResponse, error) {
+// Optional RequestOptions can be provided to set custom headers like x-on-behalf-of or x-idempotency-key
+func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams, opts ...*common.RequestOptions) (*UploadFileResponse, error) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
@@ -82,26 +83,28 @@ func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams) (*Up
 		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
 	}
 
-	// TODO: Implement multipart form-data POST in APIClient
-	// For now, this is a placeholder implementation
-	var resp UploadFileResponse
-	path := "/v1/files/upload"
-	if params.Notes != "" {
-		path += fmt.Sprintf("?notes=%s", params.Notes)
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
 	}
 
-	// Note: This requires special handling in APIClient for multipart/form-data
-	// The actual implementation needs to be added to common.APIClient
-	_ = path // Placeholder to avoid unused variable error
-
-	return &resp, fmt.Errorf("file upload not yet implemented - requires multipart/form-data support")
+	var resp UploadFileResponse
+	if err := c.client.PostMultipart(ctx, "/v1/files/upload", &buf, writer.FormDataContentType(), &resp, opt); err != nil {
+		return nil, fmt.Errorf("failed to upload file: %w", err)
+	}
+	return &resp, nil
 }
 
 // GetDownloadLinks retrieves download links for specified file IDs
 // POST /v1/files/download_links
-func (c *FilesClient) GetDownloadLinks(ctx context.Context, req *DownloadLinksRequest) (*DownloadLinksResponse, error) {
+// Optional RequestOptions can be provided to set custom headers like x-on-behalf-of or x-idempotency-key
+func (c *FilesClient) GetDownloadLinks(ctx context.Context, req *DownloadLinksRequest, opts ...*common.RequestOptions) (*DownloadLinksResponse, error) {
 	var resp DownloadLinksResponse
-	if err := c.client.Post(ctx, "/v1/files/download_links", req, &resp); err != nil {
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if err := c.client.PostWithOptions(ctx, "/v1/files/download_links", req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to get download links: %w", err)
 	}
 	return &resp, nil

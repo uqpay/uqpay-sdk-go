@@ -7,9 +7,9 @@ import (
 
 // APIError represents an API error response
 type APIError struct {
-	Code       FlexibleCode `json:"code"`
-	Message    string       `json:"message"`
-	StatusCode int          `json:"-"`
+	Code       FlexibleCode `json:"code"`    // Error code for programmatic handling, e.g. "invalid_number". May be string or number
+	Message    string       `json:"message"` // Human-readable error description. Not intended for parsing; format may change
+	StatusCode int          `json:"-"`       // HTTP status code: 400 (Bad Request), 401 (Unauthorized), 404 (Not Found), 500 (Server Error)
 }
 
 // FlexibleCode handles API code fields that may be string or number

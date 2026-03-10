@@ -83,6 +83,7 @@ func TestIssuingBalances(t *testing.T) {
 			t.Logf("   ID: %s", txn.TransactionID)
 			t.Logf("   Short ID: %s", txn.ShortTransactionID)
 			t.Logf("   Account ID: %s", txn.AccountID)
+			t.Logf("   Account Name: %s", txn.AccountName)
 			t.Logf("   Balance ID: %s", txn.BalanceID)
 			t.Logf("   Type: %s", txn.TransactionType)
 			t.Logf("   Amount: %s %s", txn.Amount, txn.Currency)

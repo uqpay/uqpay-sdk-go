@@ -15,21 +15,21 @@ type ExchangeRatesClient struct {
 
 // RateItem represents an exchange rate for a currency pair
 type RateItem struct {
-	CurrencyPair string `json:"currency_pair"` // e.g., "USDEUR"
-	BuyPrice     string `json:"buy_price"`
-	SellPrice    string `json:"sell_price"`
+	CurrencyPair string `json:"currency_pair"`        // Required. 6-letter uppercase currency pair code, e.g., "USDEUR"
+	BuyPrice     string `json:"buy_price,omitempty"`  // Required. Buy price, rounded to 4 decimal places
+	SellPrice    string `json:"sell_price,omitempty"` // Required. Sell price, rounded to 4 decimal places
 }
 
 // ListRatesRequest represents a request to list exchange rates
 type ListRatesRequest struct {
-	CurrencyPairs []string `json:"currency_pairs,omitempty"` // optional: filter by specific currency pairs (e.g., ["USDEUR", "GBPUSD"])
+	CurrencyPairs []string `json:"currency_pairs,omitempty"` // Optional. Up to 100 comma-separated 6-letter uppercase pairs, e.g., ["USDEUR", "GBPUSD"]. If omitted, all available pairs returned
 }
 
 // ListRatesResponse represents a response containing exchange rates
 type ListRatesResponse struct {
-	Rates                    []RateItem `json:"rates"`
-	UnavailableCurrencyPairs []string   `json:"unavailable_currency_pairs"`
-	LastUpdated              string     `json:"last_updated"`
+	Rates                    []RateItem `json:"rates"`                      // Required. Array of rate items for each currency pair
+	UnavailableCurrencyPairs []string   `json:"unavailable_currency_pairs"` // Optional. List of unsupported 6-letter currency pair codes from the request
+	LastUpdated              string     `json:"last_updated"`               // Optional. ISO 8601 datetime of the last rate update
 }
 
 // listRatesDataWrapper wraps the API response
