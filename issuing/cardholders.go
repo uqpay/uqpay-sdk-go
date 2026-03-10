@@ -14,72 +14,72 @@ type CardholdersClient struct {
 
 // DeliveryAddress represents a cardholder's delivery address
 type DeliveryAddress struct {
-	City       string `json:"city"`
-	Country    string `json:"country"` // ISO 3166-1 alpha-2
-	Line1      string `json:"line1"`
-	State      string `json:"state,omitempty"`
-	Line2      string `json:"line2,omitempty"`
-	PostalCode string `json:"postal_code"`
+	City       string `json:"city"`            // Required. City/district/suburb/town/village, max 128 chars
+	Country    string `json:"country"`         // Required. ISO 3166-1 alpha-2 country code
+	Line1      string `json:"line1"`           // Required. Street, PO Box, or company name, max 255 chars
+	State      string `json:"state,omitempty"` // Optional. State/county/province/region, max 128 chars
+	Line2      string `json:"line2,omitempty"` // Optional. Apartment/suite/unit/building, max 255 chars
+	PostalCode string `json:"postal_code"`     // Required. ZIP or postal code, max 16 chars
 }
 
 // CreateCardholderRequest represents a cardholder creation request
 type CreateCardholderRequest struct {
-	Email           string           `json:"email"`
-	FirstName       string           `json:"first_name"`
-	LastName        string           `json:"last_name"`
-	CountryCode     string           `json:"country_code"`
-	PhoneNumber     string           `json:"phone_number"`
-	DateOfBirth     string           `json:"date_of_birth,omitempty"`
-	DeliveryAddress *DeliveryAddress `json:"delivery_address,omitempty"`
-	DocumentType    string           `json:"document_type,omitempty"` // file format: pdf, png, jpg, jpeg
-	Document        string           `json:"document,omitempty"`      // base64 encoded document content
+	Email           string           `json:"email"`                      // Required. Cardholder's email address
+	FirstName       string           `json:"first_name"`                 // Required. Alphabetic and spaces only, 1-40 chars
+	LastName        string           `json:"last_name"`                  // Required. Alphabetic and spaces only, 1-40 chars
+	CountryCode     string           `json:"country_code"`               // Required. ISO 3166-1 alpha-2 code (e.g. "SG")
+	PhoneNumber     string           `json:"phone_number"`               // Required. Cardholder's phone number
+	DateOfBirth     string           `json:"date_of_birth,omitempty"`    // Optional. Format: yyyy-mm-dd
+	DeliveryAddress *DeliveryAddress `json:"delivery_address,omitempty"` // Optional. Physical mailing address
+	DocumentType    string           `json:"document_type,omitempty"`    // Optional. Allowed: pdf, png, jpg, jpeg
+	Document        string           `json:"document,omitempty"`         // Optional. Base64-encoded ID document, max 2MB
 }
 
 // CreateCardholderResponse represents a cardholder creation/update response
 type CreateCardholderResponse struct {
-	CardholderID     string `json:"cardholder_id"`
-	CardholderStatus string `json:"cardholder_status"`
+	CardholderID     string `json:"cardholder_id"`     // UUID. Unique cardholder identifier
+	CardholderStatus string `json:"cardholder_status"` // FAILED, PENDING, SUCCESS, or INCOMPLETE
 }
 
-// UpdateCardholderRequest represents a cardholder update request
+// UpdateCardholderRequest represents a cardholder update request (all fields optional)
 type UpdateCardholderRequest struct {
-	CountryCode     string           `json:"country_code,omitempty"`
-	Email           string           `json:"email,omitempty"`
-	PhoneNumber     string           `json:"phone_number,omitempty"`
-	DeliveryAddress *DeliveryAddress `json:"delivery_address,omitempty"`
-	DocumentType    string           `json:"document_type,omitempty"` // file format: pdf, png, jpg, jpeg
-	Document        string           `json:"document,omitempty"`      // base64 encoded document content
-	DateOfBirth     string           `json:"date_of_birth,omitempty"`
+	CountryCode     string           `json:"country_code,omitempty"`     // Optional. ISO 3166-1 alpha-2 code
+	Email           string           `json:"email,omitempty"`            // Optional. Cardholder's email address
+	PhoneNumber     string           `json:"phone_number,omitempty"`     // Optional. Cardholder's phone number
+	DeliveryAddress *DeliveryAddress `json:"delivery_address,omitempty"` // Optional. Physical mailing address
+	DocumentType    string           `json:"document_type,omitempty"`    // Optional. Allowed: pdf, png, jpg, jpeg
+	Document        string           `json:"document,omitempty"`         // Optional. Base64-encoded ID document, max 2MB
+	DateOfBirth     string           `json:"date_of_birth,omitempty"`    // Optional. Format: yyyy-mm-dd
 }
 
 // Cardholder represents a cardholder in list/retrieve responses
 type Cardholder struct {
-	CardholderID     string           `json:"cardholder_id"`
-	Email            string           `json:"email"`
-	NumberOfCards    int              `json:"number_of_cards"`
-	FirstName        string           `json:"first_name"`
-	LastName         string           `json:"last_name"`
-	CreateTime       string           `json:"create_time"`
-	CardholderStatus string           `json:"cardholder_status"`
-	DateOfBirth      string           `json:"date_of_birth,omitempty"`
-	CountryCode      string           `json:"country_code"`
-	PhoneNumber      string           `json:"phone_number"`
-	DeliveryAddress  *DeliveryAddress `json:"delivery_address,omitempty"`
-	ReviewStatus     string           `json:"review_status,omitempty"`
+	CardholderID     string           `json:"cardholder_id"`              // UUID. Unique cardholder identifier
+	Email            string           `json:"email"`                      // Cardholder's email address
+	NumberOfCards    int              `json:"number_of_cards"`            // Total cards associated with this cardholder
+	FirstName        string           `json:"first_name"`                 // Alphabetic and spaces only, 1-40 chars
+	LastName         string           `json:"last_name"`                  // Alphabetic and spaces only, 1-40 chars
+	CreateTime       string           `json:"create_time"`                // Format: YYYY-MM-DD HH:MM:SS
+	CardholderStatus string           `json:"cardholder_status"`          // FAILED, PENDING, SUCCESS, or INCOMPLETE
+	DateOfBirth      string           `json:"date_of_birth,omitempty"`    // Format: yyyy-mm-dd
+	CountryCode      string           `json:"country_code"`               // ISO 3166-1 alpha-2 code
+	PhoneNumber      string           `json:"phone_number"`               // Cardholder's phone number
+	DeliveryAddress  *DeliveryAddress `json:"delivery_address,omitempty"` // Physical mailing address
+	ReviewStatus     string           `json:"review_status,omitempty"`    // Reserved for future use
 }
 
 // ListCardholdersRequest represents a cardholder list request
 type ListCardholdersRequest struct {
-	PageSize         int    `json:"page_size"`
-	PageNumber       int    `json:"page_number"`
-	CardholderStatus string `json:"cardholder_status,omitempty"` // optional filter: PENDING, SUCCESS, INCOMPLETE, FAILED
+	PageSize         int    `json:"page_size"`                   // Required. Items per page, min 10, max 100
+	PageNumber       int    `json:"page_number"`                 // Required. Page to retrieve, min 1
+	CardholderStatus string `json:"cardholder_status,omitempty"` // Optional. Filter: PENDING, SUCCESS, INCOMPLETE, or FAILED
 }
 
 // ListCardholdersResponse represents a cardholder list response
 type ListCardholdersResponse struct {
-	TotalPages int          `json:"total_pages"`
-	TotalItems int          `json:"total_items"`
-	Data       []Cardholder `json:"data"`
+	TotalPages int          `json:"total_pages"` // Total available pages
+	TotalItems int          `json:"total_items"` // Total count of cardholders
+	Data       []Cardholder `json:"data"`        // List of cardholder objects
 }
 
 // Create creates a new cardholder

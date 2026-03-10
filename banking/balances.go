@@ -3,6 +3,7 @@ package banking
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -14,113 +15,144 @@ type BalancesClient struct {
 
 // Balance represents account balance information
 type Balance struct {
-	BalanceID        string `json:"balance_id"`
-	AccountID        string `json:"account_id,omitempty"`
-	Currency         string `json:"currency"`
-	AvailableBalance string `json:"available_balance"`
-	ReservedBalance  string `json:"reserved_balance,omitempty"`
-	TotalBalance     string `json:"total_balance,omitempty"`
-	PrepaidBalance   string `json:"prepaid_balance,omitempty"`
-	MarginBalance    string `json:"margin_balance,omitempty"`
-	FrozenBalance    string `json:"frozen_balance,omitempty"`
-	BalanceStatus    string `json:"balance_status,omitempty"`
-	CreateTime       string `json:"create_time,omitempty"`
-	LastTradeTime    string `json:"last_trade_time,omitempty"`
-	LastUpdated      string `json:"last_updated,omitempty"`
+	BalanceID        string `json:"balance_id"`        // Required. Unique balance identifier (UUID)
+	Currency         string `json:"currency"`          // Required. ISO 4217 currency code (e.g., USD)
+	AvailableBalance string `json:"available_balance"` // Required. Funds accessible for transactions
+	PrepaidBalance   string `json:"prepaid_balance"`   // Required. Prepaid account balance
+	MarginBalance    string `json:"margin_balance"`    // Required. Margin balance available
+	FrozenBalance    string `json:"frozen_balance"`    // Required. Funds restricted from use
+	CreateTime       string `json:"create_time"`       // Required. Record creation timestamp (ISO 8601)
+	LastTradeTime    string `json:"last_trade_time"`   // Required. Most recent transaction timestamp (ISO 8601)
+	BalanceStatus    string `json:"balance_status"`    // Required. ACTIVE, PENDING, PROCESSING, or CLOSED
 }
 
 // ListBalancesRequest represents a balance list request
 type ListBalancesRequest struct {
-	PageSize   int `json:"page_size"`   // required, 10-100
-	PageNumber int `json:"page_number"` // required, >=1
+	PageSize   int `json:"page_size"`   // Required. Items per page (10-100)
+	PageNumber int `json:"page_number"` // Required. Page to retrieve (>=1)
 }
 
 // ListBalancesResponse represents a balance list response
 type ListBalancesResponse struct {
-	TotalPages int       `json:"total_pages"`
-	TotalItems int       `json:"total_items"`
-	Data       []Balance `json:"data"`
+	TotalPages int       `json:"total_pages"` // Total number of pages available
+	TotalItems int       `json:"total_items"` // Total count of available items
+	Data       []Balance `json:"data"`        // Array of balance objects
 }
 
 // BalanceTransaction represents a balance transaction
 type BalanceTransaction struct {
-	TransactionID     string `json:"transaction_id"`
-	AccountID         string `json:"account_id,omitempty"`
-	BalanceID         string `json:"balance_id,omitempty"`
-	Currency          string `json:"currency"`
-	Amount            string `json:"amount"`
-	BalanceImpact     string `json:"balance_impact,omitempty"`
-	Description       string `json:"description,omitempty"`
-	CreditDebitType   string `json:"credit_debit_type,omitempty"`
-	TransactionType   string `json:"transaction_type"`
-	TransactionStatus string `json:"transaction_status,omitempty"`
-	TransactionWay    string `json:"transaction_way,omitempty"`
-	PayoutWay         string `json:"payout_way,omitempty"`
-	ReferenceID       string `json:"reference_id"`
-	CreateTime        string `json:"create_time"`
-	CompleteTime      string `json:"complete_time,omitempty"`
+	TransactionID     string `json:"transaction_id"`            // Required. Unique transaction identifier (UUID)
+	AccountID         string `json:"account_id,omitempty"`      // Optional. Associated account ID
+	BalanceID         string `json:"balance_id"`                // Required. Associated balance ID
+	TransactionType   string `json:"transaction_type"`          // Required. DEPOSIT, PAYOUT, TRANSFER, CONVERSION, FEE, REFUND, ADJUSTMENT, or INVOICE
+	Currency          string `json:"currency"`                  // Required. ISO 4217 currency code (e.g., USD)
+	Amount            string `json:"amount"`                    // Required. Transaction amount
+	CreditDebitType   string `json:"credit_debit_type"`         // Required. C (Credit) or D (Debit)
+	CreateTime        string `json:"create_time"`               // Required. Record creation timestamp (ISO 8601)
+	CompleteTime      string `json:"complete_time"`             // Required. Completion timestamp (ISO 8601)
+	ReferenceID       string `json:"reference_id"`              // Required. Reference identifier
+	TransactionStatus string `json:"transaction_status"`        // Required. FAILED, PENDING, COMPLETED, or CANCELLED
+	TransactionWay    string `json:"transaction_way,omitempty"` // Optional. How transaction was initiated (e.g., API)
 }
 
 // ListBalanceTransactionsRequest represents a balance transaction list request
 type ListBalanceTransactionsRequest struct {
-	PageSize          int    `json:"page_size"`          // required, 10-100
-	PageNumber        int    `json:"page_number"`        // required, >=1
-	StartTime         string `json:"start_time"`         // optional, ISO8601
-	EndTime           string `json:"end_time"`           // optional, ISO8601
-	Currency          string `json:"currency"`           // optional
-	TransactionType   string `json:"transaction_type"`   // optional: ALL, PAYIN, DEPOSIT, etc.
-	TransactionStatus string `json:"transaction_status"` // optional: ALL, COMPLETED, PENDING, FAILED
+	PageSize          int    `json:"page_size"`          // Required. Items per page (10-100)
+	PageNumber        int    `json:"page_number"`        // Required. Page to retrieve (>=1)
+	StartTime         string `json:"start_time"`         // Optional. Start of time range, inclusive (ISO 8601)
+	EndTime           string `json:"end_time"`           // Optional. End of time range, inclusive (ISO 8601)
+	Currency          string `json:"currency"`           // Optional. Filter by ISO 4217 currency code
+	TransactionType   string `json:"transaction_type"`   // Optional. ALL, PAYIN, DEPOSIT, PAYOUT, TRANSFER, CONVERSION, FEE, REFUND, ADJUSTMENT, or INVOICE
+	TransactionStatus string `json:"transaction_status"` // Optional. ALL, COMPLETED, PENDING, or FAILED
 }
 
 // ListBalanceTransactionsResponse represents a balance transaction list response
 type ListBalanceTransactionsResponse struct {
-	TotalPages int                  `json:"total_pages"`
-	TotalItems int                  `json:"total_items"`
-	Data       []BalanceTransaction `json:"data"`
+	TotalPages int                  `json:"total_pages"` // Total number of pages available
+	TotalItems int                  `json:"total_items"` // Total count of available items
+	Data       []BalanceTransaction `json:"data"`        // Array of balance transaction objects
 }
 
 // Get retrieves balance for a specific currency
-func (c *BalancesClient) Get(ctx context.Context, currency string) (*Balance, error) {
+// Optional RequestOptions can be provided to set custom headers like x-on-behalf-of
+func (c *BalancesClient) Get(ctx context.Context, currency string, opts ...*common.RequestOptions) (*Balance, error) {
 	var resp Balance
 	path := fmt.Sprintf("/v1/balances/%s", currency)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to get balance: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists all balances
-func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest) (*ListBalancesResponse, error) {
+// Optional RequestOptions can be provided to set custom headers like x-on-behalf-of
+func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest, opts ...*common.RequestOptions) (*ListBalancesResponse, error) {
+	if req.PageSize < 10 || req.PageSize > 100 {
+		return nil, fmt.Errorf("page_size must be between 10 and 100, got %d", req.PageSize)
+	}
+	if req.PageNumber < 1 {
+		return nil, fmt.Errorf("page_number must be >= 1, got %d", req.PageNumber)
+	}
+
 	var resp ListBalancesResponse
-	path := fmt.Sprintf("/v1/balances?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	params := url.Values{}
+	params.Set("page_size", fmt.Sprintf("%d", req.PageSize))
+	params.Set("page_number", fmt.Sprintf("%d", req.PageNumber))
+
+	path := "/v1/balances?" + params.Encode()
+
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to list balances: %w", err)
 	}
 	return &resp, nil
 }
 
 // ListTransactions lists balance transactions
-func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest) (*ListBalanceTransactionsResponse, error) {
+// Optional RequestOptions can be provided to set custom headers like x-on-behalf-of
+func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest, opts ...*common.RequestOptions) (*ListBalanceTransactionsResponse, error) {
+	if req.PageSize < 10 || req.PageSize > 100 {
+		return nil, fmt.Errorf("page_size must be between 10 and 100, got %d", req.PageSize)
+	}
+	if req.PageNumber < 1 {
+		return nil, fmt.Errorf("page_number must be >= 1, got %d", req.PageNumber)
+	}
+
 	var resp ListBalanceTransactionsResponse
-	path := fmt.Sprintf("/v1/balances/transactions?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
+	params := url.Values{}
+	params.Set("page_size", fmt.Sprintf("%d", req.PageSize))
+	params.Set("page_number", fmt.Sprintf("%d", req.PageNumber))
 
 	if req.StartTime != "" {
-		path += fmt.Sprintf("&start_time=%s", req.StartTime)
+		params.Set("start_time", req.StartTime)
 	}
 	if req.EndTime != "" {
-		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+		params.Set("end_time", req.EndTime)
 	}
 	if req.Currency != "" {
-		path += fmt.Sprintf("&currency=%s", req.Currency)
+		params.Set("currency", req.Currency)
 	}
 	if req.TransactionType != "" {
-		path += fmt.Sprintf("&transaction_type=%s", req.TransactionType)
+		params.Set("transaction_type", req.TransactionType)
 	}
 	if req.TransactionStatus != "" {
-		path += fmt.Sprintf("&transaction_status=%s", req.TransactionStatus)
+		params.Set("transaction_status", req.TransactionStatus)
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	path := "/v1/balances/transactions?" + params.Encode()
+
+	var opt *common.RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to list balance transactions: %w", err)
 	}
 	return &resp, nil

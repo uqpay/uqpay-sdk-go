@@ -17,10 +17,10 @@ const (
 // ============================================================
 
 const (
-	JobTitleDirector                    = "DIRECTOR"
-	JobTitleBeneficialOwner             = "BENEFICIAL_OWNER"
-	JobTitleBeneficialOwnerAndDirector  = "BENEFICIAL_OWNER_AND_DIRECTOR"
-	JobTitleAuthorisedPerson            = "AUTHORISED_PERSON"
+	JobTitleDirector                   = "DIRECTOR"
+	JobTitleBeneficialOwner            = "BENEFICIAL_OWNER"
+	JobTitleBeneficialOwnerAndDirector = "BENEFICIAL_OWNER_AND_DIRECTOR"
+	JobTitleAuthorisedPerson           = "AUTHORISED_PERSON"
 )
 
 // ============================================================
@@ -113,374 +113,165 @@ const (
 // This is a discriminated union: populate IndividualInfo for INDIVIDUAL entity type,
 // or CompanyInfo + OwnershipDetails + BusinessDetails for COMPANY entity type.
 type CreateSubAccountRequest struct {
-	// EntityType must be "INDIVIDUAL" or "COMPANY"
-	EntityType EntityType `json:"entity_type"`
-
-	// Nickname is the account nickname (max 100 characters)
-	Nickname string `json:"nickname"`
-
-	// Inherit controls whether to inherit from master account. 1 = inherit, -1 = do not inherit.
-	// Only applicable for COMPANY entity type.
-	Inherit *int `json:"inherit,omitempty"`
-
-	// IndividualInfo contains personal details. Required when EntityType is INDIVIDUAL.
-	IndividualInfo *SubAccountIndividualInfo `json:"individual_info,omitempty"`
-
-	// IdentityVerification contains identity document details. Required when EntityType is INDIVIDUAL.
-	IdentityVerification *SubAccountIdentityVerification `json:"identity_verification,omitempty"`
-
-	// ExpectedActivity contains expected business activity. Required when EntityType is INDIVIDUAL.
-	ExpectedActivity *SubAccountExpectedActivity `json:"expected_activity,omitempty"`
-
-	// ProofDocuments contains KYC proof documents. Required when EntityType is INDIVIDUAL.
-	ProofDocuments *SubAccountProofDocuments `json:"proof_documents,omitempty"`
-
-	// CompanyInfo contains company details. Required when EntityType is COMPANY (unless inherit=1).
-	CompanyInfo *SubAccountCompanyInfo `json:"company_info,omitempty"`
-
-	// CompanyAddress is the company registered address. Required when EntityType is COMPANY (unless inherit=1).
-	CompanyAddress *SubAccountAddress `json:"company_address,omitempty"`
-
-	// OwnershipDetails contains representatives and shareholder documents.
-	// Required when EntityType is COMPANY (unless inherit=1).
-	OwnershipDetails *SubAccountOwnershipDetails `json:"ownership_details,omitempty"`
-
-	// BusinessDetails contains business operation details. Applicable for COMPANY entity type.
-	BusinessDetails *SubAccountBusinessDetails `json:"business_details,omitempty"`
-
-	// AdditionalDocuments contains extra required/optional documents. Applicable for COMPANY entity type.
-	AdditionalDocuments *SubAccountAdditionalDocuments `json:"additional_documents,omitempty"`
-
-	// TosAcceptance contains terms of service acceptance details. Required.
-	TosAcceptance *SubAccountTosAcceptance `json:"tos_acceptance"`
+	BusinessType         string                          `json:"business_type"`                   // Required. Business line: BANKING, ACQUIRING, or ISSUING
+	EntityType           EntityType                      `json:"entity_type"`                     // Required. INDIVIDUAL or COMPANY
+	Nickname             string                          `json:"nickname"`                        // Required. Account display name, max 100 chars
+	Inherit              *int                            `json:"inherit,omitempty"`               // Optional. COMPANY only: 1 = inherit from master, -1 = do not inherit
+	IndividualInfo       *SubAccountIndividualInfo       `json:"individual_info,omitempty"`       // Required for INDIVIDUAL entity type
+	IdentityVerification *SubAccountIdentityVerification `json:"identity_verification,omitempty"` // Required for INDIVIDUAL entity type
+	ExpectedActivity     *SubAccountExpectedActivity     `json:"expected_activity,omitempty"`     // Required for INDIVIDUAL entity type
+	ProofDocuments       *SubAccountProofDocuments       `json:"proof_documents,omitempty"`       // Required for INDIVIDUAL entity type
+	CompanyInfo          *SubAccountCompanyInfo          `json:"company_info,omitempty"`          // Required for COMPANY (unless inherit=1)
+	CompanyAddress       *SubAccountAddress              `json:"company_address,omitempty"`       // Required for COMPANY (unless inherit=1)
+	OwnershipDetails     *SubAccountOwnershipDetails     `json:"ownership_details,omitempty"`     // Required for COMPANY (unless inherit=1)
+	BusinessDetails      *SubAccountBusinessDetails      `json:"business_details,omitempty"`      // Required for COMPANY entity type
+	AdditionalDocuments  *SubAccountAdditionalDocuments  `json:"additional_documents,omitempty"`  // Optional. Extra required/optional documents for COMPANY
+	TosAcceptance        *SubAccountTosAcceptance        `json:"tos_acceptance"`                  // Required. Terms of service acceptance
 }
 
 // SubAccountIndividualInfo contains personal details for an individual sub-account.
 type SubAccountIndividualInfo struct {
-	// FirstNameEnglish is the first name in English
-	FirstNameEnglish string `json:"first_name_english"`
-
-	// LastNameEnglish is the last name in English
-	LastNameEnglish string `json:"last_name_english"`
-
-	// Nationality is the ISO 3166-1 alpha-2 country code of nationality
-	Nationality string `json:"nationality"`
-
-	// TaxNumber is the tax identification number
-	TaxNumber string `json:"tax_number,omitempty"`
-
-	// PhoneNumber is the phone number with country code
-	PhoneNumber string `json:"phone_number"`
-
-	// EmailAddress is the email address
-	EmailAddress string `json:"email_address"`
-
-	// DateOfBirth is the date of birth in YYYY-MM-DD format
-	DateOfBirth string `json:"date_of_birth"`
-
-	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code of residence
-	CountryOrTerritory string `json:"country_or_territory"`
-
-	// StreetAddress is the street address
-	StreetAddress string `json:"street_address"`
-
-	// ApartmentSuiteOrFloor is the apartment, suite, or floor number
-	ApartmentSuiteOrFloor string `json:"apartment_suite_or_floor,omitempty"`
-
-	// City is the city name
-	City string `json:"city"`
-
-	// State is the state or province
-	State string `json:"state,omitempty"`
-
-	// PostalCode is the postal or ZIP code
-	PostalCode string `json:"postal_code"`
+	FirstNameEnglish      string `json:"first_name_english"`                 // Required. Given name in English, max 100 chars
+	LastNameEnglish       string `json:"last_name_english"`                  // Required. Family name in English, max 100 chars
+	Nationality           string `json:"nationality"`                        // Required. ISO 3166-1 alpha-2 country code
+	TaxNumber             string `json:"tax_number,omitempty"`               // Optional. Tax identification number, max 100 chars
+	PhoneNumber           string `json:"phone_number"`                       // Required. With country code, max 25 chars, e.g. "+12345678"
+	EmailAddress          string `json:"email_address"`                      // Required. Valid email, max 100 chars
+	DateOfBirth           string `json:"date_of_birth"`                      // Required. Format: YYYY-MM-DD
+	CountryOrTerritory    string `json:"country_or_territory"`               // Required. ISO 3166-1 alpha-2 residence country code
+	StreetAddress         string `json:"street_address"`                     // Required. Street address, max 100 chars
+	ApartmentSuiteOrFloor string `json:"apartment_suite_or_floor,omitempty"` // Optional. Unit/suite/floor, max 100 chars
+	City                  string `json:"city"`                               // Required. City name, max 100 chars
+	State                 string `json:"state,omitempty"`                    // Optional. State/province code
+	PostalCode            string `json:"postal_code"`                        // Required. ZIP/postal code, max 100 chars
 }
 
 // SubAccountIdentityVerification contains identity verification details.
 type SubAccountIdentityVerification struct {
-	// IdentificationType is the type of ID document: PASSPORT, DRIVERS_LICENSE, or NATIONAL_ID
-	IdentificationType string `json:"identification_type"`
-
-	// IdentificationValue is the ID document number
-	IdentificationValue string `json:"identification_value"`
-
-	// IdentityDocs is a list of identity document images (base64 encoded or file IDs)
-	IdentityDocs []string `json:"identity_docs"`
-
-	// FaceDocs is a list of face photo images (base64 encoded or file IDs).
-	// Mandatory for individual accounts.
-	FaceDocs []string `json:"face_docs"`
+	IdentificationType  string   `json:"identification_type"`  // Required. PASSPORT, DRIVERS_LICENSE, or NATIONAL_ID
+	IdentificationValue string   `json:"identification_value"` // Required. ID document number, max 100 chars
+	IdentityDocs        []string `json:"identity_docs"`        // Required. Identity document images (base64 or file IDs)
+	FaceDocs            []string `json:"face_docs"`            // Required for individuals. Facial verification images (base64 or file IDs)
 }
 
 // SubAccountExpectedActivity contains expected business activity for the account.
 type SubAccountExpectedActivity struct {
-	// AccountPurpose is a list of intended account purposes.
-	// Values: PURCHASE, BILL_PAYMENT, EDUCATIONAL_EXPENSES, PERSONAL_REMITTANCE,
-	// CHARITABLE_DONATION, LOAN_REPAYMENT, INVESTMENT, OTHERS
-	AccountPurpose []string `json:"account_purpose"`
-
-	// OtherPurpose is required when AccountPurpose includes "OTHERS"
-	OtherPurpose string `json:"other_purpose,omitempty"`
-
-	// BankingCountries is a list of ISO 3166-1 alpha-2 country codes for banking operations
-	BankingCountries []string `json:"banking_countries"`
-
-	// BankingCurrencies is a list of ISO 4217 currency codes for banking operations
-	BankingCurrencies []string `json:"banking_currencies"`
-
-	// Internationally indicates if banking will be international. 0 = no, 1 = yes.
-	Internationally int `json:"internationally"`
-
-	// TurnoverMonthly is the estimated monthly turnover tier (TM001-TM005)
-	TurnoverMonthly string `json:"turnover_monthly"`
-
-	// TurnoverMonthlyCurrency is the ISO 4217 currency code for turnover
-	TurnoverMonthlyCurrency string `json:"turnover_monthly_currency"`
+	AccountPurpose          []string `json:"account_purpose"`           // Required. PURCHASE, BILL_PAYMENT, EDUCATIONAL_EXPENSES, PERSONAL_REMITTANCE, CHARITABLE_DONATION, LOAN_REPAYMENT, INVESTMENT, OTHERS
+	OtherPurpose            string   `json:"other_purpose,omitempty"`   // Required if account_purpose includes OTHERS
+	BankingCountries        []string `json:"banking_countries"`         // Required. ISO 3166-1 alpha-2 country codes
+	BankingCurrencies       []string `json:"banking_currencies"`        // Required. ISO 4217 currency codes
+	Internationally         int      `json:"internationally"`           // Required. 0 = domestic only, 1 = international
+	TurnoverMonthly         string   `json:"turnover_monthly"`          // Required. TM001-TM005 (monthly revenue bracket)
+	TurnoverMonthlyCurrency string   `json:"turnover_monthly_currency"` // Required. ISO 4217 currency code for turnover estimate
 }
 
 // SubAccountProofDocuments contains KYC proof documents.
 type SubAccountProofDocuments struct {
-	// ProofOfAddress is a list of address proof documents (base64 or file IDs). Required.
-	ProofOfAddress []string `json:"proof_of_address"`
-
-	// SourceOfFunds is a list of source-of-funds documents (base64 or file IDs).
-	// Required for Virtual Account applications.
-	SourceOfFunds []string `json:"source_of_funds,omitempty"`
-
-	// ProofOfPositionAndIncome is a list of position/income proof documents
-	ProofOfPositionAndIncome []string `json:"proof_of_position_and_income,omitempty"`
-
-	// OtherProof is a list of other supporting documents
-	OtherProof []string `json:"other_proof,omitempty"`
+	ProofOfAddress           []string `json:"proof_of_address"`                       // Optional. Address verification docs (base64 or file IDs)
+	SourceOfFunds            []string `json:"source_of_funds,omitempty"`              // Optional. Source-of-funds docs; required for Virtual Account applications
+	ProofOfPositionAndIncome []string `json:"proof_of_position_and_income,omitempty"` // Optional. Employment/income proof docs (base64 or file IDs)
+	OtherProof               []string `json:"other_proof,omitempty"`                  // Optional. Miscellaneous supporting docs (base64 or file IDs)
 }
 
 // SubAccountCompanyInfo contains company details for a company sub-account.
 type SubAccountCompanyInfo struct {
-	// LegalBusinessName is the legal business name in local language
-	LegalBusinessName string `json:"legal_business_name"`
-
-	// LegalBusinessNameEnglish is the legal business name in English (ASCII, max 255)
-	LegalBusinessNameEnglish string `json:"legal_business_name_english"`
-
-	// CountryOfIncorporation is the ISO 3166-1 alpha-2 country code
-	CountryOfIncorporation string `json:"country_of_incorporation"`
-
-	// CompanyType is the type of company.
-	// Values: SOLE_PROPRIETOR, LIMITED_COMPANY, PARTNERSHIP, LISTED, OTHERS
-	CompanyType string `json:"company_type"`
-
-	// PhoneNumber is the company phone number with country code
-	PhoneNumber string `json:"phone_number"`
-
-	// EmailAddress is the company email address
-	EmailAddress string `json:"email_address"`
-
-	// CompanyRegistrationNumber is the business registration number
-	CompanyRegistrationNumber string `json:"company_registration_number"`
-
-	// TaxType is the type of tax identifier: VAT, GST, or TAX
-	TaxType string `json:"tax_type,omitempty"`
-
-	// TaxNumber is the tax identification number
-	TaxNumber string `json:"tax_number,omitempty"`
-
-	// IncorporateDate is the date of incorporation in YYYY-MM-DD format
-	IncorporateDate string `json:"incorparate_date"`
-
-	// CertificationOfIncorporation is a list of incorporation certificate documents (base64 or file IDs)
-	CertificationOfIncorporation []string `json:"certification_of_incorporation"`
+	LegalBusinessName            string   `json:"legal_business_name"`            // Required. Business name in local language, max 100 chars
+	LegalBusinessNameEnglish     string   `json:"legal_business_name_english"`    // Required. Business name in English (ASCII only), max 100 chars
+	CountryOfIncorporation       string   `json:"country_of_incorporation"`       // Required. ISO 3166-1 alpha-2 country code
+	CompanyType                  string   `json:"company_type"`                   // Required. SOLE_PROPRIETOR, LIMITED_COMPANY, PARTNERSHIP, LISTED, or OTHERS
+	PhoneNumber                  string   `json:"phone_number"`                   // Required. With country code, max 25 chars, e.g. "+12345678"
+	EmailAddress                 string   `json:"email_address"`                  // Required. Valid email, max 100 chars
+	CompanyRegistrationNumber    string   `json:"company_registration_number"`    // Required. Official registration ID, max 100 chars
+	TaxType                      string   `json:"tax_type,omitempty"`             // Optional. VAT, GST, or TAX
+	TaxNumber                    string   `json:"tax_number,omitempty"`           // Optional. Tax ID number, max 100 chars
+	IncorporateDate              string   `json:"incorparate_date"`               // Required. Format: YYYY-MM-DD
+	CertificationOfIncorporation []string `json:"certification_of_incorporation"` // Required. Incorporation certificate docs (base64 or file IDs)
 }
 
 // SubAccountAddress represents a physical address for sub-account requests.
 type SubAccountAddress struct {
-	// StreetAddress is the street address
-	StreetAddress string `json:"street_address"`
-
-	// ApartmentSuiteOrFloor is the apartment, suite, or floor number
-	ApartmentSuiteOrFloor string `json:"apartment_suite_or_floor,omitempty"`
-
-	// City is the city name
-	City string `json:"city"`
-
-	// State is the state or province
-	State string `json:"state,omitempty"`
-
-	// PostalCode is the postal or ZIP code
-	PostalCode string `json:"postal_code"`
+	StreetAddress         string `json:"street_address"`                     // Required. Street address, max 100 chars
+	ApartmentSuiteOrFloor string `json:"apartment_suite_or_floor,omitempty"` // Optional. Unit/suite/floor, max 100 chars
+	City                  string `json:"city"`                               // Required. City name, max 100 chars
+	State                 string `json:"state,omitempty"`                    // Required. State/province code
+	PostalCode            string `json:"postal_code"`                        // Required. ZIP/postal code, max 100 chars
 }
 
 // SubAccountOwnershipDetails contains company ownership information.
 type SubAccountOwnershipDetails struct {
-	// Representatives is a list of company representatives/directors/UBOs
-	Representatives []SubAccountRepresentative `json:"representatives"`
-
-	// ShareholderDocs is a list of shareholder documents (base64 or file IDs)
-	ShareholderDocs []string `json:"shareholder_docs"`
+	Representatives []SubAccountRepresentative `json:"representatives"`  // Required. Company directors, UBOs, and authorised persons
+	ShareholderDocs []string                   `json:"shareholder_docs"` // Required. Shareholder documents (base64 or file IDs)
 }
 
 // SubAccountRepresentative represents a company representative/director/UBO.
 type SubAccountRepresentative struct {
-	// LegalFirstNameEnglish is the first name in English
-	LegalFirstNameEnglish string `json:"legal_first_name_english"`
-
-	// LegalLastNameEnglish is the last name in English
-	LegalLastNameEnglish string `json:"legal_last_name_english"`
-
-	// NameInOtherLanguage is the name in local/other language
-	NameInOtherLanguage string `json:"name_in_other_language,omitempty"`
-
-	// EmailAddress is the representative's email
-	EmailAddress string `json:"email_address"`
-
-	// IsApplicant indicates if this representative is the applicant. "0" or "1".
-	// Only one representative can have IsApplicant = "1".
-	IsApplicant string `json:"is_applicant"`
-
-	// JobTitle is the representative's role.
-	// Values: DIRECTOR, BENEFICIAL_OWNER, BENEFICIAL_OWNER_AND_DIRECTOR, AUTHORISED_PERSON
-	JobTitle string `json:"job_title"`
-
-	// OwnershipPercentage is the ownership percentage
-	OwnershipPercentage float64 `json:"ownership_percentage,omitempty"`
-
-	// Nationality is the ISO 3166-1 alpha-2 country code
-	Nationality string `json:"nationality"`
-
-	// TaxNumber is the tax identification number
-	TaxNumber string `json:"tax_number,omitempty"`
-
-	// PhoneNumber is the phone number with country code
-	PhoneNumber string `json:"phone_number"`
-
-	// DateOfBirth is the date of birth in YYYY-MM-DD format
-	DateOfBirth string `json:"date_of_birth"`
-
-	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code of residence
-	CountryOrTerritory string `json:"country_or_territory"`
-
-	// StreetAddress is the street address
-	StreetAddress string `json:"street_address"`
-
-	// ApartmentSuiteOrFloor is the apartment, suite, or floor number
-	ApartmentSuiteOrFloor string `json:"apartment_suite_or_floor,omitempty"`
-
-	// City is the city name
-	City string `json:"city"`
-
-	// State is the state or province
-	State string `json:"state,omitempty"`
-
-	// PostalCode is the postal or ZIP code
-	PostalCode string `json:"postal_code"`
-
-	// IdentificationType is the type of ID document
-	IdentificationType string `json:"identification_type"`
-
-	// IdentificationValue is the ID document number
-	IdentificationValue string `json:"identification_value"`
-
-	// IdentityDocs is a list of identity document images (base64 or file IDs)
-	IdentityDocs []string `json:"identity_docs"`
-
-	// OtherDocuments is a list of additional documents
-	OtherDocuments []SubAccountRepresentativeDocument `json:"other_documents,omitempty"`
-
-	// FaceDocs is a list of face photo images (base64 or file IDs).
-	// Required for DIRECTOR and BENEFICIAL_OWNER roles.
-	FaceDocs []string `json:"face_docs,omitempty"`
+	LegalFirstNameEnglish string                             `json:"legal_first_name_english"`           // Required. Given name in English, max 100 chars
+	LegalLastNameEnglish  string                             `json:"legal_last_name_english"`            // Required. Family name in English, max 100 chars
+	NameInOtherLanguage   string                             `json:"name_in_other_language,omitempty"`   // Optional. Name in non-English language, max 100 chars
+	EmailAddress          string                             `json:"email_address"`                      // Optional. Contact email, max 100 chars
+	IsApplicant           string                             `json:"is_applicant"`                       // Required. "0" or "1"; only one representative may be "1"
+	JobTitle              string                             `json:"job_title"`                          // Required. DIRECTOR, BENEFICIAL_OWNER, BENEFICIAL_OWNER_AND_DIRECTOR, or AUTHORISED_PERSON
+	OwnershipPercentage   float64                            `json:"ownership_percentage,omitempty"`     // Optional. Ownership stake percentage, e.g. 15.5
+	Nationality           string                             `json:"nationality"`                        // Required. ISO 3166-1 alpha-2 country code
+	TaxNumber             string                             `json:"tax_number,omitempty"`               // Optional. Tax identification number, max 100 chars
+	PhoneNumber           string                             `json:"phone_number"`                       // Optional. With country code, max 25 chars
+	DateOfBirth           string                             `json:"date_of_birth"`                      // Required. Format: YYYY-MM-DD
+	CountryOrTerritory    string                             `json:"country_or_territory"`               // Required. ISO 3166-1 alpha-2 residence country code
+	StreetAddress         string                             `json:"street_address"`                     // Required. Residential street address, max 100 chars
+	ApartmentSuiteOrFloor string                             `json:"apartment_suite_or_floor,omitempty"` // Optional. Unit/suite/floor, max 100 chars
+	City                  string                             `json:"city"`                               // Required. Residential city, max 100 chars
+	State                 string                             `json:"state,omitempty"`                    // Required. State/province code
+	PostalCode            string                             `json:"postal_code"`                        // Required. ZIP/postal code, max 100 chars
+	IdentificationType    string                             `json:"identification_type"`                // Required. PASSPORT, DRIVERS_LICENSE, or NATIONAL_ID
+	IdentificationValue   string                             `json:"identification_value"`               // Required. ID document number, max 100 chars
+	IdentityDocs          []string                           `json:"identity_docs"`                      // Required. Identity document images (base64 or file IDs)
+	OtherDocuments        []SubAccountRepresentativeDocument `json:"other_documents,omitempty"`          // Optional. Additional supporting documents
+	FaceDocs              []string                           `json:"face_docs,omitempty"`                // Optional. Face photos; required for at least one DIRECTOR/BENEFICIAL_OWNER
 }
 
 // SubAccountRepresentativeDocument represents an additional document for a representative.
 type SubAccountRepresentativeDocument struct {
-	// Type is the document type identifier
-	Type string `json:"type"`
-
-	// DocStr is the document content (base64 encoded or file ID)
-	DocStr string `json:"doc_str"`
+	Type   string `json:"type"`    // Required. PROOF_OF_ADDRESS or OTHERS
+	DocStr string `json:"doc_str"` // Required. Base64-encoded document or file ID
 }
 
 // SubAccountBusinessDetails contains business operation details for a company.
 type SubAccountBusinessDetails struct {
-	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code for business operations
-	CountryOrTerritory string `json:"country_or_territory,omitempty"`
-
-	// StreetAddress is the business operating street address
-	StreetAddress string `json:"street_address,omitempty"`
-
-	// City is the city name
-	City string `json:"city,omitempty"`
-
-	// State is the state or province
-	State string `json:"state,omitempty"`
-
-	// PostalCode is the postal or ZIP code
-	PostalCode string `json:"postal_code,omitempty"`
-
-	// Industry is the numeric industry classification code
-	Industry string `json:"industry,omitempty"`
-
-	// TurnoverMonthly is the estimated monthly turnover tier (TM001-TM005)
-	TurnoverMonthly string `json:"turnover_monthly,omitempty"`
-
-	// NumberOfEmployee is the employee count tier (BS001-BS005)
-	NumberOfEmployee string `json:"number_of_employee,omitempty"`
-
-	// WebsiteURL is the business website URL (max 100 characters)
-	WebsiteURL string `json:"website_url,omitempty"`
-
-	// CompanyDescription is a description of the company's business
-	CompanyDescription string `json:"company_description,omitempty"`
-
-	// AccountPurpose is a list of intended account purposes
-	AccountPurpose []string `json:"account_purpose,omitempty"`
-
-	// BankingCurrencies is a list of ISO 4217 currency codes for banking operations
-	BankingCurrencies []string `json:"banking_currencies,omitempty"`
-
-	// BankingCountries is a list of ISO 3166-1 alpha-2 country codes for banking operations
-	BankingCountries []string `json:"banking_countries,omitempty"`
-
-	// IssuingCountries is a list of ISO 3166-1 alpha-2 country codes for card issuing.
-	// Required for ISSUING business.
-	IssuingCountries []string `json:"issuing_countries,omitempty"`
-
-	// IssuingMonthly is the estimated monthly issuing volume tier (TM001-TM005).
-	// Required for ISSUING business.
-	IssuingMonthly string `json:"issuing_monthly,omitempty"`
+	CountryOrTerritory string   `json:"country_or_territory,omitempty"` // Required. ISO 3166-1 alpha-2 operating jurisdiction
+	StreetAddress      string   `json:"street_address,omitempty"`       // Required. Business street address, max 100 chars
+	City               string   `json:"city,omitempty"`                 // Required. Business city, max 100 chars
+	State              string   `json:"state,omitempty"`                // Required. State/province code
+	PostalCode         string   `json:"postal_code,omitempty"`          // Required. ZIP/postal code, max 100 chars
+	Industry           string   `json:"industry,omitempty"`             // Required. Numeric industry classification code (MCC)
+	TurnoverMonthly    string   `json:"turnover_monthly,omitempty"`     // Required. TM001-TM005 (monthly revenue bracket)
+	NumberOfEmployee   string   `json:"number_of_employee,omitempty"`   // Required. BS001-BS005 (employee count bracket)
+	WebsiteURL         string   `json:"website_url,omitempty"`          // Optional. Business website URL, max 100 chars
+	CompanyDescription string   `json:"company_description,omitempty"`  // Optional. Business summary
+	AccountPurpose     []string `json:"account_purpose,omitempty"`      // Optional. BUSINESS_PAYMENT, BILL_PAYMENT, CHARITABLE_DONATION, LOAN_REPAYMENT, INVESTMENT, COLLECTION_OF_BUSINESS, OTHERS
+	BankingCurrencies  []string `json:"banking_currencies,omitempty"`   // Optional. ISO 4217 currency codes, e.g. "USD", "EUR"
+	BankingCountries   []string `json:"banking_countries,omitempty"`    // Optional. ISO 3166-1 alpha-2 country codes
+	IssuingCountries   []string `json:"issuing_countries,omitempty"`    // Optional. ISO 3166-1 alpha-2 codes; required for ISSUING business
+	IssuingMonthly     string   `json:"issuing_monthly,omitempty"`      // Optional. TM001-TM005; required for ISSUING business
 }
 
 // SubAccountAdditionalDocuments contains extra documents for the sub-account application.
 type SubAccountAdditionalDocuments struct {
-	// RequiredDocs is a list of required additional documents
-	RequiredDocs []SubAccountAdditionalDocument `json:"required_docs,omitempty"`
-
-	// OptionDocs is a list of optional additional documents
-	OptionDocs []SubAccountAdditionalDocument `json:"option_docs,omitempty"`
+	RequiredDocs []SubAccountAdditionalDocument `json:"required_docs,omitempty"` // Mandatory supporting documents (retrieve keys via Get Additional Documents)
+	OptionDocs   []SubAccountAdditionalDocument `json:"option_docs,omitempty"`   // Optional supporting documents
 }
 
 // SubAccountAdditionalDocument represents a single additional document.
 type SubAccountAdditionalDocument struct {
-	// ProfileKey is the document profile key identifier
-	ProfileKey string `json:"profile_key"`
-
-	// DocStr is the document content (base64 encoded or file ID)
-	DocStr string `json:"doc_str"`
+	ProfileKey string `json:"profile_key"` // Required. Document profile key, e.g. "business_articles_of_association"
+	DocStr     string `json:"doc_str"`     // Required. Base64-encoded document or file ID
 }
 
 // SubAccountTosAcceptance contains terms of service acceptance details.
 type SubAccountTosAcceptance struct {
-	// IP is the IPv4 address of the user accepting the ToS
-	IP string `json:"ip"`
-
-	// Date is the acceptance date in ISO 8601 format
-	Date string `json:"date"`
-
-	// UserAgent is the browser user agent string
-	UserAgent string `json:"user_agent,omitempty"`
-
-	// TosAgreement controls auto-signing of the TPSP agreement. Set to 1 to auto-sign.
-	TosAgreement int `json:"tos_agreement,omitempty"`
+	IP           string `json:"ip"`                      // Required. IPv4 address of the accepting user
+	Date         string `json:"date"`                    // Required. Acceptance timestamp in ISO 8601 format
+	UserAgent    string `json:"user_agent,omitempty"`    // Optional. Browser user agent string
+	TosAgreement int    `json:"tos_agreement,omitempty"` // Optional. Set to 1 to auto-sign TPSP agreement (TPSP master accounts only)
 }
 
 // ============================================================
@@ -489,15 +280,8 @@ type SubAccountTosAcceptance struct {
 
 // CreateSubAccountResponse represents the response from POST /v1/accounts/create_accounts.
 type CreateSubAccountResponse struct {
-	// AccountID is the unique identifier for the created account (UUID)
-	AccountID string `json:"account_id"`
-
-	// ShortReferenceID is a short reference identifier for the account
-	ShortReferenceID string `json:"short_reference_id"`
-
-	// Status is the account status: ACTIVE, PROCESSING, INACTIVE, or CLOSED
-	Status string `json:"status"`
-
-	// VerificationStatus is the KYC verification status: APPROVED, PENDING, REJECT, EXPIRED, or RETURN
-	VerificationStatus string `json:"verification_status"`
+	AccountID          string `json:"account_id"`          // Unique account identifier (UUID)
+	ShortReferenceID   string `json:"short_reference_id"`  // Human-readable reference, e.g. "P220406-LLCVLRM"
+	Status             string `json:"status"`              // ACTIVE, PROCESSING, INACTIVE, or CLOSED
+	VerificationStatus string `json:"verification_status"` // APPROVED, PENDING, REJECT, EXPIRED, or RETURN
 }

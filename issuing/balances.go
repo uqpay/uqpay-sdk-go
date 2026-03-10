@@ -18,25 +18,25 @@ type BalancesClient struct {
 
 // RetrieveBalanceRequest represents a request to retrieve issuing balance
 type RetrieveBalanceRequest struct {
-	Currency string `json:"currency"`
+	Currency string `json:"currency"` // Required. ISO 4217 currency code, e.g. "USD"
 }
 
 // ListBalancesRequest represents a request to list issuing balances
 type ListBalancesRequest struct {
-	PageSize   int `json:"page_size"`   // required, 10-100
-	PageNumber int `json:"page_number"` // required, >=1
+	PageSize   int `json:"page_size"`   // Required. Items per page, min: 10, max: 100, default: 10
+	PageNumber int `json:"page_number"` // Required. Page number to retrieve, min: 1, default: 1
 }
 
 // ListBalanceTransactionsRequest represents a request to list issuing balance transactions
 type ListBalanceTransactionsRequest struct {
-	PageSize          int    `json:"page_size"`                    // required, 10-100
-	PageNumber        int    `json:"page_number"`                  // required, >=1
-	StartTime         string `json:"start_time,omitempty"`         // optional, max 90 days interval
-	EndTime           string `json:"end_time,omitempty"`           // optional, max 90 days interval
-	Currency          string `json:"currency,omitempty"`           // optional, filter by currency
-	TransactionType   string `json:"transaction_type,omitempty"`   // optional, filter by transaction type
-	TransactionStatus string `json:"transaction_status,omitempty"` // optional, filter by transaction status
-	TransactionID     string `json:"transaction_id,omitempty"`     // optional, filter by transaction ID
+	PageSize          int    `json:"page_size"`                    // Required. Items per page, min: 10, max: 100, default: 10
+	PageNumber        int    `json:"page_number"`                  // Required. Page number to retrieve, min: 1, default: 1
+	StartTime         string `json:"start_time,omitempty"`         // Optional. ISO 8601 format, max 90-day interval with EndTime
+	EndTime           string `json:"end_time,omitempty"`           // Optional. ISO 8601 format, max 90-day interval with StartTime
+	Currency          string `json:"currency,omitempty"`           // Optional. ISO 4217 currency code filter, e.g. "USD"
+	TransactionType   string `json:"transaction_type,omitempty"`   // Optional. DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
+	TransactionStatus string `json:"transaction_status,omitempty"` // Optional. COMPLETED, PENDING, or FAILED
+	TransactionID     string `json:"transaction_id,omitempty"`     // Optional. UUID, filter by specific transaction
 }
 
 // ============================================================================
@@ -45,45 +45,45 @@ type ListBalanceTransactionsRequest struct {
 
 // IssuingBalance represents an issuing account balance
 type IssuingBalance struct {
-	BalanceID        string `json:"balance_id"`
-	Currency         string `json:"currency"`
-	AvailableBalance string `json:"available_balance"`
-	MarginBalance    string `json:"margin_balance"`
-	FrozenBalance    string `json:"frozen_balance"`
-	CreateTime       string `json:"create_time"`
-	LastTradeTime    string `json:"last_trade_time"`
-	BalanceStatus    string `json:"balance_status"` // ACTIVE, PENDING, PROCESSING, CLOSED
+	BalanceID        string `json:"balance_id"`        // Unique identifier for the account balance
+	Currency         string `json:"currency"`          // ISO 4217 currency code
+	AvailableBalance string `json:"available_balance"` // Currently accessible funds
+	MarginBalance    string `json:"margin_balance"`    // Additional borrowing capacity
+	FrozenBalance    string `json:"frozen_balance"`    // Temporarily locked funds
+	CreateTime       string `json:"create_time"`       // ISO 8601 creation timestamp
+	LastTradeTime    string `json:"last_trade_time"`   // ISO 8601 most recent update timestamp
+	BalanceStatus    string `json:"balance_status"`    // ACTIVE, PENDING, PROCESSING, or CLOSED
 }
 
 // ListBalancesResponse represents a paginated list of issuing balances
 type ListBalancesResponse struct {
-	TotalPages int              `json:"total_pages"`
-	TotalItems int              `json:"total_items"`
-	Data       []IssuingBalance `json:"data"`
+	TotalPages int              `json:"total_pages"` // Total pages of available items
+	TotalItems int              `json:"total_items"` // Total count of available items
+	Data       []IssuingBalance `json:"data"`        // Collection of balance objects
 }
 
 // IssuingBalanceTransaction represents an issuing balance transaction
 type IssuingBalanceTransaction struct {
-	TransactionID      string `json:"transaction_id"`
-	ShortTransactionID string `json:"short_transaction_id"`
-	AccountID          string `json:"account_id"`
-	AccountName        string `json:"account_name"`
-	BalanceID          string `json:"balance_id"`
-	TransactionType    string `json:"transaction_type"` // DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
-	Currency           string `json:"currency"`
-	Amount             string `json:"amount"`
-	CreateTime         string `json:"create_time"`
-	CompleteTime       string `json:"complete_time"`
-	TransactionStatus  string `json:"transaction_status"` // FAILED, PENDING, COMPLETED
-	EndingBalance      string `json:"ending_balance"`
-	Description        string `json:"description"`
+	TransactionID      string `json:"transaction_id"`       // UUID, unique identifier for the transaction
+	ShortTransactionID string `json:"short_transaction_id"` // Short-form transaction identifier
+	AccountID          string `json:"account_id"`           // Account identifier
+	AccountName        string `json:"account_name"`         // Account name
+	BalanceID          string `json:"balance_id"`           // Associated account balance identifier
+	TransactionType    string `json:"transaction_type"`     // DEPOSIT, TRANSFER_IN, TRANSFER_OUT, ISSUING_AUTHORIZATION, ISSUING_REVERSAL, ISSUING_REFUND, CARD_RECHARGE, CARD_WITHDRAW, SETTLEMENT_DEBIT, SETTLEMENT_CREDIT, SETTLEMENT_REVERSAL, FEE, REFUND, ADJUSTMENT, FUNDS_TRANSFER_IN, FUNDS_TRANSFER_OUT, FEE_REFUND, FEE_DEDUCTION, MARGIN_PAYMENT, MARGIN_REFUND, OTHER
+	Currency           string `json:"currency"`             // ISO 4217 three-letter currency code
+	Amount             string `json:"amount"`               // Transaction amount
+	CreateTime         string `json:"create_time"`          // ISO 8601 creation timestamp
+	CompleteTime       string `json:"complete_time"`        // ISO 8601 completion timestamp
+	TransactionStatus  string `json:"transaction_status"`   // COMPLETED, PENDING, or FAILED
+	EndingBalance      string `json:"ending_balance"`       // Balance after the transaction
+	Description        string `json:"description"`          // Transaction description
 }
 
 // ListBalanceTransactionsResponse represents a paginated list of issuing balance transactions
 type ListBalanceTransactionsResponse struct {
-	TotalPages int                         `json:"total_pages"`
-	TotalItems int                         `json:"total_items"`
-	Data       []IssuingBalanceTransaction `json:"data"`
+	TotalPages int                         `json:"total_pages"` // Total pages of available items
+	TotalItems int                         `json:"total_items"` // Total count of available items
+	Data       []IssuingBalanceTransaction `json:"data"`        // Collection of transaction objects
 }
 
 // ============================================================================

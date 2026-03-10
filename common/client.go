@@ -21,23 +21,23 @@ type TokenProvider interface {
 type RequestOptions struct {
 	// IdempotencyKey is a unique key to ensure idempotent requests.
 	// If not provided, a UUID will be generated automatically.
-	IdempotencyKey string
+	IdempotencyKey string // Optional. Unique key for idempotent requests; auto-generated UUID if empty
 	// AuthToken overrides the default auth token for this request.
 	// If not provided, the token from TokenProvider will be used.
-	AuthToken string
+	AuthToken string // Optional. Overrides TokenProvider token when set; sent as x-auth-token header
 	// ClientID is the client identifier for requests that require it.
 	// When set, it will be sent as the x-client-id header.
-	ClientID string
+	ClientID string // Optional. API client ID; sent as x-client-id header
 	// OnBehalfOf is the connected account ID for requests on behalf of a sub-account.
 	// When set, it will be sent as the x-on-behalf-of header.
-	OnBehalfOf string
+	OnBehalfOf string // Optional. UQPAY connected account ID; sent as x-on-behalf-of header
 }
 
 // APIClient handles HTTP requests to UQPAY API
 type APIClient struct {
-	Config        *configuration.Configuration
-	TokenProvider TokenProvider
-	HTTPClient    *http.Client
+	Config        *configuration.Configuration // Required. SDK configuration including environment base URL
+	TokenProvider TokenProvider                // Required. Provides auth tokens for API requests
+	HTTPClient    *http.Client                 // HTTP client for API calls. Defaults to http.Client{} if nil in config
 }
 
 // NewAPIClient creates a new API client
@@ -221,6 +221,11 @@ func (c *APIClient) Delete(ctx context.Context, path string, response interface{
 
 // GetRaw sends a GET request and returns raw bytes (for file downloads)
 func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
+	return c.GetRawWithOptions(ctx, path, "application/octet-stream", nil)
+}
+
+// GetRawWithOptions sends a GET request with custom options and returns raw bytes
+func (c *APIClient) GetRawWithOptions(ctx context.Context, path string, accept string, opts *RequestOptions) ([]byte, error) {
 	url := c.Config.Environment.BaseURL + path
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -228,16 +233,40 @@ func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Get auth token
-	token, err := c.TokenProvider.GetToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
+	// Determine auth token
+	var token string
+	if opts != nil && opts.AuthToken != "" {
+		token = opts.AuthToken
+	} else {
+		token, err = c.TokenProvider.GetToken()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get token: %w", err)
+		}
+	}
+
+	// Determine idempotency key
+	idempotencyKey := uuid.New().String()
+	if opts != nil && opts.IdempotencyKey != "" {
+		idempotencyKey = opts.IdempotencyKey
 	}
 
 	// Set headers
-	req.Header.Set("Accept", "application/octet-stream")
+	if accept == "" {
+		accept = "application/octet-stream"
+	}
+	req.Header.Set("Accept", accept)
 	req.Header.Set("x-auth-token", "Bearer "+token)
-	req.Header.Set("x-idempotency-key", uuid.New().String())
+	req.Header.Set("x-idempotency-key", idempotencyKey)
+
+	// Set x-client-id header if provided
+	if opts != nil && opts.ClientID != "" {
+		req.Header.Set("x-client-id", opts.ClientID)
+	}
+
+	// Set x-on-behalf-of header if provided
+	if opts != nil && opts.OnBehalfOf != "" {
+		req.Header.Set("x-on-behalf-of", opts.OnBehalfOf)
+	}
 
 	// Execute request
 	resp, err := c.HTTPClient.Do(req)
@@ -264,4 +293,73 @@ func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+// PostMultipart sends a multipart/form-data POST request with custom options
+func (c *APIClient) PostMultipart(ctx context.Context, path string, body io.Reader, contentType string, response interface{}, opts *RequestOptions) error {
+	url := c.Config.Environment.BaseURL + path
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, body)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Determine auth token
+	var token string
+	if opts != nil && opts.AuthToken != "" {
+		token = opts.AuthToken
+	} else {
+		token, err = c.TokenProvider.GetToken()
+		if err != nil {
+			return fmt.Errorf("failed to get token: %w", err)
+		}
+	}
+
+	// Determine idempotency key
+	idempotencyKey := uuid.New().String()
+	if opts != nil && opts.IdempotencyKey != "" {
+		idempotencyKey = opts.IdempotencyKey
+	}
+
+	// Set headers
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("x-auth-token", "Bearer "+token)
+	req.Header.Set("x-idempotency-key", idempotencyKey)
+
+	// Set x-client-id header if provided
+	if opts != nil && opts.ClientID != "" {
+		req.Header.Set("x-client-id", opts.ClientID)
+	}
+
+	// Set x-on-behalf-of header if provided
+	if opts != nil && opts.OnBehalfOf != "" {
+		req.Header.Set("x-on-behalf-of", opts.OnBehalfOf)
+	}
+
+	// Execute request
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for errors
+	if resp.StatusCode >= 400 {
+		respBody, _ := io.ReadAll(resp.Body)
+		var apiErr APIError
+		if err := json.Unmarshal(respBody, &apiErr); err != nil || apiErr.Message == "" {
+			return fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(respBody))
+		}
+		apiErr.StatusCode = resp.StatusCode
+		return &apiErr
+	}
+
+	// Decode response
+	if response != nil {
+		if err := json.NewDecoder(resp.Body).Decode(response); err != nil {
+			return fmt.Errorf("failed to decode response: %w", err)
+		}
+	}
+
+	return nil
 }

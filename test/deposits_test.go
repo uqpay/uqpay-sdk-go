@@ -37,7 +37,7 @@ func TestDeposits(t *testing.T) {
 
 	t.Run("ListWithFilters", func(t *testing.T) {
 		resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
-			PageSize: 10, PageNumber: 1, DepositStatus: "COMPLETED",
+			PageSize: 10, PageNumber: 1, Status: "COMPLETED",
 		})
 		if err != nil {
 			t.Logf("List with filters returned error: %v", err)
@@ -49,26 +49,13 @@ func TestDeposits(t *testing.T) {
 	t.Run("ListByStatus", func(t *testing.T) {
 		for _, status := range []string{"PENDING", "COMPLETED", "FAILED"} {
 			resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
-				PageSize: 10, PageNumber: 1, DepositStatus: status,
+				PageSize: 10, PageNumber: 1, Status: status,
 			})
 			if err != nil {
 				t.Logf("  %s: error - %v", status, err)
 				continue
 			}
 			t.Logf("  %s: %d found", status, resp.TotalItems)
-		}
-	})
-
-	t.Run("ListByCurrency", func(t *testing.T) {
-		for _, currency := range []string{"USD", "SGD", "EUR"} {
-			resp, err := client.Banking.Deposits.List(ctx, &banking.ListDepositsRequest{
-				PageSize: 10, PageNumber: 1, Currency: currency,
-			})
-			if err != nil {
-				t.Logf("  %s: error - %v", currency, err)
-				continue
-			}
-			t.Logf("  %s: %d found", currency, resp.TotalItems)
 		}
 	})
 

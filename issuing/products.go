@@ -14,36 +14,36 @@ type ProductsClient struct {
 
 // NoPinPaymentLimit represents a no-pin payment limit
 type NoPinPaymentLimit struct {
-	Amount   string `json:"amount"` // API returns string
-	Currency string `json:"currency"`
+	Amount   string `json:"amount"`   // Required. Maximum no-PIN transaction amount (returned as string)
+	Currency string `json:"currency"` // Required. ISO 4217 currency code
 }
 
 // CardProduct represents a card product
 type CardProduct struct {
-	ProductID          string              `json:"product_id"`
-	ModeType           string              `json:"mode_type"`
-	CardBin            string              `json:"card_bin"`
-	CardForm           []string            `json:"card_form"`
-	MaxCardQuota       int                 `json:"max_card_quota"`
-	CardScheme         string              `json:"card_scheme"`
-	CardCurrency       []string            `json:"card_currency"` // API returns array
-	ProductStatus      string              `json:"product_status"`
-	NoPinPaymentAmount []NoPinPaymentLimit `json:"no_pin_payment_amount"` // Array of payment limits
-	CreateTime         string              `json:"create_time"`
-	UpdateTime         string              `json:"update_time"`
+	ProductID          string              `json:"product_id"`            // Required. Unique product identifier (UUID)
+	ModeType           string              `json:"mode_type"`             // Required. SINGLE or SHARE
+	CardBin            string              `json:"card_bin"`              // Required. Card number prefix (BIN)
+	CardForm           []string            `json:"card_form"`             // Required. Supported forms: VIR (virtual) or PHY (physical)
+	MaxCardQuota       int                 `json:"max_card_quota"`        // Optional. Maximum number of cards issuable under account
+	CardScheme         string              `json:"card_scheme"`           // Required. Card scheme, e.g. VISA
+	CardCurrency       []string            `json:"card_currency"`         // Required. Supported ISO 4217 currencies for card issuance
+	ProductStatus      string              `json:"product_status"`        // Required. ENABLED or DISABLED
+	NoPinPaymentAmount []NoPinPaymentLimit `json:"no_pin_payment_amount"` // Required. No-PIN transaction limits per currency
+	CreateTime         string              `json:"create_time"`           // Required. ISO timestamp of creation
+	UpdateTime         string              `json:"update_time"`           // Required. ISO timestamp of last update
 }
 
 // ListProductsRequest represents a product list request
 type ListProductsRequest struct {
-	PageSize   int `json:"page_size"`
-	PageNumber int `json:"page_number"`
+	PageSize   int `json:"page_size"`   // Required. Max items per page, min: 10, max: 100, default: 10
+	PageNumber int `json:"page_number"` // Required. Page number to retrieve, min: 1, default: 1
 }
 
 // ListProductsResponse represents a product list response
 type ListProductsResponse struct {
-	TotalPages int           `json:"total_pages"`
-	TotalItems int           `json:"total_items"`
-	Data       []CardProduct `json:"data"`
+	TotalPages int           `json:"total_pages"` // Total number of available pages
+	TotalItems int           `json:"total_items"` // Total count of available items
+	Data       []CardProduct `json:"data"`        // Array of card product objects
 }
 
 // List lists card products
