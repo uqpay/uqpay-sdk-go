@@ -195,6 +195,22 @@ type SubAccountIndividualInfo struct {
 
 	// PostalCode is the postal or ZIP code
 	PostalCode string `json:"postal_code"`
+
+	// EmploymentStatus is the individual's current employment status.
+	// Values: "Employed", "Self-Employed", "Unemployed", "Student", "Retired", "Homemaker", "Other"
+	EmploymentStatus string `json:"employment_status"`
+
+	// Industry is the industry in which the individual works.
+	// See enum reference docs for the full list of accepted values.
+	Industry string `json:"industry"`
+
+	// JobTitle is the individual's job title or role.
+	// See enum reference docs for the full list of accepted values.
+	JobTitle string `json:"job_title"`
+
+	// CompanyName is the name of the company or organization the individual works for.
+	// Max 100 characters.
+	CompanyName string `json:"company_name"`
 }
 
 // SubAccountIdentityVerification contains identity verification details.

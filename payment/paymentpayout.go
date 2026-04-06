@@ -3,6 +3,7 @@ package payment
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -103,11 +104,11 @@ func (c *PaymentPayoutsClient) List(ctx context.Context, req *ListPayoutsRequest
 		separator = "&"
 	}
 	if req.StartTime != "" {
-		path += fmt.Sprintf("%sstart_time=%s", separator, req.StartTime)
+		path += fmt.Sprintf("%sstart_time=%s", separator, url.QueryEscape(req.StartTime))
 		separator = "&"
 	}
 	if req.EndTime != "" {
-		path += fmt.Sprintf("%send_time=%s", separator, req.EndTime)
+		path += fmt.Sprintf("%send_time=%s", separator, url.QueryEscape(req.EndTime))
 	}
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {

@@ -3,6 +3,8 @@ package banking
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -56,20 +58,22 @@ type ListDepositsResponse struct {
 // List lists deposits
 func (c *DepositsClient) List(ctx context.Context, req *ListDepositsRequest) (*ListDepositsResponse, error) {
 	var resp ListDepositsResponse
-	path := fmt.Sprintf("/v1/deposit?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.StartTime != "" {
-		path += fmt.Sprintf("&start_time=%s", req.StartTime)
+		params.Set("start_time", req.StartTime)
 	}
 	if req.EndTime != "" {
-		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+		params.Set("end_time", req.EndTime)
 	}
 	if req.DepositStatus != "" {
-		path += fmt.Sprintf("&deposit_status=%s", req.DepositStatus)
+		params.Set("deposit_status", req.DepositStatus)
 	}
 	if req.Currency != "" {
-		path += fmt.Sprintf("&currency=%s", req.Currency)
+		params.Set("currency", req.Currency)
 	}
+	path := "/v1/deposit?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list deposits: %w", err)

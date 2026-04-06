@@ -3,6 +3,8 @@ package banking
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -154,20 +156,22 @@ func (c *BeneficiariesClient) Create(ctx context.Context, req *BeneficiaryCreati
 // List lists beneficiaries with optional filters
 func (c *BeneficiariesClient) List(ctx context.Context, req *ListBeneficiariesRequest) (*ListBeneficiariesResponse, error) {
 	var resp ListBeneficiariesResponse
-	path := fmt.Sprintf("/v1/beneficiaries?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.Currency != "" {
-		path += fmt.Sprintf("&currency=%s", req.Currency)
+		params.Set("currency", req.Currency)
 	}
 	if req.Country != "" {
-		path += fmt.Sprintf("&country=%s", req.Country)
+		params.Set("country", req.Country)
 	}
 	if req.Status != "" {
-		path += fmt.Sprintf("&status=%s", req.Status)
+		params.Set("status", req.Status)
 	}
 	if req.EntityType != "" {
-		path += fmt.Sprintf("&entity_type=%s", req.EntityType)
+		params.Set("entity_type", req.EntityType)
 	}
+	path := "/v1/beneficiaries?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list beneficiaries: %w", err)

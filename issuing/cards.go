@@ -3,9 +3,12 @@ package issuing
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
+
 
 // CardsClient handles card operations
 type CardsClient struct {
@@ -16,21 +19,37 @@ type CardsClient struct {
 // Request Structures
 // ============================================================================
 
+// CardholderRequiredFields represents supplementary cardholder KYC info provided at card creation time
+type CardholderRequiredFields struct {
+	Gender             *string             `json:"gender,omitempty"`
+	Nationality        *string             `json:"nationality,omitempty"`
+	PhoneNumber        *string             `json:"phone_number,omitempty"`
+	DateOfBirth        *string             `json:"date_of_birth,omitempty"`
+	ResidentialAddress *ResidentialAddress `json:"residential_address,omitempty"`
+	Identity           *Identity           `json:"identity,omitempty"`
+	KycVerification    *KycVerification    `json:"kyc_verification,omitempty"`
+}
+
 // CreateCardRequest represents a card creation request
 type CreateCardRequest struct {
-	CardLimit        *float64          `json:"card_limit,omitempty"`
-	CardCurrency     string            `json:"card_currency"`
-	CardholderID     string            `json:"cardholder_id"`
-	CardProductID    string            `json:"card_product_id"`
-	SpendingControls []SpendingControl `json:"spending_controls,omitempty"`
-	RiskControls     *RiskControls     `json:"risk_controls,omitempty"`
-	Metadata         map[string]string `json:"metadata,omitempty"`
+	CardLimit                *float64                  `json:"card_limit,omitempty"`
+	CardCurrency             string                    `json:"card_currency"`
+	CardholderID             string                    `json:"cardholder_id"`
+	CardProductID            string                    `json:"card_product_id"`
+	SpendingControls         []SpendingControl         `json:"spending_controls,omitempty"`
+	RiskControls             *RiskControls             `json:"risk_controls,omitempty"`
+	Metadata                 map[string]string         `json:"metadata,omitempty"`
+	UsageType                *string                   `json:"usage_type,omitempty"`          // NORMAL or ONE_TIME
+	AutoCancelTrigger        *string                   `json:"auto_cancel_trigger,omitempty"` // ON_AUTH or ON_CAPTURE, required when UsageType=ONE_TIME
+	ExpiryAt                 *string                   `json:"expiry_at,omitempty"`           // ISO 8601 datetime
+	CardholderRequiredFields *CardholderRequiredFields `json:"cardholder_required_fields,omitempty"`
 }
 
 // SpendingControl represents spending control rules for a card
+// Note: the API returns Amount as a string even though the docs show it as a number
 type SpendingControl struct {
-	Amount   float64 `json:"amount"`
-	Interval string  `json:"interval"` // PER_TRANSACTION
+	Amount   string `json:"amount"`
+	Interval string `json:"interval"` // PER_TRANSACTION
 }
 
 // RiskControls represents user-customized risk control settings
@@ -82,11 +101,6 @@ type AssignCardRequest struct {
 	CardMode     string `json:"card_mode"` // SINGLE or SHARE
 }
 
-// BulkCardCreationRequest represents a bulk card creation request
-type BulkCardCreationRequest struct {
-	CardBIN string `json:"card_bin"`
-	Numbers int    `json:"numbers"` // 1-5000
-}
 
 // ListCardsRequest represents a card list request
 type ListCardsRequest struct {
@@ -108,6 +122,11 @@ type CardCreationResponse struct {
 	CreateTime  string `json:"create_time"`
 	CardStatus  string `json:"card_status"`
 	OrderStatus string `json:"order_status"`
+	// CardholderStatus is returned when cardholder KYC is pending or incomplete.
+	CardholderStatus *string `json:"cardholder_status,omitempty"`
+	// Message provides human-readable context when card creation is blocked or
+	// pending due to KYC requirements (e.g., insufficient KYC, missing fields).
+	Message *string `json:"message,omitempty"`
 }
 
 // CardUpdatedResponse represents the response after updating a card
@@ -136,13 +155,13 @@ type RetrieveCardResponse struct {
 	FormFactor          string                  `json:"form_factor"`
 	ModeType            string                  `json:"mode_type"`
 	CardProductID       string                  `json:"card_product_id"`
-	CardLimit           float64                 `json:"card_limit"`
+	CardLimit           common.FlexibleString    `json:"card_limit"`
 	AvailableBalance    string                  `json:"available_balance"`
 	Cardholder          CardholderInfo          `json:"cardholder"`
 	SpendingControls    []SpendingControl       `json:"spending_controls,omitempty"`
 	NoPINPaymentAmount  string                  `json:"no_pin_payment_amount"`
 	RiskControls        *RiskControls           `json:"risk_controls,omitempty"`
-	Metadata            map[string]string       `json:"metadata,omitempty"`
+	Metadata            common.FlexibleStringMap `json:"metadata,omitempty"`
 	CardStatus          string                  `json:"card_status"`
 	UpdateReason        *string                 `json:"update_reason,omitempty"`
 	ConsumedAmount      *string                 `json:"consumed_amount,omitempty"`
@@ -201,17 +220,19 @@ type AssignCardResponse struct {
 	OrderStatus string `json:"order_status"`
 }
 
-// BulkCardCreationResponse represents the response after bulk card creation
-type BulkCardCreationResponse struct {
-	ReportID   string  `json:"report_id"`
-	ExpireDate *string `json:"expire_date,omitempty"`
-}
 
 // ListCardsResponse represents a card list response
 type ListCardsResponse struct {
 	TotalPages int                    `json:"total_pages"`
 	TotalItems int                    `json:"total_items"`
 	Data       []RetrieveCardResponse `json:"data"`
+}
+
+// PANTokenResponse represents the response after creating a PAN token
+type PANTokenResponse struct {
+	Token     string `json:"token"`
+	ExpiresIn int    `json:"expires_in"`
+	ExpiresAt string `json:"expires_at"`
 }
 
 // ============================================================================
@@ -260,17 +281,19 @@ func (c *CardsClient) GetSecure(ctx context.Context, cardID string) (*SecureCard
 // List lists cards with pagination and filters
 func (c *CardsClient) List(ctx context.Context, req *ListCardsRequest) (*ListCardsResponse, error) {
 	var resp ListCardsResponse
-	path := fmt.Sprintf("/v1/issuing/cards?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.CardNumber != nil {
-		path += fmt.Sprintf("&card_number=%s", *req.CardNumber)
+		params.Set("card_number", *req.CardNumber)
 	}
 	if req.CardStatus != nil {
-		path += fmt.Sprintf("&card_status=%s", *req.CardStatus)
+		params.Set("card_status", *req.CardStatus)
 	}
 	if req.CardholderID != nil {
-		path += fmt.Sprintf("&cardholder_id=%s", *req.CardholderID)
+		params.Set("cardholder_id", *req.CardholderID)
 	}
+	path := "/v1/issuing/cards?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list cards: %w", err)
@@ -345,11 +368,14 @@ func (c *CardsClient) Assign(ctx context.Context, req *AssignCardRequest) (*Assi
 	return &resp, nil
 }
 
-// BulkCreate creates virtual cards in bulk
-func (c *CardsClient) BulkCreate(ctx context.Context, req *BulkCardCreationRequest) (*BulkCardCreationResponse, error) {
-	var resp BulkCardCreationResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cards/bulk", req, &resp); err != nil {
-		return nil, fmt.Errorf("failed to bulk create cards: %w", err)
+
+// CreatePANToken creates a one-time PAN token for accessing sensitive card details
+// through a secure iframe. The token expires after 60 seconds and can only be used once.
+func (c *CardsClient) CreatePANToken(ctx context.Context, cardID string) (*PANTokenResponse, error) {
+	var resp PANTokenResponse
+	path := fmt.Sprintf("/v1/issuing/cards/%s/token", cardID)
+	if err := c.client.Post(ctx, path, nil, &resp); err != nil {
+		return nil, fmt.Errorf("failed to create PAN token: %w", err)
 	}
 	return &resp, nil
 }

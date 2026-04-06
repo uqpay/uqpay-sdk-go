@@ -31,6 +31,10 @@ func TestCreateSubAccount(t *testing.T) {
 				City:               "London",
 				State:              "England",
 				PostalCode:         "W1U 6RS",
+				EmploymentStatus:   "Employed",
+				Industry:           "Information Technology/IT",
+				JobTitle:           "Business and administration professionals",
+				CompanyName:        "Acme Corp.",
 			},
 			IdentityVerification: &connect.SubAccountIdentityVerification{
 				IdentificationType:  connect.SubAccountIDTypePassport,
@@ -183,6 +187,10 @@ func TestCreateSubAccount(t *testing.T) {
 				StreetAddress:      "1 Test Street",
 				City:               "London",
 				PostalCode:         "W1A 1AA",
+				EmploymentStatus:   "Employed",
+				Industry:           "Information Technology/IT",
+				JobTitle:           "Business and administration professionals",
+				CompanyName:        "Acme Corp.",
 			},
 			IdentityVerification: &connect.SubAccountIdentityVerification{
 				IdentificationType:  connect.SubAccountIDTypePassport,

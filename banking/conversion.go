@@ -3,6 +3,8 @@ package banking
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -113,23 +115,25 @@ type ConversionDate struct {
 // List lists conversions
 func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest) (*ListConversionsResponse, error) {
 	var resp ListConversionsResponse
-	path := fmt.Sprintf("/v1/conversion?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.StartTime != 0 {
-		path += fmt.Sprintf("&start_time=%d", req.StartTime)
+		params.Set("start_time", strconv.FormatInt(req.StartTime, 10))
 	}
 	if req.EndTime != 0 {
-		path += fmt.Sprintf("&end_time=%d", req.EndTime)
+		params.Set("end_time", strconv.FormatInt(req.EndTime, 10))
 	}
 	if req.ConversionStatus != "" {
-		path += fmt.Sprintf("&conversion_status=%s", req.ConversionStatus)
+		params.Set("conversion_status", req.ConversionStatus)
 	}
 	if req.SellCurrency != "" {
-		path += fmt.Sprintf("&sell_currency=%s", req.SellCurrency)
+		params.Set("sell_currency", req.SellCurrency)
 	}
 	if req.BuyCurrency != "" {
-		path += fmt.Sprintf("&buy_currency=%s", req.BuyCurrency)
+		params.Set("buy_currency", req.BuyCurrency)
 	}
+	path := "/v1/conversion?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list conversions: %w", err)
