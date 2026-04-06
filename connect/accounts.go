@@ -134,23 +134,11 @@ type RetrieveAccountResponse struct {
 	Account
 }
 
-// GetAdditionalDocumentsRequest represents a request for additional documents
-type GetAdditionalDocumentsRequest struct {
-	AccountID string `json:"account_id"`
-}
-
-// Document represents a required document
-type Document struct {
-	Type        string `json:"type"`
-	Description string `json:"description"`
-	Required    bool   `json:"required"`
-	Status      string `json:"status,omitempty"`
-}
-
-// GetAdditionalDocumentsResponse represents additional documents response
-type GetAdditionalDocumentsResponse struct {
-	AccountID string     `json:"account_id"`
-	Documents []Document `json:"documents"`
+// AdditionalDocument represents a document type required or optional for company sub-account creation
+type AdditionalDocument struct {
+	ProfileKey    string `json:"profile_key"`    // Unique key representing the document type, e.g. "ARTICLES_OF_ASSOCIATION"
+	ProfileName   string `json:"profile_name"`   // Human-readable description of the document
+	ProfileOption int    `json:"profile_option"` // 1 = required, 0 = optional
 }
 
 // CreateSubAccount creates a new sub-account using the new API endpoint.
@@ -195,14 +183,15 @@ func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAcc
 	return &resp, nil
 }
 
-// GetAdditionalDocuments retrieves additional required documents for an account
-func (c *AccountsClient) GetAdditionalDocuments(ctx context.Context, accountID string) (*GetAdditionalDocumentsResponse, error) {
-	var resp GetAdditionalDocumentsResponse
-	path := fmt.Sprintf("/v1/accounts/get_additional?account_id=%s", accountID)
+// GetAdditionalDocuments retrieves the required and optional document types for creating
+// a company-type sub-account based on the specified country and business code (e.g. "BANKING").
+func (c *AccountsClient) GetAdditionalDocuments(ctx context.Context, country, businessCode string) ([]AdditionalDocument, error) {
+	var resp []AdditionalDocument
+	path := fmt.Sprintf("/v1/accounts/get_additional?country=%s&business_code=%s", country, businessCode)
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to get additional documents: %w", err)
 	}
-	return &resp, nil
+	return resp, nil
 }
 
 // Create creates a new account using the legacy API endpoint
@@ -258,10 +247,14 @@ func (c *AccountsClient) Update(ctx context.Context, accountID string, req *Upda
 	return &account, nil
 }
 
-// Get retrieves an account by ID
-func (c *AccountsClient) Get(ctx context.Context, accountID string) (*Account, error) {
+// Get retrieves an account by ID. An optional businessCode query parameter can be provided
+// to filter by business type (e.g. "BANKING"). Omit or pass empty string to use the API default.
+func (c *AccountsClient) Get(ctx context.Context, accountID string, businessCode ...string) (*Account, error) {
 	var account Account
 	path := fmt.Sprintf("/v1/accounts/%s", accountID)
+	if len(businessCode) > 0 && businessCode[0] != "" {
+		path += fmt.Sprintf("?business_code=%s", businessCode[0])
+	}
 	if err := c.client.Get(ctx, path, &account); err != nil {
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}

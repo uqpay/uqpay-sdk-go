@@ -3,6 +3,8 @@ package issuing
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -107,14 +109,16 @@ func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest) (*L
 // ListTransactions lists issuing balance transactions with pagination and optional time filters
 func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest) (*ListBalanceTransactionsResponse, error) {
 	var resp ListBalanceTransactionsResponse
-	path := fmt.Sprintf("/v1/issuing/balances/transactions?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.StartTime != "" {
-		path += fmt.Sprintf("&start_time=%s", req.StartTime)
+		params.Set("start_time", req.StartTime)
 	}
 	if req.EndTime != "" {
-		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+		params.Set("end_time", req.EndTime)
 	}
+	path := "/v1/issuing/balances/transactions?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list issuing balance transactions: %w", err)
