@@ -107,45 +107,20 @@ func TestAccounts(t *testing.T) {
 	})
 
 	t.Run("GetAdditionalDocuments", func(t *testing.T) {
-		// First, list accounts to get a valid account ID
-		listReq := &connect.ListAccountsRequest{
-			PageSize:   1,
-			PageNumber: 1,
-		}
-
-		listResp, err := client.Connect.Accounts.List(ctx, listReq)
-		if err != nil {
-			t.Logf("List accounts failed, skipping GetAdditionalDocuments test: %v", err)
-			return
-		}
-
-		if len(listResp.Data) == 0 {
-			t.Log("No accounts available, skipping GetAdditionalDocuments test")
-			return
-		}
-
-		accountID := listResp.Data[0].AccountID
-
-		// Test GetAdditionalDocuments
-		resp, err := client.Connect.Accounts.GetAdditionalDocuments(ctx, accountID)
+		// Retrieves required/optional document types for company sub-accounts by country
+		docs, err := client.Connect.Accounts.GetAdditionalDocuments(ctx, "GB", "BANKING")
 		if err != nil {
 			t.Logf("GetAdditionalDocuments returned: %v", err)
 			return
 		}
 
-		t.Logf("✅ Retrieved additional documents for account: %s", resp.AccountID)
-		t.Logf("  Total documents: %d", len(resp.Documents))
-
-		// Log document details
-		for i, doc := range resp.Documents {
-			t.Logf("  Document %d: Type=%s, Required=%t, Status=%s",
-				i+1, doc.Type, doc.Required, doc.Status)
-			t.Logf("    Description: %s", doc.Description)
-		}
-
-		// Verify account ID matches
-		if resp.AccountID != accountID {
-			t.Errorf("Expected account ID %s, got %s", accountID, resp.AccountID)
+		t.Logf("✅ Retrieved additional documents for GB/BANKING: %d items", len(docs))
+		for i, doc := range docs {
+			required := "optional"
+			if doc.ProfileOption == 1 {
+				required = "required"
+			}
+			t.Logf("  [%d] %s (%s) - %s", i+1, doc.ProfileKey, doc.ProfileName, required)
 		}
 	})
 }

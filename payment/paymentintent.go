@@ -59,6 +59,13 @@ type PaymentMethod struct {
 	KakaoPay  *WalletPayment `json:"kakaopay,omitempty"`
 	Toss      *WalletPayment `json:"tosspay,omitempty"`
 	NaverPay  *WalletPayment `json:"naverpay,omitempty"`
+
+	// Digital wallet payments with network tokens
+	ApplePay  *ApplePay  `json:"applepay,omitempty"`
+	GooglePay *GooglePay `json:"googlepay,omitempty"`
+
+	// Cryptocurrency payments (currency must be USD)
+	Crypto *Crypto `json:"crypto,omitempty"`
 }
 
 // ============================================================================
@@ -236,6 +243,69 @@ type GrabPay struct {
 	IsPresent   bool   `json:"is_present,omitempty"`   // Customer physically present during payment
 	PaymentCode string `json:"payment_code,omitempty"` // Customer's payment code from wallet app
 	ShopperName string `json:"shopper_name,omitempty"` // Name of the shopper
+}
+
+// ============================================================================
+// Apple Pay
+// ============================================================================
+
+// ApplePay represents Apple Pay payment details
+type ApplePay struct {
+	Flow           string          `json:"flow"`                      // Required. redirect, mobile_web, mobile_app, or contactless
+	OSType         string          `json:"os_type,omitempty"`         // Required for mobile_web/mobile_app. Fixed value: ios
+	IsPresent      bool            `json:"is_present,omitempty"`      // Whether customer is physically present
+	Network        string          `json:"network"`                   // Required. Card network: visa, mastercard, amex, discover, jcb
+	CardType       string          `json:"card_type,omitempty"`       // Optional. debit or credit
+	TokenType      string          `json:"token_type"`                // Required. decrypted or encrypted
+	AuthMethod     string          `json:"auth_method"`               // Required. cryptogram_3ds or pan_only
+	NetworkToken   *NetworkToken   `json:"network_token"`             // Required. DPAN token details
+	BillingContact *BillingContact `json:"billing_contact,omitempty"` // Optional. Billing contact information
+}
+
+// ============================================================================
+// Google Pay
+// ============================================================================
+
+// GooglePay represents Google Pay payment details
+type GooglePay struct {
+	Flow           string          `json:"flow"`                      // Required. redirect, mobile_web, mobile_app, or contactless
+	OSType         string          `json:"os_type,omitempty"`         // Required for mobile_web/mobile_app. ios or android
+	IsPresent      bool            `json:"is_present,omitempty"`      // Whether customer is physically present
+	Network        string          `json:"network"`                   // Required. Card network: visa, mastercard, amex, discover, jcb
+	CardType       string          `json:"card_type,omitempty"`       // Optional. debit or credit
+	TokenType      string          `json:"token_type"`                // Required. decrypted or encrypted
+	AuthMethod     string          `json:"auth_method"`               // Required. cryptogram_3ds or pan_only
+	NetworkToken   *NetworkToken   `json:"network_token"`             // Required. DPAN token details
+	BillingAddress *BillingContact `json:"billing_address,omitempty"` // Optional. Billing address information
+}
+
+// NetworkToken represents the DPAN token details for Apple Pay and Google Pay
+type NetworkToken struct {
+	Number      string `json:"number"`               // Required. DPAN number
+	ExpiryMonth string `json:"expiry_month"`         // Required. 2-digit expiry month
+	ExpiryYear  string `json:"expiry_year"`          // Required. 4-digit expiry year
+	Cryptogram  string `json:"cryptogram,omitempty"` // Required when auth_method is cryptogram_3ds. Base64 encoded
+	ECI         string `json:"eci,omitempty"`        // Required when auth_method is cryptogram_3ds. e.g. "07"
+}
+
+// BillingContact represents billing contact information for Apple Pay and Google Pay
+type BillingContact struct {
+	FirstName string   `json:"first_name,omitempty"`
+	LastName  string   `json:"last_name,omitempty"`
+	Email     string   `json:"email,omitempty"`
+	Phone     string   `json:"phone,omitempty"`
+	Address   *Address `json:"address,omitempty"`
+}
+
+// ============================================================================
+// Crypto
+// ============================================================================
+
+// Crypto represents cryptocurrency payment details (currency must be USD)
+type Crypto struct {
+	Flow      string `json:"flow"`              // Required. redirect or qrcode
+	Network   string `json:"network,omitempty"` // Required when flow is qrcode. ETH or TRON
+	IsPresent bool   `json:"is_present"`        // Required. Must be false for crypto payments
 }
 
 // UpdatePaymentIntentRequest represents a payment intent update request

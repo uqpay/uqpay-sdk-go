@@ -3,6 +3,8 @@ package banking
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
@@ -63,20 +65,22 @@ type CreateTransferResponse struct {
 // List lists transfers
 func (c *TransfersClient) List(ctx context.Context, req *ListTransfersRequest) (*ListTransfersResponse, error) {
 	var resp ListTransfersResponse
-	path := fmt.Sprintf("/v1/transfer?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-
+	params := url.Values{}
+	params.Set("page_size", strconv.Itoa(req.PageSize))
+	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.StartTime != "" {
-		path += fmt.Sprintf("&start_time=%s", req.StartTime)
+		params.Set("start_time", req.StartTime)
 	}
 	if req.EndTime != "" {
-		path += fmt.Sprintf("&end_time=%s", req.EndTime)
+		params.Set("end_time", req.EndTime)
 	}
 	if req.TransferStatus != "" {
-		path += fmt.Sprintf("&transfer_status=%s", req.TransferStatus)
+		params.Set("transfer_status", req.TransferStatus)
 	}
 	if req.Currency != "" {
-		path += fmt.Sprintf("&currency=%s", req.Currency)
+		params.Set("currency", req.Currency)
 	}
+	path := "/v1/transfer?" + params.Encode()
 
 	if err := c.client.Get(ctx, path, &resp); err != nil {
 		return nil, fmt.Errorf("failed to list transfers: %w", err)
