@@ -130,8 +130,8 @@ func TestHandlerApproveFlow(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", rec.Code)
 	}
 
-	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
-		t.Fatalf("expected Content-Type application/json, got %q", ct)
+	if ct := rec.Header().Get("Content-Type"); ct != "application/json; charset=utf-8" {
+		t.Fatalf("expected Content-Type application/json; charset=utf-8, got %q", ct)
 	}
 
 	// UQPAY decrypts the response (encrypted to UQPAY's public key)
@@ -148,19 +148,19 @@ func TestHandlerApproveFlow(t *testing.T) {
 		t.Fatalf("decrypt response: %v", err)
 	}
 
-	var result Result
+	var result map[string]interface{}
 	if err := json.Unmarshal([]byte(decryptedResp), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
 
-	if result.ResponseCode != "00" {
-		t.Fatalf("expected response_code 00, got %q", result.ResponseCode)
+	if result["response_code"] != "00" {
+		t.Fatalf("expected response_code 00, got %v", result["response_code"])
 	}
-	if result.PartnerReferenceID != "ref-123" {
-		t.Fatalf("expected partner_reference_id ref-123, got %q", result.PartnerReferenceID)
+	if result["partner_reference_id"] != "ref-123" {
+		t.Fatalf("expected partner_reference_id ref-123, got %v", result["partner_reference_id"])
 	}
-	if result.TransactionID != "tx-001" {
-		t.Fatalf("expected transaction_id tx-001, got %q", result.TransactionID)
+	if result["transaction_id"] != "tx-001" {
+		t.Fatalf("expected transaction_id tx-001, got %v", result["transaction_id"])
 	}
 }
 
@@ -205,16 +205,16 @@ func TestHandlerAutoInjectTransactionID(t *testing.T) {
 		t.Fatalf("decrypt response: %v", err)
 	}
 
-	var result Result
+	var result map[string]interface{}
 	if err := json.Unmarshal([]byte(decryptedResp), &result); err != nil {
 		t.Fatalf("unmarshal response: %v", err)
 	}
 
-	if result.TransactionID != "tx-auto-inject" {
-		t.Fatalf("expected transaction_id tx-auto-inject, got %q", result.TransactionID)
+	if result["transaction_id"] != "tx-auto-inject" {
+		t.Fatalf("expected transaction_id tx-auto-inject, got %v", result["transaction_id"])
 	}
-	if result.PartnerReferenceID != "" {
-		t.Fatalf("expected empty partner_reference_id, got %q", result.PartnerReferenceID)
+	if result["partner_reference_id"] != "" {
+		t.Fatalf("expected empty partner_reference_id, got %v", result["partner_reference_id"])
 	}
 }
 

@@ -51,7 +51,6 @@ type Transaction struct {
 type Result struct {
 	ResponseCode       string `json:"response_code"`
 	PartnerReferenceID string `json:"partner_reference_id"`
-	TransactionID      string `json:"transaction_id"`
 }
 
 // HandlerOptions configures the authorization decision HTTP handler.

@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	maxBodySize    = 1 << 20 // 1 MB
-	decideTimeout  = 4500 * time.Millisecond
+	maxBodySize   = 1 << 20 // 1 MB
+	decideTimeout = 4500 * time.Millisecond
 )
 
 // AuthDecisionClient handles PGP-encrypted card authorization decision requests.
@@ -45,8 +45,11 @@ func (c *AuthDecisionClient) Handler(opts HandlerOptions) http.HandlerFunc {
 		panic("authdecision: Handler called with nil Decide function")
 	}
 
+	// Capture pgp at handler creation time to avoid race if Configure is called again later.
+	pgp := c.pgp
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := c.handleRequest(w, r, opts); err != nil {
+		if err := handleRequest(pgp, w, r, opts); err != nil {
 			if opts.OnError != nil {
 				opts.OnError(err)
 			}
@@ -55,7 +58,7 @@ func (c *AuthDecisionClient) Handler(opts HandlerOptions) http.HandlerFunc {
 	}
 }
 
-func (c *AuthDecisionClient) handleRequest(w http.ResponseWriter, r *http.Request, opts HandlerOptions) error {
+func handleRequest(pgp *pgpContext, w http.ResponseWriter, r *http.Request, opts HandlerOptions) error {
 	// 1. Read body with size limit
 	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	body, err := io.ReadAll(r.Body)
@@ -64,7 +67,7 @@ func (c *AuthDecisionClient) handleRequest(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 2. PGP decrypt
-	plaintext, err := c.pgp.decrypt(string(body))
+	plaintext, err := pgp.decrypt(string(body))
 	if err != nil {
 		return fmt.Errorf("authdecision: failed to decrypt request: %w", err)
 	}
@@ -84,25 +87,31 @@ func (c *AuthDecisionClient) handleRequest(w http.ResponseWriter, r *http.Reques
 		return fmt.Errorf("authdecision: decide failed: %w", err)
 	}
 
-	// 5. Build response: auto-inject transaction_id, default PartnerReferenceID
-	result.TransactionID = tx.TransactionID
-	if result.PartnerReferenceID == "" {
-		result.PartnerReferenceID = ""
+	// 5. Build response: auto-inject transaction_id
+	resp := struct {
+		TransactionID      string `json:"transaction_id"`
+		ResponseCode       string `json:"response_code"`
+		PartnerReferenceID string `json:"partner_reference_id"`
+	}{
+		TransactionID:      tx.TransactionID,
+		ResponseCode:       result.ResponseCode,
+		PartnerReferenceID: result.PartnerReferenceID,
 	}
 
-	respJSON, err := json.Marshal(result)
+	respJSON, err := json.Marshal(resp)
 	if err != nil {
 		return fmt.Errorf("authdecision: failed to marshal response: %w", err)
 	}
 
 	// 6. PGP encrypt response
-	encrypted, err := c.pgp.encrypt(string(respJSON))
+	encrypted, err := pgp.encrypt(string(respJSON))
 	if err != nil {
 		return fmt.Errorf("authdecision: failed to encrypt response: %w", err)
 	}
 
-	// 7. Write HTTP 200 with Content-Type application/json
-	w.Header().Set("Content-Type", "application/json")
+	// 7. Write HTTP 200
+	// UQPAY sends requests with application/json despite PGP-armored body; match their convention.
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(encrypted))
 

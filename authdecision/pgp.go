@@ -8,8 +8,8 @@ import (
 	"github.com/ProtonMail/gopenpgp/v3/crypto"
 )
 
-// GenerateKeyPair generates an RSA 4096 PGP key pair and returns the armored
-// public and private keys.
+// GenerateKeyPair generates a PGP key pair with an encryption subkey and returns
+// the armored public and private keys. Compatible with UQPAY's server-side Go openpgp.
 func GenerateKeyPair(name, email string) (*KeyPair, error) {
 	pgpHandle := crypto.PGP()
 	key, err := pgpHandle.KeyGeneration().
@@ -44,14 +44,16 @@ type pgpContext struct {
 
 // newPgpContext creates a new pgpContext from the given Config.
 func newPgpContext(config Config) (*pgpContext, error) {
-	privArmored := resolveKey(config.PrivateKey)
-	pubArmored := resolveKey(config.UQPayPublicKey)
+	privArmored, err := resolveKey(config.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	pubArmored, err := resolveKey(config.UQPayPublicKey)
+	if err != nil {
+		return nil, err
+	}
 
-	var (
-		privKey *crypto.Key
-		err     error
-	)
-
+	var privKey *crypto.Key
 	if config.Passphrase != "" {
 		privKey, err = crypto.NewPrivateKeyFromArmored(privArmored, []byte(config.Passphrase))
 	} else {
@@ -122,14 +124,14 @@ func (p *pgpContext) encrypt(plaintext string) (string, error) {
 
 // resolveKey returns the key value as-is, or reads it from a file if the value
 // ends with .asc, .pgp, or .gpg.
-func resolveKey(value string) string {
+func resolveKey(value string) (string, error) {
 	lower := strings.ToLower(value)
 	if strings.HasSuffix(lower, ".asc") || strings.HasSuffix(lower, ".pgp") || strings.HasSuffix(lower, ".gpg") {
 		data, err := os.ReadFile(value)
 		if err != nil {
-			return value
+			return "", fmt.Errorf("authdecision: failed to read key file %s: %w", value, err)
 		}
-		return string(data)
+		return string(data), nil
 	}
-	return value
+	return value, nil
 }
