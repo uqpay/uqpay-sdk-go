@@ -256,6 +256,54 @@ Example error format:
 failed to get card: 404: card_not_found: Card not found (HTTP 404)
 ```
 
+## Authorization Decision (PGP)
+
+Handle real-time card transaction authorization decisions. UQPAY sends PGP-encrypted transactions to your endpoint; you decrypt, decide, and return an encrypted response.
+
+### Generate PGP Key Pair
+
+```go
+import "github.com/uqpay/uqpay-sdk-go/authdecision"
+
+keys, err := authdecision.GenerateKeyPair("Acme Corp", "issuing.tech@acme.com")
+if err != nil {
+    log.Fatal(err)
+}
+// Send keys.PublicKey to UQPAY, save keys.PrivateKey securely
+```
+
+### Configure and Create Handler
+
+```go
+// Configure PGP keys (once after client initialization)
+// Accepts file paths (.asc/.pgp/.gpg) or armored key strings
+err := client.Issuing.AuthDecision.Configure(authdecision.Config{
+    PrivateKey:     "./keys/my-private.asc",
+    UQPayPublicKey: "./keys/uqpay-public.asc",
+    Passphrase:     os.Getenv("PGP_PASSPHRASE"),
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+// Create handler — only write your business logic
+handler := client.Issuing.AuthDecision.Handler(authdecision.HandlerOptions{
+    Decide: func(ctx context.Context, tx authdecision.Transaction) (authdecision.Result, error) {
+        if tx.BillingAmount > 10000 {
+            return authdecision.Result{ResponseCode: "51"}, nil
+        }
+        return authdecision.Result{ResponseCode: "00", PartnerReferenceID: "ref-001"}, nil
+    },
+    OnError: func(err error) {
+        log.Println("auth decision error:", err)
+    },
+})
+
+http.Handle("/auth-decision", handler)
+```
+
+The SDK handles all PGP encryption/decryption and automatically injects `transaction_id` into the response. On error, no response is sent — UQPAY's configured timeout strategy (delegate or decline) takes effect.
+
 ## Features
 
 ### Automatic OAuth2 Token Management
