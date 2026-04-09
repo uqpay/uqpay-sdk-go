@@ -1,6 +1,9 @@
 package issuing
 
-import "github.com/uqpay/uqpay-sdk-go/common"
+import (
+	"github.com/uqpay/uqpay-sdk-go/authdecision"
+	"github.com/uqpay/uqpay-sdk-go/common"
+)
 
 // Client provides access to Issuing APIs
 type Client struct {
@@ -12,6 +15,7 @@ type Client struct {
 	Transfers      *TransfersClient
 	Reports        *ReportsClient
 	DownloadCenter *DownloadCenterClient
+	AuthDecision   *authdecision.AuthDecisionClient
 }
 
 // NewClient creates a new Issuing client
@@ -25,5 +29,6 @@ func NewClient(apiClient *common.APIClient) *Client {
 		Transfers:      &TransfersClient{client: apiClient},
 		Reports:        &ReportsClient{client: apiClient},
 		DownloadCenter: &DownloadCenterClient{client: apiClient},
+		AuthDecision:   authdecision.NewAuthDecisionClient(),
 	}
 }
