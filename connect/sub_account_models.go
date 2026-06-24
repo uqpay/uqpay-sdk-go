@@ -63,6 +63,33 @@ const (
 )
 
 // ============================================================
+// Constants - Individual Gender
+// ============================================================
+//
+// Required for INDIVIDUAL sub-accounts (effective 2026-07-02).
+
+const (
+	GenderMale   = "MALE"
+	GenderFemale = "FEMALE"
+)
+
+// ============================================================
+// Constants - Individual Employment Status
+// ============================================================
+//
+// Required for INDIVIDUAL sub-accounts (effective 2026-03-19).
+
+const (
+	EmploymentStatusEmployed     = "Employed"
+	EmploymentStatusSelfEmployed = "Self-Employed"
+	EmploymentStatusUnemployed   = "Unemployed"
+	EmploymentStatusStudent      = "Student"
+	EmploymentStatusRetired      = "Retired"
+	EmploymentStatusHomemaker    = "Homemaker"
+	EmploymentStatusOther        = "Other"
+)
+
+// ============================================================
 // Constants - Identification Types
 // ============================================================
 
@@ -178,6 +205,10 @@ type SubAccountIndividualInfo struct {
 	// DateOfBirth is the date of birth in YYYY-MM-DD format
 	DateOfBirth string `json:"date_of_birth"`
 
+	// Gender is the individual's gender. Required for INDIVIDUAL sub-accounts (effective 2026-07-02).
+	// Values: "MALE" or "FEMALE" (see GenderMale, GenderFemale).
+	Gender string `json:"gender"`
+
 	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code of residence
 	CountryOrTerritory string `json:"country_or_territory"`
 
@@ -190,8 +221,9 @@ type SubAccountIndividualInfo struct {
 	// City is the city name
 	City string `json:"city"`
 
-	// State is the state or province
-	State string `json:"state,omitempty"`
+	// State is the state or province. Required by the spec for INDIVIDUAL sub-accounts,
+	// so it is always emitted (no omitempty).
+	State string `json:"state"`
 
 	// PostalCode is the postal or ZIP code
 	PostalCode string `json:"postal_code"`
@@ -211,6 +243,10 @@ type SubAccountIndividualInfo struct {
 	// CompanyName is the name of the company or organization the individual works for.
 	// Max 100 characters.
 	CompanyName string `json:"company_name"`
+
+	// AnnualIncome is the individual's annual income, denominated in USD (e.g. "85000").
+	// Required for INDIVIDUAL sub-accounts (effective 2026-07-02).
+	AnnualIncome string `json:"annual_income"`
 }
 
 // SubAccountIdentityVerification contains identity verification details.
