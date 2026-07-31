@@ -2,6 +2,7 @@ package issuing
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -197,6 +198,47 @@ type CardOrder struct {
 	UpdateTime   string  `json:"update_time"`
 	CompleteTime string  `json:"complete_time"`
 	OrderStatus  string  `json:"order_status"`
+}
+
+// UnmarshalJSON accepts both the documented numeric amount and the string amount
+// returned by the sandbox API while preserving the public float64 field type.
+func (o *CardOrder) UnmarshalJSON(data []byte) error {
+	var wire struct {
+		CardID       string                `json:"card_id"`
+		CardOrderID  string                `json:"card_order_id"`
+		OrderType    string                `json:"order_type"`
+		Amount       common.FlexibleString `json:"amount"`
+		CardCurrency string                `json:"card_currency"`
+		CreateTime   string                `json:"create_time"`
+		UpdateTime   string                `json:"update_time"`
+		CompleteTime string                `json:"complete_time"`
+		OrderStatus  string                `json:"order_status"`
+	}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+
+	var amount float64
+	if wire.Amount != "" {
+		parsed, err := strconv.ParseFloat(wire.Amount.String(), 64)
+		if err != nil {
+			return fmt.Errorf("invalid card order amount %q: %w", wire.Amount, err)
+		}
+		amount = parsed
+	}
+
+	*o = CardOrder{
+		CardID:       wire.CardID,
+		CardOrderID:  wire.CardOrderID,
+		OrderType:    wire.OrderType,
+		Amount:       amount,
+		CardCurrency: wire.CardCurrency,
+		CreateTime:   wire.CreateTime,
+		UpdateTime:   wire.UpdateTime,
+		CompleteTime: wire.CompleteTime,
+		OrderStatus:  wire.OrderStatus,
+	}
+	return nil
 }
 
 // ActivateCardResponse represents the response after activating a card
