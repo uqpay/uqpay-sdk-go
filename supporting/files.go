@@ -56,7 +56,7 @@ type DownloadLinksResponse struct {
 // POST /v1/files/upload
 // Maximum file size: 20MB
 // Supported types: jpeg, png, jpg, doc, docx, pdf
-func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams) (*UploadFileResponse, error) {
+func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams, opts ...*common.RequestOptions) (*UploadFileResponse, error) {
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
 
@@ -82,26 +82,25 @@ func (c *FilesClient) Upload(ctx context.Context, params *UploadFileParams) (*Up
 		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
 	}
 
-	// TODO: Implement multipart form-data POST in APIClient
-	// For now, this is a placeholder implementation
 	var resp UploadFileResponse
-	path := "/v1/files/upload"
-	if params.Notes != "" {
-		path += fmt.Sprintf("?notes=%s", params.Notes)
+	if err := c.client.PostMultipartWithOptions(
+		ctx,
+		"/v1/files/upload",
+		&buf,
+		writer.FormDataContentType(),
+		&resp,
+		firstRequestOptions(opts),
+	); err != nil {
+		return nil, fmt.Errorf("failed to upload file: %w", err)
 	}
-
-	// Note: This requires special handling in APIClient for multipart/form-data
-	// The actual implementation needs to be added to common.APIClient
-	_ = path // Placeholder to avoid unused variable error
-
-	return &resp, fmt.Errorf("file upload not yet implemented - requires multipart/form-data support")
+	return &resp, nil
 }
 
 // GetDownloadLinks retrieves download links for specified file IDs
 // POST /v1/files/download_links
-func (c *FilesClient) GetDownloadLinks(ctx context.Context, req *DownloadLinksRequest) (*DownloadLinksResponse, error) {
+func (c *FilesClient) GetDownloadLinks(ctx context.Context, req *DownloadLinksRequest, opts ...*common.RequestOptions) (*DownloadLinksResponse, error) {
 	var resp DownloadLinksResponse
-	if err := c.client.Post(ctx, "/v1/files/download_links", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/files/download_links", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get download links: %w", err)
 	}
 	return &resp, nil

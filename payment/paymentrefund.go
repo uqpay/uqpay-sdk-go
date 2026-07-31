@@ -65,12 +65,10 @@ type ListRefundsResponse struct {
 // ============================================================================
 
 // Create creates a new refund for a completed payment
-func (c *PaymentRefundsClient) Create(ctx context.Context, req *CreateRefundRequest) (*Refund, error) {
+func (c *PaymentRefundsClient) Create(ctx context.Context, req *CreateRefundRequest, opts ...*common.RequestOptions) (*Refund, error) {
 	var resp Refund
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.PostWithOptions(ctx, "/v2/payment/refunds", req, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, "/v2/payment/refunds", req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to create refund: %w", err)
 	}
 	return &resp, nil

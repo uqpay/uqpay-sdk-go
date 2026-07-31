@@ -16,29 +16,29 @@ type BeneficiariesClient struct {
 
 // Address represents a beneficiary address
 type Address struct {
-	StreetAddress string `json:"street_address"`         // required
-	City          string `json:"city"`                   // required
-	State         string `json:"state"`                  // required
-	PostalCode    string `json:"postal_code"`            // required
-	Country       string `json:"country"`                // required, ISO 3166-1 alpha-2
-	Nationality   string `json:"nationality,omitempty"`  // optional, ISO 3166-1 alpha-2
+	StreetAddress string `json:"street_address"`        // required
+	City          string `json:"city"`                  // required
+	State         string `json:"state"`                 // required
+	PostalCode    string `json:"postal_code"`           // required
+	Country       string `json:"country"`               // required, ISO 3166-1 alpha-2
+	Nationality   string `json:"nationality,omitempty"` // optional, ISO 3166-1 alpha-2
 }
 
 // BankDetails represents beneficiary bank account details
 type BankDetails struct {
-	AccountNumber       string `json:"account_number"`                  // required
-	AccountHolder       string `json:"account_holder"`                  // required
-	AccountCurrencyCode string `json:"account_currency_code"`           // required, ISO 4217
-	BankName            string `json:"bank_name"`                       // required
-	BankAddress         string `json:"bank_address"`                    // required
-	BankCountryCode     string `json:"bank_country_code"`               // required, ISO 3166-1 alpha-2
-	SwiftCode           string `json:"swift_code"`                      // required
-	ClearingSystem      string `json:"clearing_system"`                 // required, e.g. ACH, FEDWIRE, FASTER_PAYMENTS, SEPA
-	RoutingCodeType1    string `json:"routing_code_type1,omitempty"`    // e.g. ach, sort_code, iban
-	RoutingCodeValue1   string `json:"routing_code_value1,omitempty"`   // routing code value
-	RoutingCodeType2    string `json:"routing_code_type2,omitempty"`    // optional second routing code
-	RoutingCodeValue2   string `json:"routing_code_value2,omitempty"`   // optional second routing value
-	IBAN                string `json:"iban,omitempty"`                  // conditional, required for European countries
+	AccountNumber       string `json:"account_number"`                // required
+	AccountHolder       string `json:"account_holder"`                // required
+	AccountCurrencyCode string `json:"account_currency_code"`         // required, ISO 4217
+	BankName            string `json:"bank_name"`                     // required
+	BankAddress         string `json:"bank_address"`                  // required
+	BankCountryCode     string `json:"bank_country_code"`             // required, ISO 3166-1 alpha-2
+	SwiftCode           string `json:"swift_code"`                    // required
+	ClearingSystem      string `json:"clearing_system"`               // required, e.g. ACH, FEDWIRE, FASTER_PAYMENTS, SEPA
+	RoutingCodeType1    string `json:"routing_code_type1,omitempty"`  // e.g. ach, sort_code, iban
+	RoutingCodeValue1   string `json:"routing_code_value1,omitempty"` // routing code value
+	RoutingCodeType2    string `json:"routing_code_type2,omitempty"`  // optional second routing code
+	RoutingCodeValue2   string `json:"routing_code_value2,omitempty"` // optional second routing value
+	IBAN                string `json:"iban,omitempty"`                // conditional, required for European countries
 }
 
 // AdditionalInfo represents extra beneficiary information
@@ -54,11 +54,11 @@ type AdditionalInfo struct {
 // Beneficiary represents a beneficiary
 type Beneficiary struct {
 	BeneficiaryID  string          `json:"beneficiary_id"`
-	EntityType     string          `json:"entity_type"`              // INDIVIDUAL or COMPANY
-	FirstName      string          `json:"first_name,omitempty"`     // present if INDIVIDUAL
-	LastName       string          `json:"last_name,omitempty"`      // present if INDIVIDUAL
-	CompanyName    string          `json:"company_name,omitempty"`   // present if COMPANY
-	IDNumber       string          `json:"id_number,omitempty"`      // present when account currency = COP
+	EntityType     string          `json:"entity_type"`            // INDIVIDUAL or COMPANY
+	FirstName      string          `json:"first_name,omitempty"`   // present if INDIVIDUAL
+	LastName       string          `json:"last_name,omitempty"`    // present if INDIVIDUAL
+	CompanyName    string          `json:"company_name,omitempty"` // present if COMPANY
+	IDNumber       string          `json:"id_number,omitempty"`    // present when account currency = COP
 	Nickname       string          `json:"nickname,omitempty"`
 	PaymentMethod  string          `json:"payment_method"`
 	BankDetails    *BankDetails    `json:"bank_details"`
@@ -72,7 +72,7 @@ type Beneficiary struct {
 
 // BeneficiaryCreationRequest represents a beneficiary creation request
 type BeneficiaryCreationRequest struct {
-	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	EntityType     string          `json:"entity_type"`               // required: INDIVIDUAL or COMPANY
 	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
 	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
 	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
@@ -118,16 +118,16 @@ type BeneficiaryCheckAdditionalInfo struct {
 
 // BeneficiaryCheckRequest represents a beneficiary check request
 type BeneficiaryCheckRequest struct {
-	EntityType     string                           `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
-	PaymentMethod  string                           `json:"payment_method"`             // required: LOCAL or SWIFT
-	AccountNumber  string                           `json:"account_number"`             // required
-	Currency       string                           `json:"currency"`                   // required, ISO 4217
-	FirstName      string                           `json:"first_name,omitempty"`       // required if INDIVIDUAL
-	LastName       string                           `json:"last_name,omitempty"`        // required if INDIVIDUAL
-	CompanyName    string                           `json:"company_name,omitempty"`     // required if COMPANY
-	ClearingSystem string                           `json:"clearing_system,omitempty"`  // e.g. LOCAL, ACH, FEDWIRE
-	IBAN           string                           `json:"iban,omitempty"`             // conditional, e.g. country code for validation
-	AdditionalInfo *BeneficiaryCheckAdditionalInfo  `json:"additional_info,omitempty"`  // optional
+	EntityType     string                          `json:"entity_type"`               // required: INDIVIDUAL or COMPANY
+	PaymentMethod  string                          `json:"payment_method"`            // required: LOCAL or SWIFT
+	AccountNumber  string                          `json:"account_number"`            // required
+	Currency       string                          `json:"currency"`                  // required, ISO 4217
+	FirstName      string                          `json:"first_name,omitempty"`      // required if INDIVIDUAL
+	LastName       string                          `json:"last_name,omitempty"`       // required if INDIVIDUAL
+	CompanyName    string                          `json:"company_name,omitempty"`    // required if COMPANY
+	ClearingSystem string                          `json:"clearing_system,omitempty"` // e.g. LOCAL, ACH, FEDWIRE
+	IBAN           string                          `json:"iban,omitempty"`            // conditional, e.g. country code for validation
+	AdditionalInfo *BeneficiaryCheckAdditionalInfo `json:"additional_info,omitempty"` // optional
 }
 
 // PaymentMethod represents an available payment method
@@ -145,16 +145,16 @@ type ListPaymentMethodsResponse struct {
 }
 
 // Create creates a new beneficiary
-func (c *BeneficiariesClient) Create(ctx context.Context, req *BeneficiaryCreationRequest) (*BeneficiaryCreationResponse, error) {
+func (c *BeneficiariesClient) Create(ctx context.Context, req *BeneficiaryCreationRequest, opts ...*common.RequestOptions) (*BeneficiaryCreationResponse, error) {
 	var resp BeneficiaryCreationResponse
-	if err := c.client.Post(ctx, "/v1/beneficiaries", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/beneficiaries", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create beneficiary: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists beneficiaries with optional filters
-func (c *BeneficiariesClient) List(ctx context.Context, req *ListBeneficiariesRequest) (*ListBeneficiariesResponse, error) {
+func (c *BeneficiariesClient) List(ctx context.Context, req *ListBeneficiariesRequest, opts ...*common.RequestOptions) (*ListBeneficiariesResponse, error) {
 	var resp ListBeneficiariesResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -173,55 +173,55 @@ func (c *BeneficiariesClient) List(ctx context.Context, req *ListBeneficiariesRe
 	}
 	path := "/v1/beneficiaries?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list beneficiaries: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific beneficiary by ID
-func (c *BeneficiariesClient) Get(ctx context.Context, beneficiaryID string) (*Beneficiary, error) {
+func (c *BeneficiariesClient) Get(ctx context.Context, beneficiaryID string, opts ...*common.RequestOptions) (*Beneficiary, error) {
 	var resp Beneficiary
 	path := fmt.Sprintf("/v1/beneficiaries/%s", beneficiaryID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get beneficiary: %w", err)
 	}
 	return &resp, nil
 }
 
 // Update updates an existing beneficiary
-func (c *BeneficiariesClient) Update(ctx context.Context, beneficiaryID string, req *BeneficiaryCreationRequest) (*Beneficiary, error) {
+func (c *BeneficiariesClient) Update(ctx context.Context, beneficiaryID string, req *BeneficiaryCreationRequest, opts ...*common.RequestOptions) (*Beneficiary, error) {
 	var resp Beneficiary
 	path := fmt.Sprintf("/v1/beneficiaries/%s", beneficiaryID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to update beneficiary: %w", err)
 	}
 	return &resp, nil
 }
 
 // Delete deletes a beneficiary
-func (c *BeneficiariesClient) Delete(ctx context.Context, beneficiaryID string) error {
+func (c *BeneficiariesClient) Delete(ctx context.Context, beneficiaryID string, opts ...*common.RequestOptions) error {
 	path := fmt.Sprintf("/v1/beneficiaries/%s/delete", beneficiaryID)
-	if err := c.client.Post(ctx, path, nil, nil); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, nil, nil, firstRequestOptions(opts)); err != nil {
 		return fmt.Errorf("failed to delete beneficiary: %w", err)
 	}
 	return nil
 }
 
 // ListPaymentMethods retrieves available payment methods for a currency and country
-func (c *BeneficiariesClient) ListPaymentMethods(ctx context.Context, currency, country string) ([]PaymentMethod, error) {
+func (c *BeneficiariesClient) ListPaymentMethods(ctx context.Context, currency, country string, opts ...*common.RequestOptions) ([]PaymentMethod, error) {
 	var resp ListPaymentMethodsResponse
 	path := fmt.Sprintf("/v1/beneficiaries/paymentmethods?currency=%s&country=%s", currency, country)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list payment methods: %w", err)
 	}
 	return resp.Data, nil
 }
 
 // Check validates beneficiary details before creation
-func (c *BeneficiariesClient) Check(ctx context.Context, req *BeneficiaryCheckRequest) (*Beneficiary, error) {
+func (c *BeneficiariesClient) Check(ctx context.Context, req *BeneficiaryCheckRequest, opts ...*common.RequestOptions) (*Beneficiary, error) {
 	var resp Beneficiary
-	if err := c.client.Post(ctx, "/v1/beneficiaries/check", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/beneficiaries/check", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to check beneficiary: %w", err)
 	}
 	return &resp, nil

@@ -88,26 +88,26 @@ type ListBalanceTransactionsResponse struct {
 // ============================================================================
 
 // Retrieve retrieves the issuing balance for a specific currency
-func (c *BalancesClient) Retrieve(ctx context.Context, req *RetrieveBalanceRequest) (*IssuingBalance, error) {
+func (c *BalancesClient) Retrieve(ctx context.Context, req *RetrieveBalanceRequest, opts ...*common.RequestOptions) (*IssuingBalance, error) {
 	var resp IssuingBalance
-	if err := c.client.Post(ctx, "/v1/issuing/balances", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/balances", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to retrieve issuing balance: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists all issuing balances with pagination
-func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest) (*ListBalancesResponse, error) {
+func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest, opts ...*common.RequestOptions) (*ListBalancesResponse, error) {
 	var resp ListBalancesResponse
 	path := fmt.Sprintf("/v1/issuing/balances?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list issuing balances: %w", err)
 	}
 	return &resp, nil
 }
 
 // ListTransactions lists issuing balance transactions with pagination and optional time filters
-func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest) (*ListBalanceTransactionsResponse, error) {
+func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest, opts ...*common.RequestOptions) (*ListBalanceTransactionsResponse, error) {
 	var resp ListBalanceTransactionsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -120,7 +120,7 @@ func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceT
 	}
 	path := "/v1/issuing/balances/transactions?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list issuing balance transactions: %w", err)
 	}
 	return &resp, nil

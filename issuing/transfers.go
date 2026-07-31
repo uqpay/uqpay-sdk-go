@@ -57,19 +57,19 @@ type Transfer struct {
 // Create creates a new issuing transfer
 // This API is specifically designed for fund transfers between the master account
 // and its sub-accounts, and does not apply to cross-business-line or external transfers.
-func (c *TransfersClient) Create(ctx context.Context, req *CreateTransferRequest) (*CreateTransferResponse, error) {
+func (c *TransfersClient) Create(ctx context.Context, req *CreateTransferRequest, opts ...*common.RequestOptions) (*CreateTransferResponse, error) {
 	var resp CreateTransferResponse
-	if err := c.client.Post(ctx, "/v1/issuing/transfers", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/transfers", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create issuing transfer: %w", err)
 	}
 	return &resp, nil
 }
 
 // Retrieve retrieves an issuing transfer with the provided transfer id
-func (c *TransfersClient) Retrieve(ctx context.Context, transferID string) (*Transfer, error) {
+func (c *TransfersClient) Retrieve(ctx context.Context, transferID string, opts ...*common.RequestOptions) (*Transfer, error) {
 	var resp Transfer
 	path := fmt.Sprintf("/v1/issuing/transfers/%s", transferID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to retrieve issuing transfer: %w", err)
 	}
 	return &resp, nil

@@ -24,28 +24,28 @@ type MerchantData struct {
 
 // Transaction represents a card transaction
 type Transaction struct {
-	TransactionID         string        `json:"transaction_id"`
-	CardID                string        `json:"card_id"`
-	CardNumber            string        `json:"card_number"`
-	CardholderID          string        `json:"cardholder_id"`
-	TransactionType       string        `json:"transaction_type"`
-	TransactionAmount     string        `json:"transaction_amount"`
-	TransactionCurrency   string        `json:"transaction_currency"`
-	BillingAmount         string        `json:"billing_amount"`
-	BillingCurrency       string        `json:"billing_currency"`
-	TransactionFee        string        `json:"transaction_fee"`
-	TransactionFeeCurrency string       `json:"transaction_fee_currency"`
-	FeePassThrough        string        `json:"fee_pass_through"` // Y or N
-	CardAvailableBalance  string        `json:"card_available_balance"`
-	AuthorizationCode     string        `json:"authorization_code"`
-	ShortTransactionID    string        `json:"short_transaction_id"`
-	OriginalTransactionID string        `json:"original_transaction_id"`
-	TransactionStatus     string        `json:"transaction_status"` // APPROVED, DECLINED, PENDING
-	TransactionTime       string        `json:"transaction_time"`
-	PostedTime            *string       `json:"posted_time,omitempty"`
-	MerchantData          *MerchantData `json:"merchant_data,omitempty"`
-	Description           string        `json:"description"`
-	WalletType            *string       `json:"wallet_type,omitempty"`
+	TransactionID          string        `json:"transaction_id"`
+	CardID                 string        `json:"card_id"`
+	CardNumber             string        `json:"card_number"`
+	CardholderID           string        `json:"cardholder_id"`
+	TransactionType        string        `json:"transaction_type"`
+	TransactionAmount      string        `json:"transaction_amount"`
+	TransactionCurrency    string        `json:"transaction_currency"`
+	BillingAmount          string        `json:"billing_amount"`
+	BillingCurrency        string        `json:"billing_currency"`
+	TransactionFee         string        `json:"transaction_fee"`
+	TransactionFeeCurrency string        `json:"transaction_fee_currency"`
+	FeePassThrough         string        `json:"fee_pass_through"` // Y or N
+	CardAvailableBalance   string        `json:"card_available_balance"`
+	AuthorizationCode      string        `json:"authorization_code"`
+	ShortTransactionID     string        `json:"short_transaction_id"`
+	OriginalTransactionID  string        `json:"original_transaction_id"`
+	TransactionStatus      string        `json:"transaction_status"` // APPROVED, DECLINED, PENDING
+	TransactionTime        string        `json:"transaction_time"`
+	PostedTime             *string       `json:"posted_time,omitempty"`
+	MerchantData           *MerchantData `json:"merchant_data,omitempty"`
+	Description            string        `json:"description"`
+	WalletType             *string       `json:"wallet_type,omitempty"`
 }
 
 // ListTransactionsRequest represents a transaction list request
@@ -65,17 +65,17 @@ type ListTransactionsResponse struct {
 }
 
 // Get retrieves a transaction by ID
-func (c *TransactionsClient) Get(ctx context.Context, transactionID string) (*Transaction, error) {
+func (c *TransactionsClient) Get(ctx context.Context, transactionID string, opts ...*common.RequestOptions) (*Transaction, error) {
 	var transaction Transaction
 	path := fmt.Sprintf("/v1/issuing/transactions/%s", transactionID)
-	if err := c.client.Get(ctx, path, &transaction); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &transaction, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get transaction: %w", err)
 	}
 	return &transaction, nil
 }
 
 // List lists transactions
-func (c *TransactionsClient) List(ctx context.Context, req *ListTransactionsRequest) (*ListTransactionsResponse, error) {
+func (c *TransactionsClient) List(ctx context.Context, req *ListTransactionsRequest, opts ...*common.RequestOptions) (*ListTransactionsResponse, error) {
 	var resp ListTransactionsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -90,7 +90,7 @@ func (c *TransactionsClient) List(ctx context.Context, req *ListTransactionsRequ
 		params.Set("end_time", req.EndTime)
 	}
 	path := "/v1/issuing/transactions?" + params.Encode()
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list transactions: %w", err)
 	}
 	return &resp, nil

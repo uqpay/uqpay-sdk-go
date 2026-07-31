@@ -26,13 +26,13 @@ type DownloadReportResponse struct {
 // ============================================================================
 
 // Download downloads a report file by its ID
-func (c *DownloadCenterClient) Download(ctx context.Context, reportID string) (*DownloadReportResponse, error) {
+func (c *DownloadCenterClient) Download(ctx context.Context, reportID string, opts ...*common.RequestOptions) (*DownloadReportResponse, error) {
 	if reportID == "" {
 		return nil, fmt.Errorf("report ID is required")
 	}
 
 	path := fmt.Sprintf("/v1/issuing/reports/%s", reportID)
-	data, err := c.client.GetRaw(ctx, path)
+	data, err := c.client.GetRawWithOptions(ctx, path, firstRequestOptions(opts))
 	if err != nil {
 		return nil, fmt.Errorf("failed to download report: %w", err)
 	}

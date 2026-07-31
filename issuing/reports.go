@@ -37,9 +37,9 @@ type CreateReportResponse struct {
 // ============================================================================
 
 // Create creates a new issuing report for account transactions, card transactions or transaction settlements
-func (c *ReportsClient) Create(ctx context.Context, req *CreateReportRequest) (*CreateReportResponse, error) {
+func (c *ReportsClient) Create(ctx context.Context, req *CreateReportRequest, opts ...*common.RequestOptions) (*CreateReportResponse, error) {
 	var resp CreateReportResponse
-	if err := c.client.Post(ctx, "/v1/issuing/reports", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/reports", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create issuing report: %w", err)
 	}
 	return &resp, nil

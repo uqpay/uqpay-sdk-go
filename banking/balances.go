@@ -45,10 +45,10 @@ type BalanceTransaction struct {
 	BalanceID         string `json:"balance_id"`
 	Currency          string `json:"currency"`
 	Amount            string `json:"amount"`
-	CreditDebitType   string `json:"credit_debit_type"`   // C (credit) or D (debit)
-	TransactionType   string `json:"transaction_type"`    // CONVERSION, DEPOSIT, PAYOUT, TRANSFER, FEE, etc.
-	TransactionStatus string `json:"transaction_status"`  // COMPLETED, PENDING, FAILED
-	TransactionWay    string `json:"transaction_way"`     // API, WEB, etc.
+	CreditDebitType   string `json:"credit_debit_type"`  // C (credit) or D (debit)
+	TransactionType   string `json:"transaction_type"`   // CONVERSION, DEPOSIT, PAYOUT, TRANSFER, FEE, etc.
+	TransactionStatus string `json:"transaction_status"` // COMPLETED, PENDING, FAILED
+	TransactionWay    string `json:"transaction_way"`    // API, WEB, etc.
 	PayoutWay         string `json:"payout_way,omitempty"`
 	ReferenceID       string `json:"reference_id"`
 	CreateTime        string `json:"create_time"`
@@ -74,27 +74,27 @@ type ListBalanceTransactionsResponse struct {
 }
 
 // Get retrieves balance for a specific currency
-func (c *BalancesClient) Get(ctx context.Context, currency string) (*Balance, error) {
+func (c *BalancesClient) Get(ctx context.Context, currency string, opts ...*common.RequestOptions) (*Balance, error) {
 	var resp Balance
 	path := fmt.Sprintf("/v1/balances/%s", currency)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get balance: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists all balances
-func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest) (*ListBalancesResponse, error) {
+func (c *BalancesClient) List(ctx context.Context, req *ListBalancesRequest, opts ...*common.RequestOptions) (*ListBalancesResponse, error) {
 	var resp ListBalancesResponse
 	path := fmt.Sprintf("/v1/balances?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list balances: %w", err)
 	}
 	return &resp, nil
 }
 
 // ListTransactions lists balance transactions
-func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest) (*ListBalanceTransactionsResponse, error) {
+func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceTransactionsRequest, opts ...*common.RequestOptions) (*ListBalanceTransactionsResponse, error) {
 	var resp ListBalanceTransactionsResponse
 	path := fmt.Sprintf("/v1/balances/transactions?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
 
@@ -114,7 +114,7 @@ func (c *BalancesClient) ListTransactions(ctx context.Context, req *ListBalanceT
 		path += fmt.Sprintf("&transaction_status=%s", req.TransactionStatus)
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list balance transactions: %w", err)
 	}
 	return &resp, nil

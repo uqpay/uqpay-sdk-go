@@ -25,3 +25,18 @@ func NewClient(apiClient *common.APIClient) *Client {
 		BankAccounts:    &BankAccountsClient{client: apiClient},
 	}
 }
+
+func requestOptionsWithClientID(clientID string, opts ...*common.RequestOptions) *common.RequestOptions {
+	resolved := common.RequestOptions{
+		ClientID: clientID,
+	}
+	if len(opts) == 0 || opts[0] == nil {
+		return &resolved
+	}
+
+	resolved = *opts[0]
+	if resolved.ClientID == "" {
+		resolved.ClientID = clientID
+	}
+	return &resolved
+}
