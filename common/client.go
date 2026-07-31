@@ -124,41 +124,24 @@ func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body
 		reqBody = bytes.NewReader(jsonData)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
+	return c.doWithOptions(ctx, method, url, reqBody, "application/json", response, opts)
+}
+
+func (c *APIClient) doWithOptions(
+	ctx context.Context,
+	method, url string,
+	body io.Reader,
+	contentType string,
+	response interface{},
+	opts *RequestOptions,
+) error {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Determine auth token
-	var token string
-	if opts != nil && opts.AuthToken != "" {
-		token = opts.AuthToken
-	} else {
-		token, err = c.TokenProvider.GetToken()
-		if err != nil {
-			return fmt.Errorf("failed to get token: %w", err)
-		}
-	}
-
-	// Determine idempotency key
-	idempotencyKey := uuid.New().String()
-	if opts != nil && opts.IdempotencyKey != "" {
-		idempotencyKey = opts.IdempotencyKey
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-auth-token", "Bearer "+token)
-	req.Header.Set("x-idempotency-key", idempotencyKey)
-
-	// Set x-client-id header if provided
-	if opts != nil && opts.ClientID != "" {
-		req.Header.Set("x-client-id", opts.ClientID)
-	}
-
-	// Set x-on-behalf-of header if provided
-	if opts != nil && opts.OnBehalfOf != "" {
-		req.Header.Set("x-on-behalf-of", opts.OnBehalfOf)
+	if err := c.setRequestHeaders(req, contentType, opts); err != nil {
+		return err
 	}
 
 	// Execute request
@@ -189,6 +172,39 @@ func (c *APIClient) DoWithOptions(ctx context.Context, method, path string, body
 	return nil
 }
 
+func (c *APIClient) setRequestHeaders(req *http.Request, contentType string, opts *RequestOptions) error {
+	token := ""
+	if opts != nil && opts.AuthToken != "" {
+		token = opts.AuthToken
+	} else {
+		var err error
+		token, err = c.TokenProvider.GetToken()
+		if err != nil {
+			return fmt.Errorf("failed to get token: %w", err)
+		}
+	}
+
+	idempotencyKey := uuid.New().String()
+	if opts != nil && opts.IdempotencyKey != "" {
+		idempotencyKey = opts.IdempotencyKey
+	}
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	req.Header.Set("x-auth-token", "Bearer "+token)
+	req.Header.Set("x-idempotency-key", idempotencyKey)
+
+	if opts != nil && opts.ClientID != "" {
+		req.Header.Set("x-client-id", opts.ClientID)
+	}
+	if opts != nil && opts.OnBehalfOf != "" {
+		req.Header.Set("x-on-behalf-of", opts.OnBehalfOf)
+	}
+
+	return nil
+}
+
 // PostWithOptions sends a POST request with custom options
 func (c *APIClient) PostWithOptions(ctx context.Context, path string, body, response interface{}, opts *RequestOptions) error {
 	return c.DoWithOptions(ctx, "POST", path, body, response, opts)
@@ -197,6 +213,19 @@ func (c *APIClient) PostWithOptions(ctx context.Context, path string, body, resp
 // GetWithOptions sends a GET request with custom options
 func (c *APIClient) GetWithOptions(ctx context.Context, path string, response interface{}, opts *RequestOptions) error {
 	return c.DoWithOptions(ctx, "GET", path, nil, response, opts)
+}
+
+// PostMultipartWithOptions sends a multipart/form-data POST request with custom options.
+func (c *APIClient) PostMultipartWithOptions(
+	ctx context.Context,
+	path string,
+	body io.Reader,
+	contentType string,
+	response interface{},
+	opts *RequestOptions,
+) error {
+	url := c.Config.Environment.BaseURL + path
+	return c.doWithOptions(ctx, "POST", url, body, contentType, response, opts)
 }
 
 // Get sends a GET request
@@ -221,6 +250,11 @@ func (c *APIClient) Delete(ctx context.Context, path string, response interface{
 
 // GetRaw sends a GET request and returns raw bytes (for file downloads)
 func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
+	return c.GetRawWithOptions(ctx, path, nil)
+}
+
+// GetRawWithOptions sends a GET request with custom options and returns raw bytes.
+func (c *APIClient) GetRawWithOptions(ctx context.Context, path string, opts *RequestOptions) ([]byte, error) {
 	url := c.Config.Environment.BaseURL + path
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -228,16 +262,10 @@ func (c *APIClient) GetRaw(ctx context.Context, path string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Get auth token
-	token, err := c.TokenProvider.GetToken()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get token: %w", err)
-	}
-
-	// Set headers
 	req.Header.Set("Accept", "application/octet-stream")
-	req.Header.Set("x-auth-token", "Bearer "+token)
-	req.Header.Set("x-idempotency-key", uuid.New().String())
+	if err := c.setRequestHeaders(req, "", opts); err != nil {
+		return nil, err
+	}
 
 	// Execute request
 	resp, err := c.HTTPClient.Do(req)

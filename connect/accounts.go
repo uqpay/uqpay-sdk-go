@@ -144,7 +144,7 @@ type AdditionalDocument struct {
 // CreateSubAccount creates a new sub-account using the new API endpoint.
 // For INDIVIDUAL accounts, populate IndividualInfo, IdentityVerification, ExpectedActivity, and ProofDocuments.
 // For COMPANY accounts, populate CompanyInfo, CompanyAddress, OwnershipDetails, and BusinessDetails.
-func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAccountRequest) (*CreateSubAccountResponse, error) {
+func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAccountRequest, opts ...*common.RequestOptions) (*CreateSubAccountResponse, error) {
 	if req.EntityType == EntityTypeIndividual {
 		if req.IndividualInfo == nil {
 			return nil, fmt.Errorf("individual_info required for INDIVIDUAL entity type")
@@ -177,7 +177,7 @@ func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAcc
 	}
 
 	var resp CreateSubAccountResponse
-	if err := c.client.Post(ctx, "/v1/accounts/create_accounts", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/accounts/create_accounts", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create sub-account: %w", err)
 	}
 	return &resp, nil
@@ -185,17 +185,17 @@ func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAcc
 
 // GetAdditionalDocuments retrieves the required and optional document types for creating
 // a company-type sub-account based on the specified country and business code (e.g. "BANKING").
-func (c *AccountsClient) GetAdditionalDocuments(ctx context.Context, country, businessCode string) ([]AdditionalDocument, error) {
+func (c *AccountsClient) GetAdditionalDocuments(ctx context.Context, country, businessCode string, opts ...*common.RequestOptions) ([]AdditionalDocument, error) {
 	var resp []AdditionalDocument
 	path := fmt.Sprintf("/v1/accounts/get_additional?country=%s&business_code=%s", country, businessCode)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get additional documents: %w", err)
 	}
 	return resp, nil
 }
 
 // Create creates a new account using the legacy API endpoint
-func (c *AccountsClient) Create(ctx context.Context, req *CreateAccountRequest) (*Account, error) {
+func (c *AccountsClient) Create(ctx context.Context, req *CreateAccountRequest, opts ...*common.RequestOptions) (*Account, error) {
 	// Validate discriminated union
 	if req.EntityType == EntityTypeIndividual && req.Individual == nil {
 		return nil, fmt.Errorf("individual details required for INDIVIDUAL entity type")
@@ -205,14 +205,14 @@ func (c *AccountsClient) Create(ctx context.Context, req *CreateAccountRequest) 
 	}
 
 	var account Account
-	if err := c.client.Post(ctx, "/v1/accounts", req, &account); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/accounts", req, &account, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create account: %w", err)
 	}
 	return &account, nil
 }
 
 // List lists accounts with optional filters
-func (c *AccountsClient) List(ctx context.Context, req *ListAccountsRequest) (*ListAccountsResponse, error) {
+func (c *AccountsClient) List(ctx context.Context, req *ListAccountsRequest, opts ...*common.RequestOptions) (*ListAccountsResponse, error) {
 	var resp ListAccountsResponse
 	path := "/v1/accounts?"
 
@@ -231,17 +231,17 @@ func (c *AccountsClient) List(ctx context.Context, req *ListAccountsRequest) (*L
 		path = path[:len(path)-1]
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list accounts: %w", err)
 	}
 	return &resp, nil
 }
 
 // Update updates an existing account
-func (c *AccountsClient) Update(ctx context.Context, accountID string, req *UpdateAccountRequest) (*Account, error) {
+func (c *AccountsClient) Update(ctx context.Context, accountID string, req *UpdateAccountRequest, opts ...*common.RequestOptions) (*Account, error) {
 	var account Account
 	path := fmt.Sprintf("/v1/accounts/%s", accountID)
-	if err := c.client.Post(ctx, path, req, &account); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &account, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to update account: %w", err)
 	}
 	return &account, nil
@@ -250,12 +250,22 @@ func (c *AccountsClient) Update(ctx context.Context, accountID string, req *Upda
 // Get retrieves an account by ID. An optional businessCode query parameter can be provided
 // to filter by business type (e.g. "BANKING"). Omit or pass empty string to use the API default.
 func (c *AccountsClient) Get(ctx context.Context, accountID string, businessCode ...string) (*Account, error) {
+	return c.get(ctx, accountID, nil, businessCode...)
+}
+
+// GetWithOptions retrieves an account by ID with optional request headers.
+// An optional businessCode query parameter can be provided after opts.
+func (c *AccountsClient) GetWithOptions(ctx context.Context, accountID string, opts *common.RequestOptions, businessCode ...string) (*Account, error) {
+	return c.get(ctx, accountID, opts, businessCode...)
+}
+
+func (c *AccountsClient) get(ctx context.Context, accountID string, opts *common.RequestOptions, businessCode ...string) (*Account, error) {
 	var account Account
 	path := fmt.Sprintf("/v1/accounts/%s", accountID)
 	if len(businessCode) > 0 && businessCode[0] != "" {
 		path += fmt.Sprintf("?business_code=%s", businessCode[0])
 	}
-	if err := c.client.Get(ctx, path, &account); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &account, opts); err != nil {
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}
 	return &account, nil

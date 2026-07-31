@@ -14,17 +14,17 @@ type VirtualAccountsClient struct {
 
 // VirtualAccount represents a virtual account
 type VirtualAccount struct {
-	AccountBankID  string                      `json:"account_bank_id"`
-	AccountHolder  string                      `json:"account_holder"`
-	AccountNumber  string                      `json:"account_number"`
-	Currency       string                      `json:"currency"`
-	CountryCode    string                      `json:"country_code"`
-	BankName       string                      `json:"bank_name"`
-	BankAddress    string                      `json:"bank_address"`
-	Capability     *VirtualAccountCapability   `json:"capability,omitempty"`
-	ClearingSystem *VirtualAccountClearing     `json:"clearing_system,omitempty"`
-	Status         string                      `json:"status"`
-	CloseReason    string                      `json:"close_reason,omitempty"`
+	AccountBankID  string                    `json:"account_bank_id"`
+	AccountHolder  string                    `json:"account_holder"`
+	AccountNumber  string                    `json:"account_number"`
+	Currency       string                    `json:"currency"`
+	CountryCode    string                    `json:"country_code"`
+	BankName       string                    `json:"bank_name"`
+	BankAddress    string                    `json:"bank_address"`
+	Capability     *VirtualAccountCapability `json:"capability,omitempty"`
+	ClearingSystem *VirtualAccountClearing   `json:"clearing_system,omitempty"`
+	Status         string                    `json:"status"`
+	CloseReason    string                    `json:"close_reason,omitempty"`
 }
 
 // VirtualAccountCapability represents the payment capability
@@ -58,19 +58,19 @@ type CreateVirtualAccountRequest struct {
 }
 
 // List lists virtual accounts
-func (c *VirtualAccountsClient) List(ctx context.Context, req *ListVirtualAccountsRequest) (*ListVirtualAccountsResponse, error) {
+func (c *VirtualAccountsClient) List(ctx context.Context, req *ListVirtualAccountsRequest, opts ...*common.RequestOptions) (*ListVirtualAccountsResponse, error) {
 	var resp ListVirtualAccountsResponse
 	path := fmt.Sprintf("/v1/virtual/accounts?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list virtual accounts: %w", err)
 	}
 	return &resp, nil
 }
 
 // Create creates a new virtual account
-func (c *VirtualAccountsClient) Create(ctx context.Context, req *CreateVirtualAccountRequest) (*VirtualAccount, error) {
+func (c *VirtualAccountsClient) Create(ctx context.Context, req *CreateVirtualAccountRequest, opts ...*common.RequestOptions) (*VirtualAccount, error) {
 	var resp VirtualAccount
-	if err := c.client.Post(ctx, "/v1/virtual/accounts", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/virtual/accounts", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create virtual account: %w", err)
 	}
 	return &resp, nil

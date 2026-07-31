@@ -21,7 +21,7 @@ type CreatePaymentIntentRequest struct {
 	Amount          string            `json:"amount"`
 	Currency        string            `json:"currency"`
 	MerchantOrderID string            `json:"merchant_order_id"`
-	Description     string            `json:"description"`              // Max 32 characters
+	Description     string            `json:"description"` // Max 32 characters
 	ReturnURL       string            `json:"return_url"`
 	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
 	IPAddress       string            `json:"ip_address,omitempty"`
@@ -110,12 +110,12 @@ type Address struct {
 
 // CustomerRequest represents customer details for a payment
 type CustomerRequest struct {
-	FirstName   string   `json:"first_name"`
-	LastName    string   `json:"last_name"`
-	Email       string   `json:"email"`
-	PhoneNumber string   `json:"phone_number,omitempty"`
-	Description string   `json:"description,omitempty"` // Max 255 characters
-	Address     *Address `json:"address,omitempty"`
+	FirstName   string            `json:"first_name"`
+	LastName    string            `json:"last_name"`
+	Email       string            `json:"email"`
+	PhoneNumber string            `json:"phone_number,omitempty"`
+	Description string            `json:"description,omitempty"` // Max 255 characters
+	Address     *Address          `json:"address,omitempty"`
 	Metadata    map[string]string `json:"metadata,omitempty"`
 }
 
@@ -125,15 +125,15 @@ type CustomerRequest struct {
 
 // PaymentOrders represents purchase order information
 type PaymentOrders struct {
-	Type     string           `json:"type,omitempty"`     // Industry category, e.g., "physical_goods"
+	Type     string           `json:"type,omitempty"` // Industry category, e.g., "physical_goods"
 	Products []PaymentProduct `json:"products,omitempty"`
 }
 
 // PaymentProduct represents a product in a payment order
 type PaymentProduct struct {
-	Name     string `json:"name"`              // Product name (max 255 chars)
-	Price    string `json:"price"`             // Price per unit
-	Quantity int    `json:"quantity"`           // Quantity
+	Name     string `json:"name"`                // Product name (max 255 chars)
+	Price    string `json:"price"`               // Price per unit
+	Quantity int    `json:"quantity"`            // Quantity
 	ImageURL string `json:"image_url,omitempty"` // Product thumbnail URL
 }
 
@@ -144,16 +144,16 @@ type PaymentProduct struct {
 // BrowserInfo represents browser information for risk and fraud prevention
 // Required when three_ds_action=enforce_3ds
 type BrowserInfo struct {
-	AcceptHeader     string          `json:"accept_header,omitempty"`
-	Browser          *BrowserDetail  `json:"browser,omitempty"`
-	DeviceID         string          `json:"device_id,omitempty"`
-	Language         string          `json:"language,omitempty"`          // ISO language code, e.g., "en-US"
-	Location         *GeoLocation    `json:"location,omitempty"`
-	Mobile           *MobileInfo     `json:"mobile,omitempty"`           // Required for mobile transactions
-	ScreenColorDepth int             `json:"screen_color_depth,omitempty"` // 1-48
-	ScreenHeight     int             `json:"screen_height,omitempty"`     // 1-9999
-	ScreenWidth      int             `json:"screen_width,omitempty"`      // 1-9999
-	Timezone         string          `json:"timezone,omitempty"`          // UTC offset, e.g., "-2" or "8"
+	AcceptHeader     string         `json:"accept_header,omitempty"`
+	Browser          *BrowserDetail `json:"browser,omitempty"`
+	DeviceID         string         `json:"device_id,omitempty"`
+	Language         string         `json:"language,omitempty"` // ISO language code, e.g., "en-US"
+	Location         *GeoLocation   `json:"location,omitempty"`
+	Mobile           *MobileInfo    `json:"mobile,omitempty"`             // Required for mobile transactions
+	ScreenColorDepth int            `json:"screen_color_depth,omitempty"` // 1-48
+	ScreenHeight     int            `json:"screen_height,omitempty"`      // 1-9999
+	ScreenWidth      int            `json:"screen_width,omitempty"`       // 1-9999
+	Timezone         string         `json:"timezone,omitempty"`           // UTC offset, e.g., "-2" or "8"
 }
 
 // BrowserDetail represents browser-specific information
@@ -312,8 +312,8 @@ type Crypto struct {
 type UpdatePaymentIntentRequest struct {
 	Amount          string            `json:"amount,omitempty"`
 	Currency        string            `json:"currency,omitempty"`
-	Customer        *CustomerRequest  `json:"customer,omitempty"`         // Omit when customer_id is specified
-	CustomerID      string            `json:"customer_id,omitempty"`      // Required for recurring payments
+	Customer        *CustomerRequest  `json:"customer,omitempty"`    // Omit when customer_id is specified
+	CustomerID      string            `json:"customer_id,omitempty"` // Required for recurring payments
 	PaymentOrders   *PaymentOrders    `json:"payment_orders,omitempty"`
 	MerchantOrderID string            `json:"merchant_order_id,omitempty"`
 	Description     string            `json:"description,omitempty"`
@@ -341,11 +341,11 @@ type CancelPaymentIntentRequest struct {
 
 // ListPaymentIntentsRequest represents a payment intents list request
 type ListPaymentIntentsRequest struct {
-	PageSize             int    `json:"page_size"`              // Number of items per page (1-100)
-	PageNumber           int    `json:"page_number"`            // Page number (1-based)
-	PaymentIntentStatus  string `json:"payment_intent_status"`  // Filter by status: REQUIRES_PAYMENT_METHOD, REQUIRES_CUSTOMER_ACTION, REQUIRES_CAPTURE, PENDING, SUCCEEDED, CANCELLED, FAILED
-	StartTime            string `json:"start_time"`             // Exclusive start time (ISO8601)
-	EndTime              string `json:"end_time"`               // Exclusive end time (ISO8601)
+	PageSize            int    `json:"page_size"`             // Number of items per page (1-100)
+	PageNumber          int    `json:"page_number"`           // Page number (1-based)
+	PaymentIntentStatus string `json:"payment_intent_status"` // Filter by status: REQUIRES_PAYMENT_METHOD, REQUIRES_CUSTOMER_ACTION, REQUIRES_CAPTURE, PENDING, SUCCEEDED, CANCELLED, FAILED
+	StartTime           string `json:"start_time"`            // Exclusive start time (ISO8601)
+	EndTime             string `json:"end_time"`              // Exclusive end time (ISO8601)
 }
 
 // ============================================================================
@@ -387,25 +387,21 @@ type ListPaymentIntentsResponse struct {
 // ============================================================================
 
 // Create creates a new payment intent
-func (c *PaymentIntentsClient) Create(ctx context.Context, req *CreatePaymentIntentRequest) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Create(ctx context.Context, req *CreatePaymentIntentRequest, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.PostWithOptions(ctx, "/v2/payment_intents/create", req, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, "/v2/payment_intents/create", req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to create payment intent: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific payment intent by ID
-func (c *PaymentIntentsClient) Get(ctx context.Context, paymentIntentID string) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Get(ctx context.Context, paymentIntentID string, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s", paymentIntentID)
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.GetWithOptions(ctx, path, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to get payment intent: %w", err)
 	}
 	return &resp, nil
@@ -413,13 +409,11 @@ func (c *PaymentIntentsClient) Get(ctx context.Context, paymentIntentID string) 
 
 // Update updates properties on a payment intent without confirming
 // Note: Updating payment_method requires subsequent confirmation
-func (c *PaymentIntentsClient) Update(ctx context.Context, paymentIntentID string, req *UpdatePaymentIntentRequest) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Update(ctx context.Context, paymentIntentID string, req *UpdatePaymentIntentRequest, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s", paymentIntentID)
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to update payment intent: %w", err)
 	}
 	return &resp, nil
@@ -437,33 +431,29 @@ func (c *PaymentIntentsClient) Confirm(ctx context.Context, paymentIntentID stri
 
 // Capture captures the funds of an uncaptured payment intent
 // The payment intent must have status "requires_capture"
-func (c *PaymentIntentsClient) Capture(ctx context.Context, paymentIntentID string, req *CapturePaymentIntentRequest) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Capture(ctx context.Context, paymentIntentID string, req *CapturePaymentIntentRequest, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/capture", paymentIntentID)
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to capture payment intent: %w", err)
 	}
 	return &resp, nil
 }
 
 // Cancel cancels a payment intent and prevents further payment attempts
-func (c *PaymentIntentsClient) Cancel(ctx context.Context, paymentIntentID string, req *CancelPaymentIntentRequest) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Cancel(ctx context.Context, paymentIntentID string, req *CancelPaymentIntentRequest, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/cancel", paymentIntentID)
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.PostWithOptions(ctx, path, req, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to cancel payment intent: %w", err)
 	}
 	return &resp, nil
 }
 
 // List returns a paginated list of payment intents with optional filters
-func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntentsRequest) (*ListPaymentIntentsResponse, error) {
+func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntentsRequest, opts ...*common.RequestOptions) (*ListPaymentIntentsResponse, error) {
 	var resp ListPaymentIntentsResponse
 
 	path := "/v2/payment_intents"
@@ -490,10 +480,8 @@ func (c *PaymentIntentsClient) List(ctx context.Context, req *ListPaymentIntents
 		separator = "&"
 	}
 
-	opts := &common.RequestOptions{
-		ClientID: c.client.Config.ClientID,
-	}
-	if err := c.client.GetWithOptions(ctx, path, &resp, opts); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to list payment intents: %w", err)
 	}
 	return &resp, nil

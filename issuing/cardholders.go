@@ -47,19 +47,19 @@ type KycVerification struct {
 
 // CreateCardholderRequest represents a cardholder creation request
 type CreateCardholderRequest struct {
-	Email               string              `json:"email"`
-	PhoneNumber         string              `json:"phone_number"`
-	FirstName           string              `json:"first_name"`
-	LastName            string              `json:"last_name"`
-	CountryCode         string              `json:"country_code"`
-	DateOfBirth         *string             `json:"date_of_birth,omitempty"`
-	Gender              *string             `json:"gender,omitempty"` // MALE or FEMALE
-	Nationality         *string             `json:"nationality,omitempty"`
-	ResidentialAddress  *ResidentialAddress `json:"residential_address,omitempty"`
-	Identity            *Identity           `json:"identity,omitempty"`
-	KycVerification     *KycVerification    `json:"kyc_verification,omitempty"`
-	DocumentType        *string             `json:"document_type,omitempty"` // pdf, png, jpg, jpeg
-	Document            *string             `json:"document,omitempty"`
+	Email              string              `json:"email"`
+	PhoneNumber        string              `json:"phone_number"`
+	FirstName          string              `json:"first_name"`
+	LastName           string              `json:"last_name"`
+	CountryCode        string              `json:"country_code"`
+	DateOfBirth        *string             `json:"date_of_birth,omitempty"`
+	Gender             *string             `json:"gender,omitempty"` // MALE or FEMALE
+	Nationality        *string             `json:"nationality,omitempty"`
+	ResidentialAddress *ResidentialAddress `json:"residential_address,omitempty"`
+	Identity           *Identity           `json:"identity,omitempty"`
+	KycVerification    *KycVerification    `json:"kyc_verification,omitempty"`
+	DocumentType       *string             `json:"document_type,omitempty"` // pdf, png, jpg, jpeg
+	Document           *string             `json:"document,omitempty"`
 }
 
 // CreateCardholderResponse represents the response after creating a cardholder
@@ -72,23 +72,23 @@ type CreateCardholderResponse struct {
 
 // Cardholder represents a full cardholder object (returned by Get and List)
 type Cardholder struct {
-	CardholderID        string              `json:"cardholder_id"`
-	Email               string              `json:"email"`
-	FirstName           string              `json:"first_name"`
-	LastName            string              `json:"last_name"`
-	CountryCode         string              `json:"country_code"`
-	CardholderStatus    string              `json:"cardholder_status"`
-	CreateTime          string              `json:"create_time"`
-	NumberOfCards       int                 `json:"number_of_cards"`
-	DateOfBirth         *string             `json:"date_of_birth,omitempty"`
-	PhoneNumber         *string             `json:"phone_number,omitempty"`
-	Gender              *string             `json:"gender,omitempty"`
-	Nationality         *string             `json:"nationality,omitempty"`
-	ResidentialAddress  *ResidentialAddress `json:"residential_address,omitempty"`
-	ReviewStatus        *string             `json:"review_status,omitempty"`
-	IdvStatus           *string             `json:"idv_status,omitempty"`
-	IdvVerificationURL  *string             `json:"idv_verification_url,omitempty"`
-	IdvURLExpiresAt     *string             `json:"idv_url_expires_at,omitempty"`
+	CardholderID       string              `json:"cardholder_id"`
+	Email              string              `json:"email"`
+	FirstName          string              `json:"first_name"`
+	LastName           string              `json:"last_name"`
+	CountryCode        string              `json:"country_code"`
+	CardholderStatus   string              `json:"cardholder_status"`
+	CreateTime         string              `json:"create_time"`
+	NumberOfCards      int                 `json:"number_of_cards"`
+	DateOfBirth        *string             `json:"date_of_birth,omitempty"`
+	PhoneNumber        *string             `json:"phone_number,omitempty"`
+	Gender             *string             `json:"gender,omitempty"`
+	Nationality        *string             `json:"nationality,omitempty"`
+	ResidentialAddress *ResidentialAddress `json:"residential_address,omitempty"`
+	ReviewStatus       *string             `json:"review_status,omitempty"`
+	IdvStatus          *string             `json:"idv_status,omitempty"`
+	IdvVerificationURL *string             `json:"idv_verification_url,omitempty"`
+	IdvURLExpiresAt    *string             `json:"idv_url_expires_at,omitempty"`
 }
 
 // UpdateCardholderRequest represents a cardholder update request
@@ -129,19 +129,19 @@ type ListCardholdersResponse struct {
 }
 
 // Create creates a new cardholder
-func (c *CardholdersClient) Create(ctx context.Context, req *CreateCardholderRequest) (*CreateCardholderResponse, error) {
+func (c *CardholdersClient) Create(ctx context.Context, req *CreateCardholderRequest, opts ...*common.RequestOptions) (*CreateCardholderResponse, error) {
 	var resp CreateCardholderResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cardholders", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cardholders", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create cardholder: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a cardholder by ID
-func (c *CardholdersClient) Get(ctx context.Context, cardholderID string) (*Cardholder, error) {
+func (c *CardholdersClient) Get(ctx context.Context, cardholderID string, opts ...*common.RequestOptions) (*Cardholder, error) {
 	var cardholder Cardholder
 	path := fmt.Sprintf("/v1/issuing/cardholders/%s", cardholderID)
-	if err := c.client.Get(ctx, path, &cardholder); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &cardholder, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get cardholder: %w", err)
 	}
 	return &cardholder, nil
@@ -149,20 +149,20 @@ func (c *CardholdersClient) Get(ctx context.Context, cardholderID string) (*Card
 
 // Update updates the specified cardholder
 // Note: first_name and last_name cannot be updated
-func (c *CardholdersClient) Update(ctx context.Context, cardholderID string, req *UpdateCardholderRequest) (*UpdateCardholderResponse, error) {
+func (c *CardholdersClient) Update(ctx context.Context, cardholderID string, req *UpdateCardholderRequest, opts ...*common.RequestOptions) (*UpdateCardholderResponse, error) {
 	var resp UpdateCardholderResponse
 	path := fmt.Sprintf("/v1/issuing/cardholders/%s", cardholderID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to update cardholder: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists cardholders
-func (c *CardholdersClient) List(ctx context.Context, req *ListCardholdersRequest) (*ListCardholdersResponse, error) {
+func (c *CardholdersClient) List(ctx context.Context, req *ListCardholdersRequest, opts ...*common.RequestOptions) (*ListCardholdersResponse, error) {
 	var resp ListCardholdersResponse
 	path := fmt.Sprintf("/v1/issuing/cardholders?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list cardholders: %w", err)
 	}
 	return &resp, nil

@@ -47,10 +47,10 @@ type ListProductsResponse struct {
 }
 
 // List lists card products
-func (c *ProductsClient) List(ctx context.Context, req *ListProductsRequest) (*ListProductsResponse, error) {
+func (c *ProductsClient) List(ctx context.Context, req *ListProductsRequest, opts ...*common.RequestOptions) (*ListProductsResponse, error) {
 	var resp ListProductsResponse
 	path := fmt.Sprintf("/v1/issuing/products?page_size=%d&page_number=%d", req.PageSize, req.PageNumber)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list products: %w", err)
 	}
 	return &resp, nil

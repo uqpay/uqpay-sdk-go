@@ -39,7 +39,7 @@ type listRatesDataWrapper struct {
 
 // List retrieves current exchange rates
 // Optionally filter by specific currency pairs
-func (c *ExchangeRatesClient) List(ctx context.Context, req *ListRatesRequest) (*ListRatesResponse, error) {
+func (c *ExchangeRatesClient) List(ctx context.Context, req *ListRatesRequest, opts ...*common.RequestOptions) (*ListRatesResponse, error) {
 	var wrapper listRatesDataWrapper
 	path := "/v1/exchange/rates"
 
@@ -49,7 +49,7 @@ func (c *ExchangeRatesClient) List(ctx context.Context, req *ListRatesRequest) (
 		path += fmt.Sprintf("?currency_pairs=%s", pairs)
 	}
 
-	if err := c.client.Get(ctx, path, &wrapper); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &wrapper, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list exchange rates: %w", err)
 	}
 	return &wrapper.Data, nil

@@ -9,7 +9,6 @@ import (
 	"github.com/uqpay/uqpay-sdk-go/common"
 )
 
-
 // CardsClient handles card operations
 type CardsClient struct {
 	client *common.APIClient
@@ -61,11 +60,11 @@ type RiskControls struct {
 
 // CardUpdateRequest represents a card update request
 type CardUpdateRequest struct {
-	CardLimit           *float64          `json:"card_limit,omitempty"`
-	NoPINPaymentAmount  *float64          `json:"no_pin_payment_amount,omitempty"`
-	SpendingControls    []SpendingControl `json:"spending_controls,omitempty"`
-	RiskControls        *RiskControls     `json:"risk_controls,omitempty"`
-	Metadata            map[string]string `json:"metadata,omitempty"`
+	CardLimit          *float64          `json:"card_limit,omitempty"`
+	NoPINPaymentAmount *float64          `json:"no_pin_payment_amount,omitempty"`
+	SpendingControls   []SpendingControl `json:"spending_controls,omitempty"`
+	RiskControls       *RiskControls     `json:"risk_controls,omitempty"`
+	Metadata           map[string]string `json:"metadata,omitempty"`
 }
 
 // UpdateCardStatusRequest represents a card status update request
@@ -100,7 +99,6 @@ type AssignCardRequest struct {
 	CardCurrency string `json:"card_currency"`
 	CardMode     string `json:"card_mode"` // SINGLE or SHARE
 }
-
 
 // ListCardsRequest represents a card list request
 type ListCardsRequest struct {
@@ -147,24 +145,24 @@ type CardStatusResponse struct {
 
 // RetrieveCardResponse represents detailed card information
 type RetrieveCardResponse struct {
-	CardID              string                  `json:"card_id"`
-	CardBIN             string                  `json:"card_bin"`
-	CardScheme          string                  `json:"card_scheme"`
-	CardCurrency        string                  `json:"card_currency"`
-	CardNumber          string                  `json:"card_number"`
-	FormFactor          string                  `json:"form_factor"`
-	ModeType            string                  `json:"mode_type"`
-	CardProductID       string                  `json:"card_product_id"`
-	CardLimit           common.FlexibleString    `json:"card_limit"`
-	AvailableBalance    string                  `json:"available_balance"`
-	Cardholder          CardholderInfo          `json:"cardholder"`
-	SpendingControls    []SpendingControl       `json:"spending_controls,omitempty"`
-	NoPINPaymentAmount  string                  `json:"no_pin_payment_amount"`
-	RiskControls        *RiskControls           `json:"risk_controls,omitempty"`
-	Metadata            common.FlexibleStringMap `json:"metadata,omitempty"`
-	CardStatus          string                  `json:"card_status"`
-	UpdateReason        *string                 `json:"update_reason,omitempty"`
-	ConsumedAmount      *string                 `json:"consumed_amount,omitempty"`
+	CardID             string                   `json:"card_id"`
+	CardBIN            string                   `json:"card_bin"`
+	CardScheme         string                   `json:"card_scheme"`
+	CardCurrency       string                   `json:"card_currency"`
+	CardNumber         string                   `json:"card_number"`
+	FormFactor         string                   `json:"form_factor"`
+	ModeType           string                   `json:"mode_type"`
+	CardProductID      string                   `json:"card_product_id"`
+	CardLimit          common.FlexibleString    `json:"card_limit"`
+	AvailableBalance   string                   `json:"available_balance"`
+	Cardholder         CardholderInfo           `json:"cardholder"`
+	SpendingControls   []SpendingControl        `json:"spending_controls,omitempty"`
+	NoPINPaymentAmount string                   `json:"no_pin_payment_amount"`
+	RiskControls       *RiskControls            `json:"risk_controls,omitempty"`
+	Metadata           common.FlexibleStringMap `json:"metadata,omitempty"`
+	CardStatus         string                   `json:"card_status"`
+	UpdateReason       *string                  `json:"update_reason,omitempty"`
+	ConsumedAmount     *string                  `json:"consumed_amount,omitempty"`
 }
 
 // CardholderInfo represents cardholder information in card response
@@ -220,7 +218,6 @@ type AssignCardResponse struct {
 	OrderStatus string `json:"order_status"`
 }
 
-
 // ListCardsResponse represents a card list response
 type ListCardsResponse struct {
 	TotalPages int                    `json:"total_pages"`
@@ -240,46 +237,46 @@ type PANTokenResponse struct {
 // ============================================================================
 
 // Create creates a new card
-func (c *CardsClient) Create(ctx context.Context, req *CreateCardRequest) (*CardCreationResponse, error) {
+func (c *CardsClient) Create(ctx context.Context, req *CreateCardRequest, opts ...*common.RequestOptions) (*CardCreationResponse, error) {
 	var resp CardCreationResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cards", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create card: %w", err)
 	}
 	return &resp, nil
 }
 
 // Update updates the specified issuing card
-func (c *CardsClient) Update(ctx context.Context, cardID string, req *CardUpdateRequest) (*CardUpdatedResponse, error) {
+func (c *CardsClient) Update(ctx context.Context, cardID string, req *CardUpdateRequest, opts ...*common.RequestOptions) (*CardUpdatedResponse, error) {
 	var resp CardUpdatedResponse
 	path := fmt.Sprintf("/v1/issuing/cards/%s", cardID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to update card: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a card by ID
-func (c *CardsClient) Get(ctx context.Context, cardID string) (*RetrieveCardResponse, error) {
+func (c *CardsClient) Get(ctx context.Context, cardID string, opts ...*common.RequestOptions) (*RetrieveCardResponse, error) {
 	var card RetrieveCardResponse
 	path := fmt.Sprintf("/v1/issuing/cards/%s", cardID)
-	if err := c.client.Get(ctx, path, &card); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &card, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get card: %w", err)
 	}
 	return &card, nil
 }
 
 // GetSecure retrieves secure card information
-func (c *CardsClient) GetSecure(ctx context.Context, cardID string) (*SecureCardInfo, error) {
+func (c *CardsClient) GetSecure(ctx context.Context, cardID string, opts ...*common.RequestOptions) (*SecureCardInfo, error) {
 	var info SecureCardInfo
 	path := fmt.Sprintf("/v1/issuing/cards/%s/secure", cardID)
-	if err := c.client.Get(ctx, path, &info); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &info, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get secure card info: %w", err)
 	}
 	return &info, nil
 }
 
 // List lists cards with pagination and filters
-func (c *CardsClient) List(ctx context.Context, req *ListCardsRequest) (*ListCardsResponse, error) {
+func (c *CardsClient) List(ctx context.Context, req *ListCardsRequest, opts ...*common.RequestOptions) (*ListCardsResponse, error) {
 	var resp ListCardsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -295,86 +292,85 @@ func (c *CardsClient) List(ctx context.Context, req *ListCardsRequest) (*ListCar
 	}
 	path := "/v1/issuing/cards?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list cards: %w", err)
 	}
 	return &resp, nil
 }
 
 // UpdateStatus updates card status
-func (c *CardsClient) UpdateStatus(ctx context.Context, cardID string, req *UpdateCardStatusRequest) (*CardStatusResponse, error) {
+func (c *CardsClient) UpdateStatus(ctx context.Context, cardID string, req *UpdateCardStatusRequest, opts ...*common.RequestOptions) (*CardStatusResponse, error) {
 	var resp CardStatusResponse
 	path := fmt.Sprintf("/v1/issuing/cards/%s/status", cardID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to update card status: %w", err)
 	}
 	return &resp, nil
 }
 
 // Recharge recharges a card
-func (c *CardsClient) Recharge(ctx context.Context, cardID string, req *CardOrderRequest) (*CardOrder, error) {
+func (c *CardsClient) Recharge(ctx context.Context, cardID string, req *CardOrderRequest, opts ...*common.RequestOptions) (*CardOrder, error) {
 	var order CardOrder
 	path := fmt.Sprintf("/v1/issuing/cards/%s/recharge", cardID)
-	if err := c.client.Post(ctx, path, req, &order); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &order, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to recharge card: %w", err)
 	}
 	return &order, nil
 }
 
 // Withdraw withdraws funds from a card
-func (c *CardsClient) Withdraw(ctx context.Context, cardID string, req *CardOrderRequest) (*CardOrder, error) {
+func (c *CardsClient) Withdraw(ctx context.Context, cardID string, req *CardOrderRequest, opts ...*common.RequestOptions) (*CardOrder, error) {
 	var order CardOrder
 	path := fmt.Sprintf("/v1/issuing/cards/%s/withdraw", cardID)
-	if err := c.client.Post(ctx, path, req, &order); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, req, &order, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to withdraw from card: %w", err)
 	}
 	return &order, nil
 }
 
 // GetOrder retrieves a card order by order ID
-func (c *CardsClient) GetOrder(ctx context.Context, orderID string) (*CardOrder, error) {
+func (c *CardsClient) GetOrder(ctx context.Context, orderID string, opts ...*common.RequestOptions) (*CardOrder, error) {
 	var order CardOrder
 	path := fmt.Sprintf("/v1/issuing/cards/%s/order", orderID)
-	if err := c.client.Get(ctx, path, &order); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &order, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get card order: %w", err)
 	}
 	return &order, nil
 }
 
 // Activate activates a physical card
-func (c *CardsClient) Activate(ctx context.Context, req *ActivateCardRequest) (*ActivateCardResponse, error) {
+func (c *CardsClient) Activate(ctx context.Context, req *ActivateCardRequest, opts ...*common.RequestOptions) (*ActivateCardResponse, error) {
 	var resp ActivateCardResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cards/activate", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/activate", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to activate card: %w", err)
 	}
 	return &resp, nil
 }
 
 // ResetPIN resets the PIN for a physical card
-func (c *CardsClient) ResetPIN(ctx context.Context, req *SetPINRequest) (*SetPINResponse, error) {
+func (c *CardsClient) ResetPIN(ctx context.Context, req *SetPINRequest, opts ...*common.RequestOptions) (*SetPINResponse, error) {
 	var resp SetPINResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cards/pin", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/pin", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to reset card PIN: %w", err)
 	}
 	return &resp, nil
 }
 
 // Assign assigns a physical card or bulk created virtual card to a cardholder
-func (c *CardsClient) Assign(ctx context.Context, req *AssignCardRequest) (*AssignCardResponse, error) {
+func (c *CardsClient) Assign(ctx context.Context, req *AssignCardRequest, opts ...*common.RequestOptions) (*AssignCardResponse, error) {
 	var resp AssignCardResponse
-	if err := c.client.Post(ctx, "/v1/issuing/cards/assign", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/assign", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to assign card: %w", err)
 	}
 	return &resp, nil
 }
 
-
 // CreatePANToken creates a one-time PAN token for accessing sensitive card details
 // through a secure iframe. The token expires after 60 seconds and can only be used once.
-func (c *CardsClient) CreatePANToken(ctx context.Context, cardID string) (*PANTokenResponse, error) {
+func (c *CardsClient) CreatePANToken(ctx context.Context, cardID string, opts ...*common.RequestOptions) (*PANTokenResponse, error) {
 	var resp PANTokenResponse
 	path := fmt.Sprintf("/v1/issuing/cards/%s/token", cardID)
-	if err := c.client.Post(ctx, path, nil, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, path, nil, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create PAN token: %w", err)
 	}
 	return &resp, nil

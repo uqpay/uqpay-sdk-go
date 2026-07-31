@@ -47,7 +47,7 @@ type Payout struct {
 
 // PayoutInlineBeneficiary represents an inline beneficiary for payout creation
 type PayoutInlineBeneficiary struct {
-	EntityType     string          `json:"entity_type"`                // required: INDIVIDUAL or COMPANY
+	EntityType     string          `json:"entity_type"`               // required: INDIVIDUAL or COMPANY
 	FirstName      string          `json:"first_name,omitempty"`      // required if INDIVIDUAL
 	LastName       string          `json:"last_name,omitempty"`       // required if INDIVIDUAL
 	CompanyName    string          `json:"company_name,omitempty"`    // required if COMPANY
@@ -138,16 +138,16 @@ type PayoutDetailResponse struct {
 }
 
 // Create creates a new payout
-func (c *PayoutsClient) Create(ctx context.Context, req *CreatePayoutRequest) (*CreatePayoutResponse, error) {
+func (c *PayoutsClient) Create(ctx context.Context, req *CreatePayoutRequest, opts ...*common.RequestOptions) (*CreatePayoutResponse, error) {
 	var resp CreatePayoutResponse
-	if err := c.client.Post(ctx, "/v1/payouts", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/payouts", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create payout: %w", err)
 	}
 	return &resp, nil
 }
 
 // List lists payouts with filters and pagination
-func (c *PayoutsClient) List(ctx context.Context, req *ListPayoutsRequest) (*ListPayoutsResponse, error) {
+func (c *PayoutsClient) List(ctx context.Context, req *ListPayoutsRequest, opts ...*common.RequestOptions) (*ListPayoutsResponse, error) {
 	var resp ListPayoutsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -169,17 +169,17 @@ func (c *PayoutsClient) List(ctx context.Context, req *ListPayoutsRequest) (*Lis
 	}
 	path := "/v1/payouts?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list payouts: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific payout by ID
-func (c *PayoutsClient) Get(ctx context.Context, payoutID string) (*PayoutDetailResponse, error) {
+func (c *PayoutsClient) Get(ctx context.Context, payoutID string, opts ...*common.RequestOptions) (*PayoutDetailResponse, error) {
 	var resp PayoutDetailResponse
 	path := fmt.Sprintf("/v1/payouts/%s", payoutID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get payout: %w", err)
 	}
 	return &resp, nil

@@ -113,7 +113,7 @@ type ConversionDate struct {
 }
 
 // List lists conversions
-func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest) (*ListConversionsResponse, error) {
+func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest, opts ...*common.RequestOptions) (*ListConversionsResponse, error) {
 	var resp ListConversionsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -135,45 +135,45 @@ func (c *ConversionClient) List(ctx context.Context, req *ListConversionsRequest
 	}
 	path := "/v1/conversion?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list conversions: %w", err)
 	}
 	return &resp, nil
 }
 
 // Create creates a new conversion
-func (c *ConversionClient) Create(ctx context.Context, req *CreateConversionRequest) (*CreateConversionResponse, error) {
+func (c *ConversionClient) Create(ctx context.Context, req *CreateConversionRequest, opts ...*common.RequestOptions) (*CreateConversionResponse, error) {
 	var resp CreateConversionResponse
-	if err := c.client.Post(ctx, "/v1/conversion", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/conversion", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create conversion: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific conversion
-func (c *ConversionClient) Get(ctx context.Context, conversionID string) (*Conversion, error) {
+func (c *ConversionClient) Get(ctx context.Context, conversionID string, opts ...*common.RequestOptions) (*Conversion, error) {
 	var resp Conversion
 	path := fmt.Sprintf("/v1/conversion/%s", conversionID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get conversion: %w", err)
 	}
 	return &resp, nil
 }
 
 // ListConversionDates retrieves available conversion dates for a currency pair
-func (c *ConversionClient) ListConversionDates(ctx context.Context, currencyFrom, currencyTo string) ([]ConversionDate, error) {
+func (c *ConversionClient) ListConversionDates(ctx context.Context, currencyFrom, currencyTo string, opts ...*common.RequestOptions) ([]ConversionDate, error) {
 	var resp []ConversionDate
 	path := fmt.Sprintf("/v1/conversion/conversion_dates?currency_from=%s&currency_to=%s", currencyFrom, currencyTo)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list conversion dates: %w", err)
 	}
 	return resp, nil
 }
 
 // CreateQuote creates a new conversion quote
-func (c *ConversionClient) CreateQuote(ctx context.Context, req *CreateQuoteRequest) (*CreateQuoteResponse, error) {
+func (c *ConversionClient) CreateQuote(ctx context.Context, req *CreateQuoteRequest, opts ...*common.RequestOptions) (*CreateQuoteResponse, error) {
 	var resp CreateQuoteResponse
-	if err := c.client.Post(ctx, "/v1/conversion/quote", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/conversion/quote", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create quote: %w", err)
 	}
 	return &resp, nil

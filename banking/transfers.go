@@ -63,7 +63,7 @@ type CreateTransferResponse struct {
 }
 
 // List lists transfers
-func (c *TransfersClient) List(ctx context.Context, req *ListTransfersRequest) (*ListTransfersResponse, error) {
+func (c *TransfersClient) List(ctx context.Context, req *ListTransfersRequest, opts ...*common.RequestOptions) (*ListTransfersResponse, error) {
 	var resp ListTransfersResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -82,26 +82,26 @@ func (c *TransfersClient) List(ctx context.Context, req *ListTransfersRequest) (
 	}
 	path := "/v1/transfer?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list transfers: %w", err)
 	}
 	return &resp, nil
 }
 
 // Create creates a new transfer
-func (c *TransfersClient) Create(ctx context.Context, req *CreateTransferRequest) (*CreateTransferResponse, error) {
+func (c *TransfersClient) Create(ctx context.Context, req *CreateTransferRequest, opts ...*common.RequestOptions) (*CreateTransferResponse, error) {
 	var resp CreateTransferResponse
-	if err := c.client.Post(ctx, "/v1/transfer", req, &resp); err != nil {
+	if err := c.client.PostWithOptions(ctx, "/v1/transfer", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create transfer: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific transfer
-func (c *TransfersClient) Get(ctx context.Context, transferID string) (*Transfer, error) {
+func (c *TransfersClient) Get(ctx context.Context, transferID string, opts ...*common.RequestOptions) (*Transfer, error) {
 	var resp Transfer
 	path := fmt.Sprintf("/v1/transfer/%s", transferID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get transfer: %w", err)
 	}
 	return &resp, nil

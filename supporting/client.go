@@ -13,3 +13,10 @@ func NewClient(apiClient *common.APIClient) *Client {
 		Files: &FilesClient{client: apiClient},
 	}
 }
+
+func firstRequestOptions(opts []*common.RequestOptions) *common.RequestOptions {
+	if len(opts) == 0 {
+		return nil
+	}
+	return opts[0]
+}

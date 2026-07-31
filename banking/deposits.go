@@ -16,17 +16,17 @@ type DepositsClient struct {
 
 // Deposit represents a deposit transaction
 type Deposit struct {
-	DepositID              string         `json:"deposit_id"`
-	ShortReferenceID       string         `json:"short_reference_id"`
-	Currency               string         `json:"currency"`
-	Amount                 string         `json:"amount"`
-	DepositFee             string         `json:"deposit_fee"`
-	DepositStatus          string         `json:"deposit_status"`
-	ReceiverAccountNumber  string         `json:"receiver_account_number"`
-	DepositReference       string         `json:"deposit_reference"`
-	Sender                 *DepositSender `json:"sender,omitempty"`
-	CreateTime             string         `json:"create_time"`
-	CompleteTime           string         `json:"complete_time"`
+	DepositID             string         `json:"deposit_id"`
+	ShortReferenceID      string         `json:"short_reference_id"`
+	Currency              string         `json:"currency"`
+	Amount                string         `json:"amount"`
+	DepositFee            string         `json:"deposit_fee"`
+	DepositStatus         string         `json:"deposit_status"`
+	ReceiverAccountNumber string         `json:"receiver_account_number"`
+	DepositReference      string         `json:"deposit_reference"`
+	Sender                *DepositSender `json:"sender,omitempty"`
+	CreateTime            string         `json:"create_time"`
+	CompleteTime          string         `json:"complete_time"`
 }
 
 // DepositSender represents the sender information for a deposit
@@ -56,7 +56,7 @@ type ListDepositsResponse struct {
 }
 
 // List lists deposits
-func (c *DepositsClient) List(ctx context.Context, req *ListDepositsRequest) (*ListDepositsResponse, error) {
+func (c *DepositsClient) List(ctx context.Context, req *ListDepositsRequest, opts ...*common.RequestOptions) (*ListDepositsResponse, error) {
 	var resp ListDepositsResponse
 	params := url.Values{}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
@@ -75,17 +75,17 @@ func (c *DepositsClient) List(ctx context.Context, req *ListDepositsRequest) (*L
 	}
 	path := "/v1/deposit?" + params.Encode()
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list deposits: %w", err)
 	}
 	return &resp, nil
 }
 
 // Get retrieves a specific deposit
-func (c *DepositsClient) Get(ctx context.Context, depositID string) (*Deposit, error) {
+func (c *DepositsClient) Get(ctx context.Context, depositID string, opts ...*common.RequestOptions) (*Deposit, error) {
 	var resp Deposit
 	path := fmt.Sprintf("/v1/deposit/%s", depositID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get deposit: %w", err)
 	}
 	return &resp, nil
