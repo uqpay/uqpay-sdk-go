@@ -12,6 +12,7 @@ type Client struct {
 	Transfers      *TransfersClient
 	Reports        *ReportsClient
 	DownloadCenter *DownloadCenterClient
+	MerchantBrands *MerchantBrandsClient
 }
 
 // NewClient creates a new Issuing client
@@ -25,6 +26,7 @@ func NewClient(apiClient *common.APIClient) *Client {
 		Transfers:      &TransfersClient{client: apiClient},
 		Reports:        &ReportsClient{client: apiClient},
 		DownloadCenter: &DownloadCenterClient{client: apiClient},
+		MerchantBrands: &MerchantBrandsClient{client: apiClient},
 	}
 }
 

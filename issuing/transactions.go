@@ -64,6 +64,15 @@ type ListTransactionsResponse struct {
 	Data       []Transaction `json:"data"`
 }
 
+type ClaimUnsolicitedRefundRequest struct {
+	RelatedTransactionID string `json:"related_transaction_id"`
+	Remark               string `json:"remark,omitempty"`
+}
+
+type ClaimUnsolicitedRefundResponse struct {
+	RequestStatus string `json:"request_status"`
+}
+
 // Get retrieves a transaction by ID
 func (c *TransactionsClient) Get(ctx context.Context, transactionID string, opts ...*common.RequestOptions) (*Transaction, error) {
 	var transaction Transaction
@@ -92,6 +101,14 @@ func (c *TransactionsClient) List(ctx context.Context, req *ListTransactionsRequ
 	path := "/v1/issuing/transactions?" + params.Encode()
 	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list transactions: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *TransactionsClient) ClaimUnsolicitedRefund(ctx context.Context, req *ClaimUnsolicitedRefundRequest, opts ...*common.RequestOptions) (*ClaimUnsolicitedRefundResponse, error) {
+	var resp ClaimUnsolicitedRefundResponse
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/transactions/unsolicited_refund/release", req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to claim unsolicited refund: %w", err)
 	}
 	return &resp, nil
 }

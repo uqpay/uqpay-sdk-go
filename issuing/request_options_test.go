@@ -2,6 +2,7 @@ package issuing
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,8 +21,11 @@ func (p *staticTokenProvider) GetToken() (string, error) {
 }
 
 type capturedRequest struct {
+	method string
 	path   string
+	query  string
 	header http.Header
+	body   string
 }
 
 func newRequestOptionsTestClient(t *testing.T) (*Client, <-chan capturedRequest) {
@@ -29,9 +33,13 @@ func newRequestOptionsTestClient(t *testing.T) (*Client, <-chan capturedRequest)
 
 	requests := make(chan capturedRequest, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
 		requests <- capturedRequest{
+			method: r.Method,
 			path:   r.URL.Path,
+			query:  r.URL.RawQuery,
 			header: r.Header.Clone(),
+			body:   string(body),
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{}`))

@@ -215,6 +215,11 @@ func (c *APIClient) GetWithOptions(ctx context.Context, path string, response in
 	return c.DoWithOptions(ctx, "GET", path, nil, response, opts)
 }
 
+// DeleteWithOptions sends a DELETE request with an optional JSON body and custom options.
+func (c *APIClient) DeleteWithOptions(ctx context.Context, path string, body, response interface{}, opts *RequestOptions) error {
+	return c.DoWithOptions(ctx, "DELETE", path, body, response, opts)
+}
+
 // PostMultipartWithOptions sends a multipart/form-data POST request with custom options.
 func (c *APIClient) PostMultipartWithOptions(
 	ctx context.Context,
