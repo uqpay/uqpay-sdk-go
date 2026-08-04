@@ -274,6 +274,69 @@ type PANTokenResponse struct {
 	ExpiresAt string `json:"expires_at"`
 }
 
+type ElevateLimitRequest struct {
+	LimitAmount    float64 `json:"limit_amount"`
+	DurationInDays int     `json:"duration_in_days,omitempty"`
+}
+
+type ElevateLimitResponse struct {
+	CardID      string `json:"card_id"`
+	CardOrderID string `json:"card_order_id"`
+	OrderStatus string `json:"order_status"`
+}
+
+type EnrollNetworkProtectionRequest struct {
+	RiskControl string `json:"risk_control"`
+	ActionCode  string `json:"action_code"`
+}
+
+type RemoveNetworkProtectionRequest struct {
+	RiskControl string `json:"risk_control"`
+}
+
+type NetworkProtectionResponse struct {
+	CardID       string  `json:"card_id"`
+	CardNumber   string  `json:"card_number"`
+	CardholderID string  `json:"cardholder_id"`
+	CardScheme   string  `json:"card_scheme"`
+	Enabled      bool    `json:"enabled"`
+	Status       string  `json:"status"`
+	ActionCode   string  `json:"action_code"`
+	Definition   string  `json:"definition"`
+	UpdateTime   *string `json:"update_time"`
+}
+
+type ManageCardPINRequest struct {
+	CardID string `json:"card_id"`
+	Type   string `json:"type"`
+	PIN    string `json:"pin"`
+	OldPIN string `json:"old_pin,omitempty"`
+}
+
+type ManageCardPINResponse struct {
+	CardID      string `json:"card_id"`
+	CardOrderID string `json:"card_order_id"`
+	CreateTime  string `json:"create_time"`
+}
+
+type ListCardArtsRequest struct{ CardProductID string }
+
+type CardArtItem map[string]interface{}
+
+type CardArtListResponse struct {
+	DefaultCardArtID string        `json:"default_card_art_id"`
+	CardArts         []CardArtItem `json:"card_arts"`
+}
+
+type SetDefaultCardArtRequest struct {
+	CardArtID string `json:"card_art_id"`
+}
+
+type SetDefaultCardArtResponse struct {
+	DefaultCardArtID string `json:"default_card_art_id"`
+	UpdatedAt        string `json:"updated_at"`
+}
+
 // ============================================================================
 // API Methods
 // ============================================================================
@@ -414,6 +477,61 @@ func (c *CardsClient) CreatePANToken(ctx context.Context, cardID string, opts ..
 	path := fmt.Sprintf("/v1/issuing/cards/%s/token", cardID)
 	if err := c.client.PostWithOptions(ctx, path, nil, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create PAN token: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) ElevateLimit(ctx context.Context, cardID string, req *ElevateLimitRequest, opts ...*common.RequestOptions) (*ElevateLimitResponse, error) {
+	var resp ElevateLimitResponse
+	path := fmt.Sprintf("/v1/issuing/cards/%s/elevate_limit", cardID)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to elevate card limit: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) EnrollNetworkProtection(ctx context.Context, cardID string, req *EnrollNetworkProtectionRequest, opts ...*common.RequestOptions) (*NetworkProtectionResponse, error) {
+	var resp NetworkProtectionResponse
+	path := fmt.Sprintf("/v1/issuing/cards/%s/risk", cardID)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to enroll network protection: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) RemoveNetworkProtection(ctx context.Context, cardID string, req *RemoveNetworkProtectionRequest, opts ...*common.RequestOptions) (*NetworkProtectionResponse, error) {
+	var resp NetworkProtectionResponse
+	path := fmt.Sprintf("/v1/issuing/cards/%s/risk", cardID)
+	if err := c.client.DeleteWithOptions(ctx, path, req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to remove network protection: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) ManagePIN(ctx context.Context, req *ManageCardPINRequest, opts ...*common.RequestOptions) (*ManageCardPINResponse, error) {
+	var resp ManageCardPINResponse
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/manage/pin", req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to manage card PIN: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) ListArts(ctx context.Context, req *ListCardArtsRequest, opts ...*common.RequestOptions) (*CardArtListResponse, error) {
+	path := "/v1/issuing/cards/arts"
+	if req != nil && req.CardProductID != "" {
+		path += "?card_product_id=" + url.QueryEscape(req.CardProductID)
+	}
+	var resp CardArtListResponse
+	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to list card arts: %w", err)
+	}
+	return &resp, nil
+}
+
+func (c *CardsClient) SetDefaultArt(ctx context.Context, req *SetDefaultCardArtRequest, opts ...*common.RequestOptions) (*SetDefaultCardArtResponse, error) {
+	var resp SetDefaultCardArtResponse
+	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/arts/default", req, &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to set default card art: %w", err)
 	}
 	return &resp, nil
 }

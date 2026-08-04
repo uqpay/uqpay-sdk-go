@@ -11,6 +11,7 @@ type Client struct {
 	Balances        *PaymentBalancesClient
 	Payouts         *PaymentPayoutsClient
 	BankAccounts    *BankAccountsClient
+	Terminals       *TerminalsClient
 }
 
 // NewClient creates a new Payment API client
@@ -23,6 +24,7 @@ func NewClient(apiClient *common.APIClient) *Client {
 		Balances:        &PaymentBalancesClient{client: apiClient},
 		Payouts:         &PaymentPayoutsClient{client: apiClient},
 		BankAccounts:    &BankAccountsClient{client: apiClient},
+		Terminals:       &TerminalsClient{client: apiClient},
 	}
 }
 
