@@ -364,12 +364,10 @@ go vet ./...
 
 This SDK follows [Semantic Versioning](https://semver.org/).
 
-Current version: `1.0.3`
-
-To install a specific version:
+Install the latest compatible version:
 
 ```bash
-go get github.com/uqpay/uqpay-sdk-go@v1.0.3
+go get github.com/uqpay/uqpay-sdk-go@latest
 ```
 
 View all releases: [GitHub Releases](https://github.com/uqpay/uqpay-sdk-go/releases)
