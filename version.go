@@ -1,4 +1,4 @@
 package uqpay
 
 // Version is the current version of the UQPAY SDK
-const Version = "1.2.0"
+const Version = "1.2.1"

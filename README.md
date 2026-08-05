@@ -15,6 +15,7 @@ Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
 - 🏦 **Banking** - Balances, transfers, deposits, payouts, beneficiaries, virtual accounts, conversions, and exchange rates
 - 📊 **Transaction Tracking** - Real-time transaction monitoring
 - 🔒 **Secure** - Built-in OAuth2 authentication with automatic token management
+- 🔑 **Authorization Decisions** - PGP-encrypted real-time card transaction decisions
 - ⚡ **Idempotency** - Automatic idempotency key generation for safe retries
 - 🌍 **Multi-Environment** - Support for Sandbox and Production environments
 
@@ -256,6 +257,61 @@ Example error format:
 failed to get card: 404: card_not_found: Card not found (HTTP 404)
 ```
 
+## Authorization Decision (PGP)
+
+Authorization decisions let your endpoint approve or decline card transactions in
+real time. Before implementing the handler, review the UQPAY authorization decision
+[workflow, enablement requirements, response codes, and configured timeout window](https://developers.uqpay.com/card-issuance/v1.6/guide/authorization-decisions).
+
+Generate the required RSA 2048 key pair:
+
+```go
+keys, err := authdecision.GenerateKeyPair("Acme Corp", "issuing@acme.example")
+if err != nil {
+    log.Fatal(err)
+}
+// Exchange keys.PublicKey with UQPAY and store keys.PrivateKey securely.
+```
+
+Configure the SDK and register an HTTP handler. `DecisionTimeout` must be shorter
+than the timeout configured with UQPAY; the default UQPAY window is two seconds.
+
+```go
+err := client.Issuing.AuthDecision.Configure(authdecision.Config{
+    PrivateKey:     os.Getenv("AUTH_DECISION_PRIVATE_KEY"),
+    UQPayPublicKey: os.Getenv("UQPAY_PGP_PUBLIC_KEY"),
+    Passphrase:     os.Getenv("PGP_PASSPHRASE"),
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+handler, err := client.Issuing.AuthDecision.Handler(authdecision.HandlerOptions{
+    DecisionTimeout: 1500 * time.Millisecond,
+    Decide: func(ctx context.Context, tx authdecision.Transaction) (authdecision.Result, error) {
+        if tx.BillingAmount == "10000.00" {
+            return authdecision.Result{ResponseCode: "51"}, nil
+        }
+        return authdecision.Result{
+            ResponseCode:       "00",
+            PartnerReferenceID: "ref-001",
+        }, nil
+    },
+    OnError: func(err error) {
+        log.Printf("authorization decision failed: %v", err)
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+http.Handle("/auth-decision", handler)
+```
+
+The SDK accepts monetary fields encoded as either JSON strings or numbers and
+exposes them as strings to preserve decimal precision. On processing errors the
+HTTP handler aborts the response so UQPAY applies the configured timeout action.
+
 ## Features
 
 ### Automatic OAuth2 Token Management
@@ -326,6 +382,7 @@ The SDK includes comprehensive integration tests covering:
 ```
 uqpay-sdk-go/
 ├── auth/              # OAuth2 authentication
+├── authdecision/      # PGP authorization decision handling
 ├── banking/           # Banking API client
 │   ├── balances.go
 │   ├── beneficiaries.go
