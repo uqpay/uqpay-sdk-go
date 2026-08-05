@@ -2,8 +2,36 @@
 
 All notable changes to the UQPAY Go SDK are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versions follow UQPAY's shared `MAJOR.MINOR` and repository-specific `PATCH`
+policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.1]
+
+This Go-only release is an explicitly approved, one-time parity-repair exception.
+It restores a capability already present in the Node.js, Python, and Java SDKs but
+omitted from the Go SDK's `1.2.0` bootstrap alignment. It does not establish a
+general policy of adding public SDK capabilities in PATCH releases.
+
+### Added
+
+- PGP-encrypted real-time authorization decisions through
+  `client.Issuing.AuthDecision`.
+- RSA-2048 key generation, armored strings and key-file configuration, and
+  passphrase-protected customer private keys.
+- Typed authorization transactions, string-preserving monetary values, and
+  encrypted approve/decline responses.
+- Configurable decision timeouts, request-size limits, and fail-closed HTTP error
+  handling so UQPAY can apply the configured timeout action.
+
+### Compatibility and security
+
+- Go 1.19 source compatibility is retained.
+- The authorization-decision path accepts only RSA keys of at least 2048 bits.
+- `govulncheck` reports conditional findings in the indirect CIRCL dependency for
+  P-384 (`GO-2026-4550`) and FourQ (`GO-2025-3754`). Those algorithms are not
+  accepted by this RSA-only path; CIRCL versions containing the upstream fixes
+  require Go 1.22 or later.
 
 ## [1.2.0]
 
