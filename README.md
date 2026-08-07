@@ -14,7 +14,7 @@ Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
 - 💰 **Card Operations** - Recharge, withdraw, freeze, and manage card status
 - 🏦 **Banking** - Balances, transfers, deposits, payouts, beneficiaries, virtual accounts, conversions, and exchange rates
 - 📊 **Transaction Tracking** - Real-time transaction monitoring
-- 🔒 **Secure** - Built-in OAuth2 authentication with automatic token management
+- 🔒 **Secure** - Automatic UQPAY Access Token management
 - 🔑 **Authorization Decisions** - PGP-encrypted real-time card transaction decisions
 - ⚡ **Idempotency** - Automatic idempotency key generation for safe retries
 - 🌍 **Multi-Environment** - Support for Sandbox and Production environments
@@ -199,45 +199,37 @@ client, err := uqpay.NewClient(clientID, apiKey, &configuration.Config{
 
 ### Environment Variables
 
-For testing, you can use environment variables:
+Store credentials in your environment and pass them explicitly when you create the client. The SDK does not load environment variables or `.env` files automatically.
 
 ```bash
 export UQPAY_CLIENT_ID="your-client-id"
 export UQPAY_API_KEY="your-api-key"
 ```
 
-Or create a `.env` file (see `.env.example`):
-
-```bash
-cp .env.example .env
-# Edit .env with your credentials
+```go
+client, err := uqpay.NewClient(
+    os.Getenv("UQPAY_CLIENT_ID"),
+    os.Getenv("UQPAY_API_KEY"),
+    configuration.Sandbox(),
+)
 ```
+
+The repository's integration-test helper can load `.env` for local SDK testing. That test-only behavior is not part of the SDK runtime.
 
 ## API Coverage
 
-### Banking API
+The root client exposes these product namespaces and resource clients. See the [UQPAY API documentation](https://developers.uqpay.com/) and the exported Go types for operation-level request and response details.
 
-> 详细使用文档: [docs/banking-usage.md](docs/banking-usage.md)
+| Namespace | Product | Resources |
+|-----------|---------|-----------|
+| `client.Connect` | Account Center | Accounts and RFIs |
+| `client.Banking` | Global Account | Balances, transfers, deposits, beneficiaries, payouts, virtual accounts, conversions, and exchange rates |
+| `client.Payment` | Global Acquiring | Payment intents, attempts, refunds, reports, balances, payouts, bank accounts, and terminals |
+| `client.Issuing` | Card Issuance | Cards, cardholders, transactions, products, balances, transfers, reports, download center, merchant brands, and authorization decisions |
+| `client.Supporting` | Supporting Services | File upload and download links |
+| `client.Simulator` | Sandbox | Issuing authorization/reversal and deposit simulation |
 
-| Resource | Operations |
-|----------|------------|
-| **Balances** | Get, List, ListTransactions |
-| **Transfers** | Create, List, Get |
-| **Deposits** | List, Get |
-| **Beneficiaries** | Create, List, Get, Update, Delete, ListPaymentMethods, Check |
-| **Payouts** | Create, List, Get |
-| **Virtual Accounts** | Create, List |
-| **Conversions** | CreateQuote, Create, List, Get, ListConversionDates |
-| **Exchange Rates** | List |
-
-### Issuing API
-
-| Resource | Operations |
-|----------|------------|
-| **Cardholders** | Create, Get, List |
-| **Cards** | Create, Get, GetSecure, List, Recharge, Withdraw, UpdateStatus |
-| **Transactions** | Get, List |
-| **Products** | List |
+Stablecoin Account (Ramp) is not included in the current SDK product scope.
 
 ## Error Handling
 
@@ -314,12 +306,12 @@ HTTP handler aborts the response so UQPAY applies the configured timeout action.
 
 ## Features
 
-### Automatic OAuth2 Token Management
+### Automatic Access Token Management
 
-The SDK automatically handles OAuth2 authentication:
-- Fetches access tokens using client credentials
-- Caches tokens until expiration
-- Automatically refreshes expired tokens
+The SDK automatically manages UQPAY Access Tokens:
+- Retrieves an Access Token using the Client ID and API key
+- Caches the Token until it nears expiry
+- Retrieves a new Token before the current one expires
 - Thread-safe token management
 
 ### Automatic Idempotency Keys
@@ -381,7 +373,7 @@ The SDK includes comprehensive integration tests covering:
 
 ```
 uqpay-sdk-go/
-├── auth/              # OAuth2 authentication
+├── auth/              # Access Token management
 ├── authdecision/      # PGP authorization decision handling
 ├── banking/           # Banking API client
 │   ├── balances.go
@@ -392,15 +384,16 @@ uqpay-sdk-go/
 │   ├── payouts.go
 │   ├── transfers.go
 │   └── virtual_accounts.go
-├── common/            # Shared API client
-├── configuration/     # Environment configuration
-├── issuing/           # Issuing API client
-│   ├── cardholders.go
-│   ├── cards.go
-│   ├── transactions.go
-│   └── products.go
-├── docs/              # Documentation
+├── common/            # Shared HTTP transport and request options
+├── configuration/     # Sandbox and production environments
+├── connect/           # Account Center API client
+├── issuing/           # Card Issuance API client
+├── payment/           # Global Acquiring API client
+├── simulator/         # Sandbox transaction simulator
+├── supporting/        # File upload and download links
 ├── test/              # Integration tests
+├── webhook/           # Webhook signature verification
+├── uqpay.go            # Root client
 └── version.go         # SDK version
 ```
 
@@ -436,7 +429,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 - 📧 Email: support@uqpay.com
-- 📚 Documentation: https://docs.uqpay.com
+- 📚 Documentation: https://developers.uqpay.com
 - 🐛 Issues: https://github.com/uqpay/uqpay-sdk-go/issues
 
 ## License
@@ -445,12 +438,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
-### v1.0.3 (Latest)
-- Initial stable release
-- Full Issuing API support
-- Automatic OAuth2 token management
-- Comprehensive test coverage
-- Production ready
+See [CHANGELOG.md](CHANGELOG.md) for version-specific changes and [GitHub Releases](https://github.com/uqpay/uqpay-sdk-go/releases) for published releases.
 
 ---
 
