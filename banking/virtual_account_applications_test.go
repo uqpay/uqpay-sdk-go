@@ -94,3 +94,50 @@ func TestApplicationListRetrieveAndStrictNotFoundError(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", apiErr)
 	}
 }
+
+func TestFullApplicationParsesSkippedAndAsyncFailedResults(t *testing.T) {
+	raw := []byte(`{
+		"data": {
+			"application_id": "app-id",
+			"public_version": 2,
+			"country": "SG",
+			"currency": "USD",
+			"status": "FAILED",
+			"results": [
+				{
+					"payment_method": "LOCAL",
+					"status": "SKIPPED",
+					"virtual_accounts": [],
+					"error": {
+						"code": "VA_METHOD_NOT_SUPPORTED",
+						"message": "LOCAL is not supported for the requested country and currency"
+					}
+				},
+				{
+					"payment_method": "SWIFT",
+					"status": "FAILED",
+					"virtual_accounts": [],
+					"error": {
+						"code": "VA_PROVISIONING_FAILED",
+						"message": "Virtual account provisioning failed"
+					}
+				}
+			]
+		}
+	}`)
+	var response VirtualAccountApplicationResponse
+	if err := json.Unmarshal(raw, &response); err != nil {
+		t.Fatal(err)
+	}
+	if response.Data.Status != VirtualAccountApplicationFailed || len(response.Data.Results) != 2 {
+		t.Fatalf("unexpected application: %+v", response.Data)
+	}
+	skipped := response.Data.Results[0]
+	if skipped.Status != "SKIPPED" || len(skipped.VirtualAccounts) != 0 || skipped.Error == nil || skipped.Error.Code != "VA_METHOD_NOT_SUPPORTED" {
+		t.Fatalf("unexpected skipped result: %+v", skipped)
+	}
+	failed := response.Data.Results[1]
+	if failed.Status != "FAILED" || len(failed.VirtualAccounts) != 0 || failed.Error == nil || failed.Error.Code != "VA_PROVISIONING_FAILED" || failed.Error.Message != "Virtual account provisioning failed" {
+		t.Fatalf("unexpected failed result: %+v", failed)
+	}
+}
