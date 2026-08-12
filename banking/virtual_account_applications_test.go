@@ -93,6 +93,9 @@ func TestApplicationListRetrieveAndStrictNotFoundError(t *testing.T) {
 	if apiErr.StatusCode != 400 || apiErr.Type != "not_found" || string(apiErr.Code) != "virtual_account_application_not_found" || apiErr.Message != "Virtual account application not found" {
 		t.Fatalf("unexpected error: %+v", apiErr)
 	}
+	if !apiErr.IsNotFound() || !apiErr.IsBadRequest() {
+		t.Fatalf("expected semantic not-found and HTTP bad-request helpers, got: %+v", apiErr)
+	}
 }
 
 func TestFullApplicationParsesSkippedAndAsyncFailedResults(t *testing.T) {

@@ -38,9 +38,9 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("%s: %s (HTTP %d)", string(e.Code), e.Message, e.StatusCode)
 }
 
-// IsNotFound returns true if the error is a 404
+// IsNotFound returns true for HTTP 404 or a semantic not_found API response.
 func (e *APIError) IsNotFound() bool {
-	return e.StatusCode == 404
+	return e.StatusCode == 404 || e.Type == "not_found"
 }
 
 // IsUnauthorized returns true if the error is a 401
