@@ -16,23 +16,16 @@ func TestVirtualAccountsCreate(t *testing.T) {
 	ctx := context.Background()
 
 	account, err := client.Banking.VirtualAccounts.Create(ctx, &banking.CreateVirtualAccountRequest{
+		Country:       "BH",
 		Currency:      "USD",
-		PaymentMethod: "LOCAL",
+		PaymentMethod: "SWIFT",
 	})
 	if err != nil {
 		t.Fatalf("Failed to create virtual account: %v", err)
 	}
 
 	t.Logf("Created virtual account:")
-	t.Logf("  BankID=%s, Holder=%s, Currency=%s", account.AccountBankID, account.AccountHolder, account.Currency)
-	t.Logf("  AccountNumber=%s, Country=%s, Status=%s", account.AccountNumber, account.CountryCode, account.Status)
-	t.Logf("  Bank=%s", account.BankName)
-	if account.Capability != nil {
-		t.Logf("  PaymentMethod=%s", account.Capability.PaymentMethod)
-	}
-	if account.ClearingSystem != nil {
-		t.Logf("  Clearing=%s: %s", account.ClearingSystem.Type, account.ClearingSystem.Value)
-	}
+	t.Logf("  ApplicationID=%s, Version=%d, Currency=%s, Country=%s, Status=%s", account.Data.ApplicationID, account.Data.PublicVersion, account.Data.Currency, account.Data.Country, account.Data.Status)
 }
 
 func TestVirtualAccountsList(t *testing.T) {
@@ -68,13 +61,14 @@ func TestVirtualAccountsCreateAndList(t *testing.T) {
 	ctx := context.Background()
 
 	account, err := client.Banking.VirtualAccounts.Create(ctx, &banking.CreateVirtualAccountRequest{
+		Country:       "BH",
 		Currency:      "USD",
-		PaymentMethod: "LOCAL",
+		PaymentMethod: "SWIFT",
 	})
 	if err != nil {
 		t.Fatalf("Failed to create virtual account: %v", err)
 	}
-	t.Logf("Created: BankID=%s, Currency=%s", account.AccountBankID, account.Currency)
+	t.Logf("Created application: ID=%s, Currency=%s", account.Data.ApplicationID, account.Data.Currency)
 
 	listResp, err := client.Banking.VirtualAccounts.List(ctx, &banking.ListVirtualAccountsRequest{
 		PageSize: 10, PageNumber: 1,
@@ -85,10 +79,13 @@ func TestVirtualAccountsCreateAndList(t *testing.T) {
 
 	found := false
 	for _, a := range listResp.Data {
-		if a.AccountBankID == account.AccountBankID {
-			found = true
-			t.Logf("Found in list: BankID=%s, Status=%s", a.AccountBankID, a.Status)
-			break
+		for _, result := range account.Data.Results {
+			for _, bank := range result.VirtualAccounts {
+				if a.AccountBankID == bank.AccountBankID {
+					found = true
+					t.Logf("Found in list: BankID=%s, Status=%s", a.AccountBankID, a.Status)
+				}
+			}
 		}
 	}
 	if !found {
@@ -96,7 +93,7 @@ func TestVirtualAccountsCreateAndList(t *testing.T) {
 	}
 }
 
-func TestVirtualAccountsMultipleCurrencies(t *testing.T) {
+func TestVirtualAccountsOmittedPaymentMethod(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode")
 	}
@@ -105,12 +102,12 @@ func TestVirtualAccountsMultipleCurrencies(t *testing.T) {
 	ctx := context.Background()
 
 	account, err := client.Banking.VirtualAccounts.Create(ctx, &banking.CreateVirtualAccountRequest{
-		Currency:      "USD,EUR,GBP",
-		PaymentMethod: "LOCAL",
+		Country:  "SG",
+		Currency: "USD",
 	})
 	if err != nil {
 		t.Fatalf("Failed to create multi-currency virtual account: %v", err)
 	}
 
-	t.Logf("Created multi-currency account: BankID=%s, Status=%s", account.AccountBankID, account.Status)
+	t.Logf("Created application evaluating methods: ID=%s, Status=%s", account.Data.ApplicationID, account.Data.Status)
 }

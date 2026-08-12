@@ -7,6 +7,7 @@ import (
 
 // APIError represents an API error response
 type APIError struct {
+	Type       string       `json:"type"`
 	Code       FlexibleCode `json:"code"`
 	Message    string       `json:"message"`
 	StatusCode int          `json:"-"`
