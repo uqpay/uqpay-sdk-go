@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow UQPAY's shared `MAJOR.MINOR` and repository-specific `PATCH`
 policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Virtual Account Application list and retrieve clients with precise summary,
+  full application, result error, bank-detail, and clearing-system models.
+- Typed `virtual.account.create`, `virtual.account.update`, and
+  `virtual.account.closed` parsing for webhook mappings on `V1.5.1`, `V1.5.2`,
+  and `V1.6.0`.
+
+### Changed
+
+- Webhook freshness validation accepts Webhook Hub's Unix-millisecond
+  `x-wk-timestamp` while retaining Unix-second compatibility and signing the
+  unmodified header value.
+- Create Virtual Account now requires a country and one currency, accepts an
+  optional `LOCAL` or `SWIFT` method and nickname, and returns the asynchronous
+  application response. Existing request options continue to forward
+  `IdempotencyKey` as `x-idempotency-key` and `OnBehalfOf` as
+  `x-on-behalf-of`.
+
 ## [1.2.1]
 
 This Go-only release is an explicitly approved, one-time parity-repair exception.

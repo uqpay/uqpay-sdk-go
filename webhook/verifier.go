@@ -49,7 +49,11 @@ func (v *Verifier) ConstructEvent(payload []byte, signatureHeader, timestampHead
 	if err != nil {
 		return nil, fmt.Errorf("invalid x-wk-timestamp %q: %w", timestampHeader, err)
 	}
-	if delta := v.now().Sub(time.Unix(timestamp, 0)); delta > v.tolerance || delta < -v.tolerance {
+	timestampTime := time.Unix(timestamp, 0)
+	if timestamp >= 1_000_000_000_000 {
+		timestampTime = time.UnixMilli(timestamp)
+	}
+	if delta := v.now().Sub(timestampTime); delta > v.tolerance || delta < -v.tolerance {
 		return nil, fmt.Errorf("webhook timestamp is outside the allowed tolerance of %s", v.tolerance)
 	}
 

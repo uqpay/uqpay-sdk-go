@@ -24,7 +24,7 @@ type VirtualAccount struct {
 	Capability     *VirtualAccountCapability `json:"capability,omitempty"`
 	ClearingSystem *VirtualAccountClearing   `json:"clearing_system,omitempty"`
 	Status         string                    `json:"status"`
-	CloseReason    string                    `json:"close_reason,omitempty"`
+	CloseReason    string                    `json:"close_reason"`
 }
 
 // VirtualAccountCapability represents the payment capability
@@ -53,8 +53,10 @@ type ListVirtualAccountsResponse struct {
 
 // CreateVirtualAccountRequest represents a virtual account creation request
 type CreateVirtualAccountRequest struct {
-	Currency      string `json:"currency"`       // required, ISO 4217 currency code(s), e.g., "USD" or "USD,SGD" for multiple
-	PaymentMethod string `json:"payment_method"` // required, "LOCAL" or "SWIFT"
+	Country       string `json:"country"`                  // required, ISO 3166-1 alpha-2
+	Currency      string `json:"currency"`                 // required, one ISO 4217 currency
+	PaymentMethod string `json:"payment_method,omitempty"` // optional: "LOCAL" or "SWIFT"
+	Nickname      string `json:"nickname,omitempty"`       // optional, max 255 characters
 }
 
 // List lists virtual accounts
@@ -68,8 +70,8 @@ func (c *VirtualAccountsClient) List(ctx context.Context, req *ListVirtualAccoun
 }
 
 // Create creates a new virtual account
-func (c *VirtualAccountsClient) Create(ctx context.Context, req *CreateVirtualAccountRequest, opts ...*common.RequestOptions) (*VirtualAccount, error) {
-	var resp VirtualAccount
+func (c *VirtualAccountsClient) Create(ctx context.Context, req *CreateVirtualAccountRequest, opts ...*common.RequestOptions) (*VirtualAccountApplicationResponse, error) {
+	var resp VirtualAccountApplicationResponse
 	if err := c.client.PostWithOptions(ctx, "/v1/virtual/accounts", req, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to create virtual account: %w", err)
 	}

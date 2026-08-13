@@ -318,6 +318,47 @@ The SDK automatically manages UQPAY Access Tokens:
 
 Every API request automatically includes a unique idempotency key to ensure safe retries and prevent duplicate operations.
 
+For Create Virtual Account, supply a stable key explicitly and reuse it only for
+the same normalized application request:
+
+```go
+application, err := client.Banking.VirtualAccounts.Create(ctx,
+    &banking.CreateVirtualAccountRequest{
+        Country: "BH", Currency: "USD", PaymentMethod: "SWIFT",
+        Nickname: "USD collections",
+    },
+    &common.RequestOptions{
+        IdempotencyKey: "merchant-va-application-42",
+        // OnBehalfOf: "connected-account-id",
+    },
+)
+
+// Applications are distinct from issued Virtual Accounts.
+applications, err := client.Banking.VirtualAccountApplications.List(ctx,
+    &banking.ListVirtualAccountApplicationsRequest{
+        PageNumber: 1, PageSize: 50, Status: "SUBMITTED",
+        Country: "BH", Currency: "USD",
+    },
+)
+latest, err := client.Banking.VirtualAccountApplications.Retrieve(
+    ctx, application.Data.ApplicationID,
+)
+issued, err := client.Banking.VirtualAccounts.List(ctx,
+    &banking.ListVirtualAccountsRequest{PageNumber: 1, PageSize: 50},
+)
+```
+
+Create returns HTTP 200 with an accepted application; it does not mean bank
+details are ready. Synchronous 400 errors create no application. Asynchronous
+method failures are returned in `Results[].Error`.
+
+The version-independent webhook parser accepts the application mapping used for
+`V1.5.1`, `V1.5.2`, and `V1.6.0`. Handle `virtual.account.create`,
+`virtual.account.update`, and `virtual.account.closed`; `SourceID` equals
+`ApplicationID`. Deduplicate by event ID and apply only a higher `PublicVersion`.
+Every returned bank detail has `CloseReason`; non-closed records and closed
+records without a recorded reason use the empty string.
+
 ### Type Safety
 
 All API requests and responses are strongly typed with proper Go structs:
