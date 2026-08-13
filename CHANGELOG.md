@@ -23,8 +23,9 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   unmodified header value.
 - Create Virtual Account now requires a country and one currency, accepts an
   optional `LOCAL` or `SWIFT` method and nickname, and returns the asynchronous
-  application response. Callers can explicitly provide `IdempotencyKey` and
-  retain `OnBehalfOf` through request options.
+  application response. Existing request options continue to forward
+  `IdempotencyKey` as `x-idempotency-key` and `OnBehalfOf` as
+  `x-on-behalf-of`.
 
 ## [1.2.1]
 
