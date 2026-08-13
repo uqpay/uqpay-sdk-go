@@ -25,6 +25,21 @@ func TestVerifierAcceptsPublishedSignatureAndUnknownEventType(t *testing.T) {
 	}
 }
 
+func TestVerifierAcceptsWebhookHubMillisecondTimestamp(t *testing.T) {
+	const secret = "whsec_test_secret"
+	payload := []byte(`{"event_type":"virtual.account.create","event_id":"evt_ms","data":{}}`)
+	timestampHeader := stringInt(time.Now().UnixMilli())
+	signature := signWebhook(secret, payload, timestampHeader)
+
+	event, err := NewVerifier(secret).ConstructEvent(payload, signature, timestampHeader)
+	if err != nil {
+		t.Fatalf("ConstructEvent returned an error: %v", err)
+	}
+	if event.EventID != "evt_ms" {
+		t.Fatalf("event id = %q, want evt_ms", event.EventID)
+	}
+}
+
 func TestVerifierRejectsInvalidSignatureAndStaleTimestamp(t *testing.T) {
 	const secret = "whsec_test_secret"
 	payload := []byte(`{"event_type":"deposit.completed"}`)
