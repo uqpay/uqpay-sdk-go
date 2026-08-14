@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
 )
 
 // CardsClient handles card operations

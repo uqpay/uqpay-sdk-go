@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/issuing"
+	"github.com/uqpay/uqpay-sdk-go/v2/issuing"
 )
 
 // TestExistingCards tests operations on existing cards fetched dynamically from the API.

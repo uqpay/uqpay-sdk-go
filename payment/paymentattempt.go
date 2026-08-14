@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
 )
 
 // PaymentAttemptsClient handles payment attempt operations

@@ -86,7 +86,7 @@ jobs:
             ### Installation
 
             ```bash
-            go get github.com/uqpay/uqpay-sdk-go@${{ github.ref_name }}
+            go get github.com/uqpay/uqpay-sdk-go/v2@${{ github.ref_name }}
             ```
 
             See [README.md](https://github.com/uqpay/uqpay-sdk-go/blob/main/README.md) for usage instructions.

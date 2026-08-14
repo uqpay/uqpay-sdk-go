@@ -8,6 +8,12 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.0.0]
+
+This major release replaces the previous Virtual Account Create and webhook
+contracts with the Virtual Account application lifecycle contract. Existing
+Virtual Account integrations must migrate before adopting this version.
+
 ### Added
 
 - Virtual Account Application list and retrieve clients with precise summary,
@@ -26,6 +32,21 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   application response. Existing request options continue to forward
   `IdempotencyKey` as `x-idempotency-key` and `OnBehalfOf` as
   `x-on-behalf-of`.
+
+### Breaking
+
+- The module and import path is now `github.com/uqpay/uqpay-sdk-go/v2`, as
+  required for a Go module major version greater than one.
+- Existing Create Virtual Account callers must add `Country`, replace a currency
+  slice with one `Currency`, and consume the application response.
+- Virtual Account webhook consumers must correlate by `application_id`, process
+  complete application data, and use `public_version` for ordering.
+
+### Migration
+
+- Run `go get github.com/uqpay/uqpay-sdk-go/v2@v2.0.0`, update imports to include
+  `/v2`, run `go mod tidy`, and follow the
+  [Virtual Account migration guide](https://developers.uqpay.com/global-account/v1.6/guide/migrate-to-virtual-account-applications).
 
 ## [1.2.1]
 

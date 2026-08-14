@@ -1,8 +1,8 @@
 package issuing
 
 import (
-	"github.com/uqpay/uqpay-sdk-go/authdecision"
-	"github.com/uqpay/uqpay-sdk-go/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/authdecision"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
 )
 
 // Client provides access to Issuing APIs

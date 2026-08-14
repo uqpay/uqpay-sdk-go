@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/banking"
+	"github.com/uqpay/uqpay-sdk-go/v2/banking"
 )
 
 func TestBalances(t *testing.T) {

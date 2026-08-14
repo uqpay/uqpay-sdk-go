@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/uqpay/uqpay-sdk-go/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
 )
 
 // PaymentPayoutsClient handles payment payout operations
@@ -19,19 +19,19 @@ type PaymentPayoutsClient struct {
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	PayoutCurrency      string `json:"payout_currency"`                // Required: Three-letter currency code (e.g., "SGD")
-	PayoutAmount        string `json:"payout_amount"`                  // Required: The amount to be withdrawn
-	StatementDescriptor string `json:"statement_descriptor"`           // Required: Max 15 characters
-	InternalNote        string `json:"internal_note,omitempty"`        // Optional: Internal note for the payout
+	PayoutCurrency      string `json:"payout_currency"`         // Required: Three-letter currency code (e.g., "SGD")
+	PayoutAmount        string `json:"payout_amount"`           // Required: The amount to be withdrawn
+	StatementDescriptor string `json:"statement_descriptor"`    // Required: Max 15 characters
+	InternalNote        string `json:"internal_note,omitempty"` // Optional: Internal note for the payout
 }
 
 // ListPayoutsRequest represents a payouts list request
 type ListPayoutsRequest struct {
-	PageSize   int    `json:"page_size"`   // Number of items per page
-	PageNumber int    `json:"page_number"` // Page number (1-based)
+	PageSize     int    `json:"page_size"`     // Number of items per page
+	PageNumber   int    `json:"page_number"`   // Page number (1-based)
 	PayoutStatus string `json:"payout_status"` // Filter by status: INITIATED, PROCESSING, COMPLETED, FAILED, FAILED_REFUNDED
-	StartTime  string `json:"start_time"`  // Filter by creation time (ISO8601)
-	EndTime    string `json:"end_time"`    // Filter by creation time (ISO8601)
+	StartTime    string `json:"start_time"`    // Filter by creation time (ISO8601)
+	EndTime      string `json:"end_time"`      // Filter by creation time (ISO8601)
 }
 
 // ============================================================================

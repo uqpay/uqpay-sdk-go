@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/uqpay/uqpay-sdk-go/common"
-	"github.com/uqpay/uqpay-sdk-go/payment"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/payment"
 )
 
 // ============================================================================

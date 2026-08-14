@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	uqpay "github.com/uqpay/uqpay-sdk-go"
-	"github.com/uqpay/uqpay-sdk-go/banking"
+	uqpay "github.com/uqpay/uqpay-sdk-go/v2"
+	"github.com/uqpay/uqpay-sdk-go/v2/banking"
 )
 
 // getAvailableConversionDate fetches available conversion dates and returns the first valid one
@@ -198,8 +198,8 @@ func TestConversionListWithFilters(t *testing.T) {
 	ctx := context.Background()
 
 	req := &banking.ListConversionsRequest{
-		PageSize:   10,
-		PageNumber: 1,
+		PageSize:     10,
+		PageNumber:   1,
 		SellCurrency: "USD",
 	}
 

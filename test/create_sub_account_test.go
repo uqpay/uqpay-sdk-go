@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/connect"
+	"github.com/uqpay/uqpay-sdk-go/v2/connect"
 )
 
 func TestCreateSubAccount(t *testing.T) {
@@ -43,11 +43,11 @@ func TestCreateSubAccount(t *testing.T) {
 				FaceDocs:            []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			ExpectedActivity: &connect.SubAccountExpectedActivity{
-				AccountPurpose:      []string{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
-				BankingCountries:    []string{"GB", "US"},
-				BankingCurrencies:   []string{"GBP", "USD"},
-				Internationally:     1,
-				TurnoverMonthly:     connect.TurnoverMonthlyTM002,
+				AccountPurpose:          []string{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
+				BankingCountries:        []string{"GB", "US"},
+				BankingCurrencies:       []string{"GBP", "USD"},
+				Internationally:         1,
+				TurnoverMonthly:         connect.TurnoverMonthlyTM002,
 				TurnoverMonthlyCurrency: "GBP",
 			},
 			ProofDocuments: &connect.SubAccountProofDocuments{
@@ -87,16 +87,16 @@ func TestCreateSubAccount(t *testing.T) {
 			Nickname:   "SDK Test Company",
 			Inherit:    &inheritNo,
 			CompanyInfo: &connect.SubAccountCompanyInfo{
-				LegalBusinessName:        "SDK Test Ltd",
-				LegalBusinessNameEnglish: "SDK Test Ltd",
-				CountryOfIncorporation:   "GB",
-				CompanyType:              connect.CompanyTypeLimitedCompany,
-				PhoneNumber:              "+442071234567",
-				EmailAddress:             "company.sdktest@example.com",
-				CompanyRegistrationNumber: "12345678",
-				TaxType:                  connect.TaxTypeVAT,
-				TaxNumber:               "GB123456789",
-				IncorporateDate:          "2020-06-15",
+				LegalBusinessName:            "SDK Test Ltd",
+				LegalBusinessNameEnglish:     "SDK Test Ltd",
+				CountryOfIncorporation:       "GB",
+				CompanyType:                  connect.CompanyTypeLimitedCompany,
+				PhoneNumber:                  "+442071234567",
+				EmailAddress:                 "company.sdktest@example.com",
+				CompanyRegistrationNumber:    "12345678",
+				TaxType:                      connect.TaxTypeVAT,
+				TaxNumber:                    "GB123456789",
+				IncorporateDate:              "2020-06-15",
 				CertificationOfIncorporation: []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			CompanyAddress: &connect.SubAccountAddress{
