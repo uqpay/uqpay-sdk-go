@@ -357,9 +357,10 @@ The webhook parser accepts the application mapping used for
 `virtual.account.update`, and `virtual.account.closed`; `SourceID` equals
 `ApplicationID`. Its webhook-only `AccountID` is the UUID of the account that owns
 the application. `DirectID` is a string: `"0"` for a main account, or the
-connected account's main account ID. Neither field is added to Gateway Create,
-List, or Retrieve response models. Deduplicate by event ID and apply only a higher
-`PublicVersion`.
+connected account's main account ID. This release adds typed access in the webhook
+shape only; the REST public SDK types remain unchanged while elevation of the
+Sandbox Create/List/Retrieve fields into the Developer Docs contract is pending.
+Deduplicate by event ID and apply only a higher `PublicVersion`.
 Every returned bank detail has `CloseReason`; non-closed records and closed
 records without a recorded reason use the empty string.
 

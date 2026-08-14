@@ -25,10 +25,12 @@ and `V1.6.0`.
 ### Fixed
 
 - Restored the always-present webhook-only `account_id` and `direct_id` fields to
-  typed Virtual Account application data without adding them to Gateway Create,
-  List, or Retrieve response models. Typed parsing validates supported versions,
-  required account context, and `source_id = application_id`; unknown older
-  events remain available through generic raw event data.
+  typed Virtual Account application data. REST public SDK types remain unchanged
+  in this scope while elevation of the observed Sandbox Create/List/Retrieve
+  fields into the Developer Docs contract is pending. Typed parsing validates
+  supported versions, required account context, and
+  `source_id = application_id`; unknown older events remain available through
+  generic raw event data.
 
 ### Changed
 

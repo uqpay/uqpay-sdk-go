@@ -69,7 +69,7 @@ func TestVirtualAccountApplicationParserRejectsSourceMismatch(t *testing.T) {
 	}
 }
 
-func TestGatewayApplicationJSONExcludesWebhookAccountContext(t *testing.T) {
+func TestCurrentRESTApplicationPublicTypesExcludeAccountContext(t *testing.T) {
 	application := banking.VirtualAccountApplication{
 		ApplicationID: "app-id",
 		PublicVersion: 1,
@@ -88,7 +88,7 @@ func TestGatewayApplicationJSONExcludesWebhookAccountContext(t *testing.T) {
 		}
 		jsonText := string(raw)
 		if strings.Contains(jsonText, `"account_id"`) || strings.Contains(jsonText, `"direct_id"`) {
-			t.Fatalf("%s leaked webhook-only account context: %s", name, jsonText)
+			t.Fatalf("current REST public %s type unexpectedly includes account context: %s", name, jsonText)
 		}
 	}
 }
