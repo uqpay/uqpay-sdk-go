@@ -352,12 +352,19 @@ Create returns HTTP 200 with an accepted application; it does not mean bank
 details are ready. Synchronous 400 errors create no application. Asynchronous
 method failures are returned in `Results[].Error`.
 
-The version-independent webhook parser accepts the application mapping used for
+The webhook parser accepts the application mapping used for
 `V1.5.1`, `V1.5.2`, and `V1.6.0`. Handle `virtual.account.create`,
 `virtual.account.update`, and `virtual.account.closed`; `SourceID` equals
-`ApplicationID`. Deduplicate by event ID and apply only a higher `PublicVersion`.
+`ApplicationID`. Its webhook-only `AccountID` and `DirectID` fields identify the
+account context and are not added to Gateway Create, List, or Retrieve response
+models. Deduplicate by event ID and apply only a higher `PublicVersion`.
 Every returned bank detail has `CloseReason`; non-closed records and closed
 records without a recorded reason use the empty string.
+
+`ParseVirtualAccountApplicationData` enforces the supported version, both
+account-context fields, and the source/application ID match. Unknown older
+Virtual Account events remain available through the generic `Event.Data` raw JSON
+and are not reclassified as application events.
 
 ### Type Safety
 

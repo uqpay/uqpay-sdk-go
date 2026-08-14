@@ -8,6 +8,14 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Fixed
+
+- Restored the always-present webhook-only `account_id` and `direct_id` fields to
+  typed Virtual Account application data without adding them to Gateway Create,
+  List, or Retrieve response models. Typed parsing validates supported versions,
+  required account context, and `source_id = application_id`; unknown older
+  events remain available through generic raw event data.
+
 ## [2.0.0]
 
 This major release replaces the previous Virtual Account Create and webhook
