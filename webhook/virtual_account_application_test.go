@@ -2,7 +2,10 @@ package webhook
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
+
+	"github.com/uqpay/uqpay-sdk-go/v2/banking"
 )
 
 func TestVirtualAccountApplicationWebhookVersionsAndOrderingFields(t *testing.T) {
@@ -63,5 +66,29 @@ func TestVirtualAccountApplicationParserRejectsSourceMismatch(t *testing.T) {
 	event := Event{Version: "V1.6.0", EventName: EventNameVirtual, EventType: EventTypeVirtualAccountCreate, SourceID: "different-id", Data: payload}
 	if _, err := event.ParseVirtualAccountApplicationData(); err == nil {
 		t.Fatal("source_id mismatch must fail typed application parsing")
+	}
+}
+
+func TestGatewayApplicationJSONExcludesWebhookAccountContext(t *testing.T) {
+	application := banking.VirtualAccountApplication{
+		ApplicationID: "app-id",
+		PublicVersion: 1,
+		Country:       "BH",
+		Currency:      "USD",
+		Status:        banking.VirtualAccountApplicationSubmitted,
+		Results:       []banking.VirtualAccountApplicationResult{},
+	}
+	for name, value := range map[string]any{
+		"application": application,
+		"response":    banking.VirtualAccountApplicationResponse{Data: application},
+	} {
+		raw, err := json.Marshal(value)
+		if err != nil {
+			t.Fatalf("marshal %s: %v", name, err)
+		}
+		jsonText := string(raw)
+		if strings.Contains(jsonText, `"account_id"`) || strings.Contains(jsonText, `"direct_id"`) {
+			t.Fatalf("%s leaked webhook-only account context: %s", name, jsonText)
+		}
 	}
 }

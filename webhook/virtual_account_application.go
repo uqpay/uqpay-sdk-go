@@ -21,8 +21,9 @@ var virtualAccountApplicationVersions = map[string]struct{}{
 }
 
 // VirtualAccountApplicationData is the webhook-only VA application shape.
-// AccountID and DirectID identify the account context and are not returned by
-// the Gateway Create, List, or Retrieve application endpoints.
+// AccountID is the UUID of the account that owns the application. DirectID is a
+// string: "0" for a main account, or the connected account's main account ID.
+// Neither field is returned by Gateway Create, List, or Retrieve endpoints.
 type VirtualAccountApplicationData struct {
 	banking.VirtualAccountApplication
 	AccountID string `json:"account_id"`
