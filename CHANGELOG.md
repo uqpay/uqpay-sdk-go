@@ -8,14 +8,6 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
-### Fixed
-
-- Restored the always-present webhook-only `account_id` and `direct_id` fields to
-  typed Virtual Account application data without adding them to Gateway Create,
-  List, or Retrieve response models. Typed parsing validates supported versions,
-  required account context, and `source_id = application_id`; unknown older
-  events remain available through generic raw event data.
-
 ## [2.0.0]
 
 This major release replaces the previous Virtual Account Create and webhook
@@ -28,7 +20,15 @@ Virtual Account integrations must migrate before adopting this version.
   full application, result error, bank-detail, and clearing-system models.
 - Typed `virtual.account.create`, `virtual.account.update`, and
   `virtual.account.closed` parsing for webhook mappings on `V1.5.1`, `V1.5.2`,
-  and `V1.6.0`.
+and `V1.6.0`.
+
+### Fixed
+
+- Restored the always-present webhook-only `account_id` and `direct_id` fields to
+  typed Virtual Account application data without adding them to Gateway Create,
+  List, or Retrieve response models. Typed parsing validates supported versions,
+  required account context, and `source_id = application_id`; unknown older
+  events remain available through generic raw event data.
 
 ### Changed
 
