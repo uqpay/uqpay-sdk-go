@@ -50,6 +50,8 @@ type VirtualAccountApplicationResult struct {
 }
 
 type VirtualAccountApplication struct {
+	AccountID     string                            `json:"account_id"`
+	DirectID      string                            `json:"direct_id"`
 	ApplicationID string                            `json:"application_id"`
 	PublicVersion int64                             `json:"public_version"`
 	Country       string                            `json:"country"`
@@ -63,6 +65,8 @@ type VirtualAccountApplicationResponse struct {
 }
 
 type VirtualAccountApplicationSummary struct {
+	AccountID     string `json:"account_id"`
+	DirectID      string `json:"direct_id"`
 	ApplicationID string `json:"application_id"`
 	PublicVersion int64  `json:"public_version"`
 	Country       string `json:"country"`

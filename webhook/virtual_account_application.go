@@ -20,16 +20,13 @@ var virtualAccountApplicationVersions = map[string]struct{}{
 	"V1.6.0": {},
 }
 
-// VirtualAccountApplicationData is the webhook-specific VA application shape
-// added in the current SDK scope.
-// AccountID is the UUID of the account that owns the application. DirectID is a
-// string: "0" for a main account, or the connected account's main account ID.
-// REST public SDK types remain unchanged pending a confirmed Developer Docs
-// contract for these fields.
+// VirtualAccountApplicationData is the application shape delivered by VA
+// application webhook events. It inherits the same required AccountID and
+// DirectID fields as Create/Retrieve details. AccountID is the UUID of the
+// account that owns the application. DirectID is a string: "0" for a main
+// account, or the connected account's main account ID.
 type VirtualAccountApplicationData struct {
 	banking.VirtualAccountApplication
-	AccountID string `json:"account_id"`
-	DirectID  string `json:"direct_id"`
 }
 
 // ParseVirtualAccountApplicationData supports application events for webhook

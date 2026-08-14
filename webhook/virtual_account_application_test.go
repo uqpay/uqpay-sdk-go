@@ -69,8 +69,10 @@ func TestVirtualAccountApplicationParserRejectsSourceMismatch(t *testing.T) {
 	}
 }
 
-func TestCurrentRESTApplicationPublicTypesExcludeAccountContext(t *testing.T) {
+func TestRESTApplicationPublicTypesIncludeAccountContext(t *testing.T) {
 	application := banking.VirtualAccountApplication{
+		AccountID:     "connected-account-uuid",
+		DirectID:      "main-account-uuid",
 		ApplicationID: "app-id",
 		PublicVersion: 1,
 		Country:       "BH",
@@ -81,14 +83,19 @@ func TestCurrentRESTApplicationPublicTypesExcludeAccountContext(t *testing.T) {
 	for name, value := range map[string]any{
 		"application": application,
 		"response":    banking.VirtualAccountApplicationResponse{Data: application},
+		"summary": banking.VirtualAccountApplicationSummary{
+			AccountID: "main-account-uuid", DirectID: "0", ApplicationID: "app-id",
+			PublicVersion: 1, Country: "BH", Currency: "USD",
+			Status: banking.VirtualAccountApplicationSubmitted, CreatedAt: "2026-08-12T00:00:00Z",
+		},
 	} {
 		raw, err := json.Marshal(value)
 		if err != nil {
 			t.Fatalf("marshal %s: %v", name, err)
 		}
 		jsonText := string(raw)
-		if strings.Contains(jsonText, `"account_id"`) || strings.Contains(jsonText, `"direct_id"`) {
-			t.Fatalf("current REST public %s type unexpectedly includes account context: %s", name, jsonText)
+		if !strings.Contains(jsonText, `"account_id"`) || !strings.Contains(jsonText, `"direct_id"`) {
+			t.Fatalf("REST public %s type is missing required account context: %s", name, jsonText)
 		}
 	}
 }

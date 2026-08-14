@@ -24,11 +24,11 @@ and `V1.6.0`.
 
 ### Fixed
 
-- Restored the always-present webhook-only `account_id` and `direct_id` fields to
-  typed Virtual Account application data. REST public SDK types remain unchanged
-  in this scope while elevation of the observed Sandbox Create/List/Retrieve
-  fields into the Developer Docs contract is pending. Typed parsing validates
-  supported versions, required account context, and
+- Restored the required `account_id` and `direct_id` fields across Virtual Account
+  Create/Retrieve application details, List summaries, and typed application
+  webhook data. `account_id` identifies the owning account UUID; `direct_id` is
+  `"0"` for a main account or the connected account's main account ID. Typed
+  webhook parsing validates supported versions, required account context, and
   `source_id = application_id`; unknown older events remain available through
   generic raw event data.
 

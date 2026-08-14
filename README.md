@@ -355,11 +355,10 @@ method failures are returned in `Results[].Error`.
 The webhook parser accepts the application mapping used for
 `V1.5.1`, `V1.5.2`, and `V1.6.0`. Handle `virtual.account.create`,
 `virtual.account.update`, and `virtual.account.closed`; `SourceID` equals
-`ApplicationID`. Its webhook-only `AccountID` is the UUID of the account that owns
-the application. `DirectID` is a string: `"0"` for a main account, or the
-connected account's main account ID. This release adds typed access in the webhook
-shape only; the REST public SDK types remain unchanged while elevation of the
-Sandbox Create/List/Retrieve fields into the Developer Docs contract is pending.
+`ApplicationID`. `AccountID` is the UUID of the account that owns the application.
+`DirectID` is a string: `"0"` for a main account, or the connected account's main
+account ID. The same required fields are typed on Create and Retrieve application
+details and on every List application summary.
 Deduplicate by event ID and apply only a higher `PublicVersion`.
 Every returned bank detail has `CloseReason`; non-closed records and closed
 records without a recorded reason use the empty string.
