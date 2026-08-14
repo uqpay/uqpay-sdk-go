@@ -3,15 +3,15 @@ package uqpay
 import (
 	"net/http"
 
-	"github.com/uqpay/uqpay-sdk-go/auth"
-	"github.com/uqpay/uqpay-sdk-go/banking"
-	"github.com/uqpay/uqpay-sdk-go/common"
-	"github.com/uqpay/uqpay-sdk-go/configuration"
-	"github.com/uqpay/uqpay-sdk-go/connect"
-	"github.com/uqpay/uqpay-sdk-go/issuing"
-	"github.com/uqpay/uqpay-sdk-go/payment"
-	"github.com/uqpay/uqpay-sdk-go/simulator"
-	"github.com/uqpay/uqpay-sdk-go/supporting"
+	"github.com/uqpay/uqpay-sdk-go/v2/auth"
+	"github.com/uqpay/uqpay-sdk-go/v2/banking"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v2/connect"
+	"github.com/uqpay/uqpay-sdk-go/v2/issuing"
+	"github.com/uqpay/uqpay-sdk-go/v2/payment"
+	"github.com/uqpay/uqpay-sdk-go/v2/simulator"
+	"github.com/uqpay/uqpay-sdk-go/v2/supporting"
 )
 
 // Client is the main UQPAY SDK client.

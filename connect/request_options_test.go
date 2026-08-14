@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/common"
-	"github.com/uqpay/uqpay-sdk-go/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
 )
 
 type requestOptionsTokenProvider struct{}

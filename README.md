@@ -1,7 +1,7 @@
 # UQPAY Go SDK
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/uqpay/uqpay-sdk-go.svg)](https://pkg.go.dev/github.com/uqpay/uqpay-sdk-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/uqpay/uqpay-sdk-go)](https://goreportcard.com/report/github.com/uqpay/uqpay-sdk-go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/uqpay/uqpay-sdk-go/v2.svg)](https://pkg.go.dev/github.com/uqpay/uqpay-sdk-go/v2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/uqpay/uqpay-sdk-go/v2)](https://goreportcard.com/report/github.com/uqpay/uqpay-sdk-go/v2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
@@ -22,7 +22,7 @@ Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
 ## Installation
 
 ```bash
-go get github.com/uqpay/uqpay-sdk-go@latest
+go get github.com/uqpay/uqpay-sdk-go/v2@latest
 ```
 
 **Requirements**: Go 1.19 or higher
@@ -38,9 +38,9 @@ import (
     "context"
     "log"
 
-    "github.com/uqpay/uqpay-sdk-go"
-    "github.com/uqpay/uqpay-sdk-go/configuration"
-    "github.com/uqpay/uqpay-sdk-go/issuing"
+    "github.com/uqpay/uqpay-sdk-go/v2"
+    "github.com/uqpay/uqpay-sdk-go/v2/configuration"
+    "github.com/uqpay/uqpay-sdk-go/v2/issuing"
 )
 
 func main() {
@@ -352,12 +352,21 @@ Create returns HTTP 200 with an accepted application; it does not mean bank
 details are ready. Synchronous 400 errors create no application. Asynchronous
 method failures are returned in `Results[].Error`.
 
-The version-independent webhook parser accepts the application mapping used for
+The webhook parser accepts the application mapping used for
 `V1.5.1`, `V1.5.2`, and `V1.6.0`. Handle `virtual.account.create`,
 `virtual.account.update`, and `virtual.account.closed`; `SourceID` equals
-`ApplicationID`. Deduplicate by event ID and apply only a higher `PublicVersion`.
+`ApplicationID`. `AccountID` is the UUID of the account that owns the application.
+`DirectID` is a string: `"0"` for a main account, or the connected account's main
+account ID. The same required fields are typed on Create and Retrieve application
+details and on every List application summary.
+Deduplicate by event ID and apply only a higher `PublicVersion`.
 Every returned bank detail has `CloseReason`; non-closed records and closed
 records without a recorded reason use the empty string.
+
+`ParseVirtualAccountApplicationData` enforces the supported version, both
+account-context fields, and the source/application ID match. Unknown older
+Virtual Account events remain available through the generic `Event.Data` raw JSON
+and are not reclassified as application events.
 
 ### Type Safety
 
@@ -458,7 +467,7 @@ This SDK follows [Semantic Versioning](https://semver.org/).
 Install the latest compatible version:
 
 ```bash
-go get github.com/uqpay/uqpay-sdk-go@latest
+go get github.com/uqpay/uqpay-sdk-go/v2@latest
 ```
 
 View all releases: [GitHub Releases](https://github.com/uqpay/uqpay-sdk-go/releases)

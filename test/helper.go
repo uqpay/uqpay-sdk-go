@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/uqpay/uqpay-sdk-go"
-	"github.com/uqpay/uqpay-sdk-go/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v2"
+	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
 )
 
 func init() {

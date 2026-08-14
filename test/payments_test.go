@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uqpay/uqpay-sdk-go/payment"
+	"github.com/uqpay/uqpay-sdk-go/v2/payment"
 )
-
 
 // ============================================================================
 // Payment Intents Tests

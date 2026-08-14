@@ -8,13 +8,29 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.0.0]
+
+This major release replaces the previous Virtual Account Create and webhook
+contracts with the Virtual Account application lifecycle contract. Existing
+Virtual Account integrations must migrate before adopting this version.
+
 ### Added
 
 - Virtual Account Application list and retrieve clients with precise summary,
   full application, result error, bank-detail, and clearing-system models.
 - Typed `virtual.account.create`, `virtual.account.update`, and
   `virtual.account.closed` parsing for webhook mappings on `V1.5.1`, `V1.5.2`,
-  and `V1.6.0`.
+and `V1.6.0`.
+
+### Fixed
+
+- Restored the required `account_id` and `direct_id` fields across Virtual Account
+  Create/Retrieve application details, List summaries, and typed application
+  webhook data. `account_id` identifies the owning account UUID; `direct_id` is
+  `"0"` for a main account or the connected account's main account ID. Typed
+  webhook parsing validates supported versions, required account context, and
+  `source_id = application_id`; unknown older events remain available through
+  generic raw event data.
 
 ### Changed
 
@@ -26,6 +42,21 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
   application response. Existing request options continue to forward
   `IdempotencyKey` as `x-idempotency-key` and `OnBehalfOf` as
   `x-on-behalf-of`.
+
+### Breaking
+
+- The module and import path is now `github.com/uqpay/uqpay-sdk-go/v2`, as
+  required for a Go module major version greater than one.
+- Existing Create Virtual Account callers must add `Country`, replace a currency
+  slice with one `Currency`, and consume the application response.
+- Virtual Account webhook consumers must correlate by `application_id`, process
+  complete application data, and use `public_version` for ordering.
+
+### Migration
+
+- Run `go get github.com/uqpay/uqpay-sdk-go/v2@v2.0.0`, update imports to include
+  `/v2`, run `go mod tidy`, and follow the
+  [Virtual Account migration guide](https://developers.uqpay.com/global-account/v1.6/guide/migrate-to-virtual-account-applications).
 
 ## [1.2.1]
 

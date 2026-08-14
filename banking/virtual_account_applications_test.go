@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/common"
-	"github.com/uqpay/uqpay-sdk-go/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
 )
 
 type vaStaticTokenProvider struct{}
@@ -44,7 +44,7 @@ func TestCreateVirtualAccountApplicationContract(t *testing.T) {
 			t.Fatalf("unexpected body: %+v", body)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"application_id":"app-id","public_version":1,"country":"BH","currency":"USD","status":"SUBMITTED","results":[{"payment_method":"SWIFT","status":"SUBMITTED","virtual_accounts":[],"error":null}]}}`))
+		_, _ = w.Write([]byte(`{"data":{"account_id":"connected-account-uuid","direct_id":"main-account-uuid","application_id":"app-id","public_version":1,"country":"BH","currency":"USD","status":"SUBMITTED","results":[{"payment_method":"SWIFT","status":"SUBMITTED","virtual_accounts":[],"error":null}]}}`))
 	})
 	defer closeServer()
 
@@ -54,7 +54,7 @@ func TestCreateVirtualAccountApplicationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Data.ApplicationID != "app-id" || resp.Data.PublicVersion != 1 || len(resp.Data.Results) != 1 {
+	if resp.Data.AccountID != "connected-account-uuid" || resp.Data.DirectID != "main-account-uuid" || resp.Data.ApplicationID != "app-id" || resp.Data.PublicVersion != 1 || len(resp.Data.Results) != 1 {
 		t.Fatalf("unexpected response: %+v", resp)
 	}
 	replay, err := client.VirtualAccounts.Create(context.Background(), req, opts)
@@ -70,7 +70,11 @@ func TestApplicationListRetrieveAndStrictNotFoundError(t *testing.T) {
 			if r.URL.Query().Get("page_number") != "1" || r.URL.Query().Get("page_size") != "50" || r.URL.Query().Get("status") != "SUBMITTED" {
 				t.Fatalf("unexpected query: %s", r.URL.RawQuery)
 			}
-			_, _ = w.Write([]byte(`{"total_pages":1,"total_items":1,"data":[{"application_id":"app-id","public_version":1,"country":"BH","currency":"USD","status":"SUBMITTED","created_at":"2026-08-12T00:00:00Z"}]}`))
+			_, _ = w.Write([]byte(`{"total_pages":1,"total_items":1,"data":[{"account_id":"main-account-uuid","direct_id":"0","application_id":"app-id","public_version":1,"country":"BH","currency":"USD","status":"SUBMITTED","created_at":"2026-08-12T00:00:00Z"}]}`))
+			return
+		}
+		if r.URL.Path == "/v1/virtual/applications/app-id" {
+			_, _ = w.Write([]byte(`{"data":{"account_id":"connected-account-uuid","direct_id":"main-account-uuid","application_id":"app-id","public_version":2,"country":"BH","currency":"USD","status":"COMPLETED","results":[]}}`))
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -78,8 +82,12 @@ func TestApplicationListRetrieveAndStrictNotFoundError(t *testing.T) {
 	})
 	defer closeServer()
 	list, err := client.VirtualAccountApplications.List(context.Background(), &ListVirtualAccountApplicationsRequest{PageNumber: 1, PageSize: 50, Status: "SUBMITTED"})
-	if err != nil || list.TotalItems != 1 || list.Data[0].ApplicationID != "app-id" {
+	if err != nil || list.TotalItems != 1 || list.Data[0].ApplicationID != "app-id" || list.Data[0].AccountID != "main-account-uuid" || list.Data[0].DirectID != "0" {
 		t.Fatalf("list: %+v, %v", list, err)
+	}
+	detail, err := client.VirtualAccountApplications.Retrieve(context.Background(), "app-id")
+	if err != nil || detail.Data.AccountID != "connected-account-uuid" || detail.Data.DirectID != "main-account-uuid" {
+		t.Fatalf("retrieve: %+v, %v", detail, err)
 	}
 	_, err = client.VirtualAccountApplications.Retrieve(context.Background(), "missing")
 	apiErr, ok := err.(*common.APIError)
@@ -101,6 +109,8 @@ func TestApplicationListRetrieveAndStrictNotFoundError(t *testing.T) {
 func TestFullApplicationParsesSkippedAndAsyncFailedResults(t *testing.T) {
 	raw := []byte(`{
 		"data": {
+			"account_id": "main-account-uuid",
+			"direct_id": "0",
 			"application_id": "app-id",
 			"public_version": 2,
 			"country": "SG",
