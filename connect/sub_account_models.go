@@ -202,7 +202,8 @@ type SubAccountIndividualInfo struct {
 	// EmailAddress is the email address
 	EmailAddress string `json:"email_address"`
 
-	// DateOfBirth is the date of birth in YYYY-MM-DD format
+	// DateOfBirth is the date of birth in YYYY-MM-DD format.
+	// Required for INDIVIDUAL sub-accounts.
 	DateOfBirth string `json:"date_of_birth"`
 
 	// Gender is the individual's gender. Required for INDIVIDUAL sub-accounts (effective 2026-07-02).
@@ -405,8 +406,8 @@ type SubAccountRepresentative struct {
 	// PhoneNumber is the phone number with country code
 	PhoneNumber string `json:"phone_number"`
 
-	// DateOfBirth is the date of birth in YYYY-MM-DD format
-	DateOfBirth string `json:"date_of_birth"`
+	// DateOfBirth is the date of birth in YYYY-MM-DD format when provided.
+	DateOfBirth string `json:"date_of_birth,omitempty"`
 
 	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code of residence
 	CountryOrTerritory string `json:"country_or_territory"`
