@@ -45,6 +45,7 @@ func TestSubAccountIndividualInfo_RequiredFieldsSerialize(t *testing.T) {
 
 	// All breaking-change required keys must be present in the request body.
 	wantKeys := map[string]string{
+		"date_of_birth":     "1990-01-15",
 		"employment_status": "Employed",
 		"industry":          "Information Technology/IT",
 		"job_title":         "Business and administration professionals",
@@ -86,9 +87,38 @@ func TestSubAccountIndividualInfo_StateAlwaysEmitted(t *testing.T) {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
 
-	for _, key := range []string{"state", "gender", "annual_income"} {
+	for _, key := range []string{"date_of_birth", "state", "gender", "annual_income"} {
 		if _, ok := got[key]; !ok {
 			t.Errorf("required key %q must be emitted even when empty (no omitempty)", key)
 		}
+	}
+}
+
+func TestSubAccountRepresentative_DateOfBirthOptional(t *testing.T) {
+	representative := SubAccountRepresentative{}
+
+	data, err := json.Marshal(representative)
+	if err != nil {
+		t.Fatalf("failed to marshal representative: %v", err)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("failed to unmarshal representative: %v", err)
+	}
+	if _, ok := got["date_of_birth"]; ok {
+		t.Fatal("date_of_birth must be omitted when a COMPANY representative DOB is not provided")
+	}
+
+	representative.DateOfBirth = "1985-03-20"
+	data, err = json.Marshal(representative)
+	if err != nil {
+		t.Fatalf("failed to marshal representative with DOB: %v", err)
+	}
+	if err := json.Unmarshal(data, &got); err != nil {
+		t.Fatalf("failed to unmarshal representative with DOB: %v", err)
+	}
+	if got["date_of_birth"] != "1985-03-20" {
+		t.Fatalf("date_of_birth = %v, want YYYY-MM-DD value", got["date_of_birth"])
 	}
 }
