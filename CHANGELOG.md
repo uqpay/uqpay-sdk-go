@@ -8,6 +8,15 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [2.1.0]
+
+### Changed
+
+- Account Center Create SubAccount COMPANY requests may omit
+  `ownership_details.representatives[].date_of_birth`. When supplied, the
+  value remains an ISO `YYYY-MM-DD` date. INDIVIDUAL requests still require
+  `individual_info.date_of_birth`.
+
 ## [2.0.0]
 
 This major release replaces the previous Virtual Account Create and webhook
