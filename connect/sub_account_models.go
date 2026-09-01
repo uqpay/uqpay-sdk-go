@@ -17,10 +17,10 @@ const (
 // ============================================================
 
 const (
-	JobTitleDirector                    = "DIRECTOR"
-	JobTitleBeneficialOwner             = "BENEFICIAL_OWNER"
-	JobTitleBeneficialOwnerAndDirector  = "BENEFICIAL_OWNER_AND_DIRECTOR"
-	JobTitleAuthorisedPerson            = "AUTHORISED_PERSON"
+	JobTitleDirector                   = "DIRECTOR"
+	JobTitleBeneficialOwner            = "BENEFICIAL_OWNER"
+	JobTitleBeneficialOwnerAndDirector = "BENEFICIAL_OWNER_AND_DIRECTOR"
+	JobTitleAuthorisedPerson           = "AUTHORISED_PERSON"
 )
 
 // ============================================================
@@ -51,15 +51,32 @@ const (
 // Constants - Account Purpose
 // ============================================================
 
+// SubAccountIndividualPurpose is an accepted INDIVIDUAL expected_activity account purpose.
+type SubAccountIndividualPurpose string
+
 const (
-	SubAccountPurposePurchase           = "PURCHASE"
-	SubAccountPurposeBillPayment        = "BILL_PAYMENT"
-	SubAccountPurposeEducationalExpense = "EDUCATIONAL_EXPENSES"
-	SubAccountPurposePersonalRemittance = "PERSONAL_REMITTANCE"
-	SubAccountPurposeCharitableDonation = "CHARITABLE_DONATION"
-	SubAccountPurposeLoanRepayment      = "LOAN_REPAYMENT"
-	SubAccountPurposeInvestment         = "INVESTMENT"
-	SubAccountPurposeOthers             = "OTHERS"
+	SubAccountPurposePurchase           SubAccountIndividualPurpose = "PURCHASE"
+	SubAccountPurposeBillPayment        SubAccountIndividualPurpose = "BILL_PAYMENT"
+	SubAccountPurposeEducationalExpense SubAccountIndividualPurpose = "EDUCATIONAL_EXPENSES"
+	SubAccountPurposePersonalRemittance SubAccountIndividualPurpose = "PERSONAL_REMITTANCE"
+	SubAccountPurposeCharitableDonation SubAccountIndividualPurpose = "CHARITABLE_DONATION"
+	SubAccountPurposeLoanRepayment      SubAccountIndividualPurpose = "LOAN_REPAYMENT"
+	SubAccountPurposeInvestment         SubAccountIndividualPurpose = "INVESTMENT"
+	SubAccountPurposeOthers             SubAccountIndividualPurpose = "OTHERS"
+)
+
+// SubAccountCompanyPurpose is an accepted COMPANY business_details account purpose.
+type SubAccountCompanyPurpose string
+
+const (
+	CompanyPurposePaymentCollection    SubAccountCompanyPurpose = "PAYMENT_COLLECTION"
+	CompanyPurposePayoutDisbursement   SubAccountCompanyPurpose = "PAYOUT_DISBURSEMENT"
+	CompanyPurposeMultiCurrencyBanking SubAccountCompanyPurpose = "MULTI_CURRENCY_BANKING"
+	CompanyPurposeCardIssuing          SubAccountCompanyPurpose = "CARD_ISSUING"
+	CompanyPurposeCryptoRamp           SubAccountCompanyPurpose = "CRYPTO_RAMP"
+	CompanyPurposeGlobalTransfer       SubAccountCompanyPurpose = "GLOBAL_TRANSFER"
+	CompanyPurposeTreasuryFX           SubAccountCompanyPurpose = "TREASURY_FX"
+	CompanyPurposeOthers               SubAccountCompanyPurpose = "OTHERS"
 )
 
 // ============================================================
@@ -271,7 +288,7 @@ type SubAccountExpectedActivity struct {
 	// AccountPurpose is a list of intended account purposes.
 	// Values: PURCHASE, BILL_PAYMENT, EDUCATIONAL_EXPENSES, PERSONAL_REMITTANCE,
 	// CHARITABLE_DONATION, LOAN_REPAYMENT, INVESTMENT, OTHERS
-	AccountPurpose []string `json:"account_purpose"`
+	AccountPurpose []SubAccountIndividualPurpose `json:"account_purpose"`
 
 	// OtherPurpose is required when AccountPurpose includes "OTHERS"
 	OtherPurpose string `json:"other_purpose,omitempty"`
@@ -394,8 +411,8 @@ type SubAccountRepresentative struct {
 	// Values: DIRECTOR, BENEFICIAL_OWNER, BENEFICIAL_OWNER_AND_DIRECTOR, AUTHORISED_PERSON
 	JobTitle string `json:"job_title"`
 
-	// OwnershipPercentage is the ownership percentage
-	OwnershipPercentage float64 `json:"ownership_percentage,omitempty"`
+	// OwnershipPercentage is the ownership share as a decimal string. Use "0" for no ownership.
+	OwnershipPercentage string `json:"ownership_percentage"`
 
 	// Nationality is the ISO 3166-1 alpha-2 country code
 	Nationality string `json:"nationality"`
@@ -406,8 +423,8 @@ type SubAccountRepresentative struct {
 	// PhoneNumber is the phone number with country code
 	PhoneNumber string `json:"phone_number"`
 
-	// DateOfBirth is the date of birth in YYYY-MM-DD format when provided.
-	DateOfBirth string `json:"date_of_birth,omitempty"`
+	// DateOfBirth is the required date of birth in YYYY-MM-DD format.
+	DateOfBirth string `json:"date_of_birth"`
 
 	// CountryOrTerritory is the ISO 3166-1 alpha-2 country code of residence
 	CountryOrTerritory string `json:"country_or_territory"`
@@ -485,14 +502,17 @@ type SubAccountBusinessDetails struct {
 	// CompanyDescription is a description of the company's business
 	CompanyDescription string `json:"company_description,omitempty"`
 
-	// AccountPurpose is a list of intended account purposes
-	AccountPurpose []string `json:"account_purpose,omitempty"`
+	// AccountPurpose is a list of intended COMPANY account purposes.
+	AccountPurpose []SubAccountCompanyPurpose `json:"account_purpose"`
 
 	// BankingCurrencies is a list of ISO 4217 currency codes for banking operations
-	BankingCurrencies []string `json:"banking_currencies,omitempty"`
+	BankingCurrencies []string `json:"banking_currencies"`
 
 	// BankingCountries is a list of ISO 3166-1 alpha-2 country codes for banking operations
-	BankingCountries []string `json:"banking_countries,omitempty"`
+	BankingCountries []string `json:"banking_countries"`
+
+	// ArticlesOfAssociation is a list of base64 documents or UQPAY file IDs.
+	ArticlesOfAssociation []string `json:"articles_of_association"`
 
 	// IssuingCountries is a list of ISO 3166-1 alpha-2 country codes for card issuing.
 	// Required for ISSUING business.

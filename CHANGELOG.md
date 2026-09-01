@@ -8,6 +8,34 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+## [3.0.0]
+
+This major release aligns Account Center Create SubAccount COMPANY requests
+with the contract that takes effect in Production on 2026-09-17.
+
+### Breaking
+
+- The module and import path is now `github.com/uqpay/uqpay-sdk-go/v3`.
+- For `entity_type=COMPANY` with `inherit=-1`, representatives now require
+  `EmailAddress`, `DateOfBirth`, and string-valued `OwnershipPercentage`; use
+  `"0"` when a representative has no ownership.
+- `SubAccountBusinessDetails` now requires `AccountPurpose`,
+  `BankingCurrencies`, `BankingCountries`, and `ArticlesOfAssociation`.
+- `AccountPurpose` uses `SubAccountCompanyPurpose` and accepts only the eight
+  company-purpose constants introduced in this release.
+- `CreateSubAccount` rejects missing non-inherited COMPANY sections and the
+  newly required representative and business fields before sending the HTTP
+  request.
+
+See the [Account Center Changelog](https://developers.uqpay.com/changelog) for
+the rollout timeline and migration details.
+
+### Migration
+
+- Run `go get github.com/uqpay/uqpay-sdk-go/v3@v3.0.0`, update imports from
+  `/v2` to `/v3`, update affected COMPANY payloads, and validate them in
+  Sandbox before the Production cutover.
+
 ## [2.1.0]
 
 ### Changed

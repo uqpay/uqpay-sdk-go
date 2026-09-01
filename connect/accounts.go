@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
 )
 
 // AccountsClient handles account operations
@@ -145,35 +145,8 @@ type AdditionalDocument struct {
 // For INDIVIDUAL accounts, populate IndividualInfo, IdentityVerification, ExpectedActivity, and ProofDocuments.
 // For COMPANY accounts, populate CompanyInfo, CompanyAddress, OwnershipDetails, and BusinessDetails.
 func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAccountRequest, opts ...*common.RequestOptions) (*CreateSubAccountResponse, error) {
-	if req.EntityType == EntityTypeIndividual {
-		if req.IndividualInfo == nil {
-			return nil, fmt.Errorf("individual_info required for INDIVIDUAL entity type")
-		}
-		if req.IdentityVerification == nil {
-			return nil, fmt.Errorf("identity_verification required for INDIVIDUAL entity type")
-		}
-		if req.ExpectedActivity == nil {
-			return nil, fmt.Errorf("expected_activity required for INDIVIDUAL entity type")
-		}
-		if req.ProofDocuments == nil {
-			return nil, fmt.Errorf("proof_documents required for INDIVIDUAL entity type")
-		}
-	}
-	if req.EntityType == EntityTypeCompany {
-		if req.Inherit == nil || *req.Inherit != 1 {
-			if req.CompanyInfo == nil {
-				return nil, fmt.Errorf("company_info required for COMPANY entity type when inherit != 1")
-			}
-			if req.CompanyAddress == nil {
-				return nil, fmt.Errorf("company_address required for COMPANY entity type when inherit != 1")
-			}
-			if req.OwnershipDetails == nil {
-				return nil, fmt.Errorf("ownership_details required for COMPANY entity type when inherit != 1")
-			}
-		}
-	}
-	if req.TosAcceptance == nil {
-		return nil, fmt.Errorf("tos_acceptance is required")
+	if err := validateCreateSubAccountRequest(req); err != nil {
+		return nil, err
 	}
 
 	var resp CreateSubAccountResponse
@@ -181,6 +154,72 @@ func (c *AccountsClient) CreateSubAccount(ctx context.Context, req *CreateSubAcc
 		return nil, fmt.Errorf("failed to create sub-account: %w", err)
 	}
 	return &resp, nil
+}
+
+func validateCreateSubAccountRequest(req *CreateSubAccountRequest) error {
+	if req == nil {
+		return fmt.Errorf("request is required")
+	}
+	if req.EntityType == EntityTypeIndividual {
+		if req.IndividualInfo == nil {
+			return fmt.Errorf("individual_info required for INDIVIDUAL entity type")
+		}
+		if req.IdentityVerification == nil {
+			return fmt.Errorf("identity_verification required for INDIVIDUAL entity type")
+		}
+		if req.ExpectedActivity == nil {
+			return fmt.Errorf("expected_activity required for INDIVIDUAL entity type")
+		}
+		if req.ProofDocuments == nil {
+			return fmt.Errorf("proof_documents required for INDIVIDUAL entity type")
+		}
+	}
+	if req.EntityType == EntityTypeCompany {
+		if req.Inherit == nil || *req.Inherit != 1 {
+			if req.CompanyInfo == nil {
+				return fmt.Errorf("company_info required for COMPANY entity type when inherit != 1")
+			}
+			if req.CompanyAddress == nil {
+				return fmt.Errorf("company_address required for COMPANY entity type when inherit != 1")
+			}
+			if req.OwnershipDetails == nil {
+				return fmt.Errorf("ownership_details required for COMPANY entity type when inherit != 1")
+			}
+			if req.OwnershipDetails.Representatives == nil {
+				return fmt.Errorf("ownership_details.representatives required for COMPANY entity type when inherit != 1")
+			}
+			for i, representative := range req.OwnershipDetails.Representatives {
+				if representative.EmailAddress == "" {
+					return fmt.Errorf("ownership_details.representatives[%d].email_address is required", i)
+				}
+				if representative.DateOfBirth == "" {
+					return fmt.Errorf("ownership_details.representatives[%d].date_of_birth is required", i)
+				}
+				if representative.OwnershipPercentage == "" {
+					return fmt.Errorf("ownership_details.representatives[%d].ownership_percentage is required", i)
+				}
+			}
+			if req.BusinessDetails == nil {
+				return fmt.Errorf("business_details required for COMPANY entity type when inherit != 1")
+			}
+			if req.BusinessDetails.AccountPurpose == nil {
+				return fmt.Errorf("business_details.account_purpose is required")
+			}
+			if req.BusinessDetails.BankingCurrencies == nil {
+				return fmt.Errorf("business_details.banking_currencies is required")
+			}
+			if req.BusinessDetails.BankingCountries == nil {
+				return fmt.Errorf("business_details.banking_countries is required")
+			}
+			if req.BusinessDetails.ArticlesOfAssociation == nil {
+				return fmt.Errorf("business_details.articles_of_association is required")
+			}
+		}
+	}
+	if req.TosAcceptance == nil {
+		return fmt.Errorf("tos_acceptance is required")
+	}
+	return nil
 }
 
 // GetAdditionalDocuments retrieves the required and optional document types for creating

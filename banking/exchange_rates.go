@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
 )
 
 // ExchangeRatesClient handles exchange rate operations

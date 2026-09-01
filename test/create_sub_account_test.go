@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/connect"
+	"github.com/uqpay/uqpay-sdk-go/v3/connect"
 )
 
 func TestCreateSubAccount(t *testing.T) {
@@ -43,7 +43,7 @@ func TestCreateSubAccount(t *testing.T) {
 				FaceDocs:            []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			ExpectedActivity: &connect.SubAccountExpectedActivity{
-				AccountPurpose:          []string{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
+				AccountPurpose:          []connect.SubAccountIndividualPurpose{connect.SubAccountPurposePurchase, connect.SubAccountPurposeBillPayment},
 				BankingCountries:        []string{"GB", "US"},
 				BankingCurrencies:       []string{"GBP", "USD"},
 				Internationally:         1,
@@ -113,7 +113,7 @@ func TestCreateSubAccount(t *testing.T) {
 						EmailAddress:          "jane.smith@example.com",
 						IsApplicant:           "1",
 						JobTitle:              connect.JobTitleBeneficialOwnerAndDirector,
-						OwnershipPercentage:   100,
+						OwnershipPercentage:   "100",
 						Nationality:           "GB",
 						PhoneNumber:           "+447911654321",
 						DateOfBirth:           "1985-03-20",
@@ -131,19 +131,20 @@ func TestCreateSubAccount(t *testing.T) {
 				ShareholderDocs: []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			BusinessDetails: &connect.SubAccountBusinessDetails{
-				CountryOrTerritory: "GB",
-				StreetAddress:      "456 Oxford Street",
-				City:               "London",
-				State:              "England",
-				PostalCode:         "W1C 1AP",
-				Industry:           "7372",
-				TurnoverMonthly:    connect.TurnoverMonthlyTM003,
-				NumberOfEmployee:   connect.NumberOfEmployeeBS002,
-				WebsiteURL:         "https://sdktest.example.com",
-				CompanyDescription: "Software development and testing",
-				AccountPurpose:     []string{connect.SubAccountPurposeBillPayment},
-				BankingCurrencies:  []string{"GBP", "USD", "EUR"},
-				BankingCountries:   []string{"GB", "US", "DE"},
+				CountryOrTerritory:    "GB",
+				StreetAddress:         "456 Oxford Street",
+				City:                  "London",
+				State:                 "England",
+				PostalCode:            "W1C 1AP",
+				Industry:              "7372",
+				TurnoverMonthly:       connect.TurnoverMonthlyTM003,
+				NumberOfEmployee:      connect.NumberOfEmployeeBS002,
+				WebsiteURL:            "https://sdktest.example.com",
+				CompanyDescription:    "Software development and testing",
+				AccountPurpose:        []connect.SubAccountCompanyPurpose{connect.CompanyPurposePaymentCollection},
+				BankingCurrencies:     []string{"GBP", "USD", "EUR"},
+				BankingCountries:      []string{"GB", "US", "DE"},
+				ArticlesOfAssociation: []string{"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="},
 			},
 			TosAcceptance: &connect.SubAccountTosAcceptance{
 				IP:           "192.168.1.1",
@@ -199,7 +200,7 @@ func TestCreateSubAccount(t *testing.T) {
 				FaceDocs:            []string{"face1"},
 			},
 			ExpectedActivity: &connect.SubAccountExpectedActivity{
-				AccountPurpose:          []string{connect.SubAccountPurposePurchase},
+				AccountPurpose:          []connect.SubAccountIndividualPurpose{connect.SubAccountPurposePurchase},
 				BankingCountries:        []string{"GB"},
 				BankingCurrencies:       []string{"GBP"},
 				Internationally:         0,
