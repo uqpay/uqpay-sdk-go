@@ -94,7 +94,7 @@ func TestSubAccountIndividualInfo_StateAlwaysEmitted(t *testing.T) {
 	}
 }
 
-func TestSubAccountRepresentative_DateOfBirthOptional(t *testing.T) {
+func TestSubAccountRepresentative_DateOfBirthRequired(t *testing.T) {
 	representative := SubAccountRepresentative{}
 
 	data, err := json.Marshal(representative)
@@ -106,8 +106,8 @@ func TestSubAccountRepresentative_DateOfBirthOptional(t *testing.T) {
 	if err := json.Unmarshal(data, &got); err != nil {
 		t.Fatalf("failed to unmarshal representative: %v", err)
 	}
-	if _, ok := got["date_of_birth"]; ok {
-		t.Fatal("date_of_birth must be omitted when a COMPANY representative DOB is not provided")
+	if _, ok := got["date_of_birth"]; !ok {
+		t.Fatal("date_of_birth must be emitted for a COMPANY representative")
 	}
 
 	representative.DateOfBirth = "1985-03-20"
@@ -120,5 +120,40 @@ func TestSubAccountRepresentative_DateOfBirthOptional(t *testing.T) {
 	}
 	if got["date_of_birth"] != "1985-03-20" {
 		t.Fatalf("date_of_birth = %v, want YYYY-MM-DD value", got["date_of_birth"])
+	}
+}
+
+func TestSubAccountCompanyV3RequiredFieldsSerialize(t *testing.T) {
+	representative := SubAccountRepresentative{OwnershipPercentage: "0"}
+	representativeData, err := json.Marshal(representative)
+	if err != nil {
+		t.Fatalf("failed to marshal representative: %v", err)
+	}
+	var representativeJSON map[string]any
+	if err := json.Unmarshal(representativeData, &representativeJSON); err != nil {
+		t.Fatalf("failed to decode representative: %v", err)
+	}
+	if representativeJSON["ownership_percentage"] != "0" {
+		t.Fatalf("ownership_percentage = %v, want string 0", representativeJSON["ownership_percentage"])
+	}
+
+	details := SubAccountBusinessDetails{
+		AccountPurpose:        []SubAccountCompanyPurpose{CompanyPurposePaymentCollection, CompanyPurposeTreasuryFX},
+		BankingCurrencies:     []string{"SGD"},
+		BankingCountries:      []string{"SG"},
+		ArticlesOfAssociation: []string{"file-id"},
+	}
+	detailsData, err := json.Marshal(details)
+	if err != nil {
+		t.Fatalf("failed to marshal business details: %v", err)
+	}
+	var detailsJSON map[string]any
+	if err := json.Unmarshal(detailsData, &detailsJSON); err != nil {
+		t.Fatalf("failed to decode business details: %v", err)
+	}
+	for _, key := range []string{"account_purpose", "banking_currencies", "banking_countries", "articles_of_association"} {
+		if _, ok := detailsJSON[key]; !ok {
+			t.Errorf("required key %q missing", key)
+		}
 	}
 }

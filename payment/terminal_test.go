@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/common"
-	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
 )
 
 type capturedTerminalRequest struct {

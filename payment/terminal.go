@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
 )
 
 type TerminalsClient struct{ client *common.APIClient }

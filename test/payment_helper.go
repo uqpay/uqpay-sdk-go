@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v2"
-	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v3"
+	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
 )
 
 // GetPaymentTestClient creates a test client for Payment API tests

@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v2/common"
-	"github.com/uqpay/uqpay-sdk-go/v2/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
 )
 
 type staticTokenProvider struct {
