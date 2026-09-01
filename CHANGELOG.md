@@ -23,6 +23,9 @@ with the contract that takes effect in Production on 2026-09-17.
   `BankingCurrencies`, `BankingCountries`, and `ArticlesOfAssociation`.
 - `AccountPurpose` uses `SubAccountCompanyPurpose` and accepts only the eight
   company-purpose constants introduced in this release.
+- `CreateSubAccount` rejects missing non-inherited COMPANY sections and the
+  newly required representative and business fields before sending the HTTP
+  request.
 
 See the [Account Center Changelog](https://developers.uqpay.com/changelog) for
 the rollout timeline and migration details.
