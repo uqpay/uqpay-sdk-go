@@ -3,6 +3,7 @@ package webhook
 // PaymentIntentData represents the payment intent information in acquiring webhook events.
 // This is returned in the data field for acquiring.payment_intent.* events.
 type PaymentIntentData struct {
+	NextAction map[string]interface{} `json:"next_action,omitempty"`
 	// PaymentIntentID is the unique identifier for the payment intent
 	PaymentIntentID string `json:"payment_intent_id"`
 
@@ -42,6 +43,28 @@ type PaymentIntentData struct {
 
 // PaymentMethod represents the payment method used for a payment
 type PaymentMethod struct {
+	CardPresent   *CardDetails   `json:"card_present,omitempty"`
+	Alipay        *AlipayDetails `json:"alipay,omitempty"`
+	PayNow        *AlipayDetails `json:"paynow,omitempty"`
+	ApplePay      *AlipayDetails `json:"applepay,omitempty"`
+	GooglePay     *AlipayDetails `json:"googlepay,omitempty"`
+	UnionPay      *AlipayDetails `json:"unionpay,omitempty"`
+	Crypto        *AlipayDetails `json:"crypto,omitempty"`
+	TNG           *AlipayDetails `json:"tng,omitempty"`
+	TrueMoney     *AlipayDetails `json:"truemoney,omitempty"`
+	GCash         *AlipayDetails `json:"gcash,omitempty"`
+	Dana          *AlipayDetails `json:"dana,omitempty"`
+	KakaoPay      *AlipayDetails `json:"kakaopay,omitempty"`
+	TossPay       *AlipayDetails `json:"tosspay,omitempty"`
+	NaverPay      *AlipayDetails `json:"naverpay,omitempty"`
+	MPay          *AlipayDetails `json:"mpay,omitempty"`
+	KPlus         *AlipayDetails `json:"kplus,omitempty"`
+	Boost         *AlipayDetails `json:"boost,omitempty"`
+	RabbitLinePay *AlipayDetails `json:"rabbitlinepay,omitempty"`
+	Kaspi         *AlipayDetails `json:"kaspi,omitempty"`
+	HiPay         *AlipayDetails `json:"hipay,omitempty"`
+	ShopeePay     *AlipayDetails `json:"shopeepay,omitempty"`
+
 	// Type is the payment method type (e.g., "card", "alipaycn", "grabpay")
 	Type string `json:"type,omitempty"`
 
@@ -63,6 +86,9 @@ type PaymentMethod struct {
 
 // AlipayDetails represents alternative payment method details (Alipay, GrabPay, etc.)
 type AlipayDetails struct {
+	StaticQRCode            string `json:"static_qrcode,omitempty"`
+	StaticQRCodeExtension   string `json:"static_qrcode_extension,omitempty"`
+	StaticQRCodeNumberPlate string `json:"static_qrcode_number_plate,omitempty"`
 	// Flow is the payment flow type (e.g., "qrcode", "app", "wap")
 	Flow string `json:"flow,omitempty"`
 
@@ -72,6 +98,9 @@ type AlipayDetails struct {
 
 // CardDetails represents card payment method details
 type CardDetails struct {
+	CardName   string `json:"card_name,omitempty"`
+	CardNumber string `json:"card_number,omitempty"`
+	Network    string `json:"network,omitempty"`
 	// Brand is the card brand (e.g., "visa", "mastercard")
 	Brand string `json:"brand,omitempty"`
 

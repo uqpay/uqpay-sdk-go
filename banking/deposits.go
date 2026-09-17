@@ -16,6 +16,7 @@ type DepositsClient struct {
 
 // Deposit represents a deposit transaction
 type Deposit struct {
+	DepositMethod         string         `json:"deposit_method,omitempty"`
 	DepositID             string         `json:"deposit_id"`
 	ShortReferenceID      string         `json:"short_reference_id"`
 	Currency              string         `json:"currency"`
@@ -31,6 +32,8 @@ type Deposit struct {
 
 // DepositSender represents the sender information for a deposit
 type DepositSender struct {
+	SenderType          string `json:"sender_type,omitempty"`
+	NameType            string `json:"name_type,omitempty"`
 	SenderName          string `json:"sender_name"`
 	SenderCountry       string `json:"sender_country"`
 	SenderAccountNumber string `json:"sender_account_number"`

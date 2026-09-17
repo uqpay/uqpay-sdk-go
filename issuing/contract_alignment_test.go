@@ -66,6 +66,8 @@ func TestAlignedContractsThroughTransport(t *testing.T) {
 			}
 		}
 		switch r.URL.Path {
+		case "/v1/issuing/cards/card-1":
+			_, _ = w.Write([]byte(`{"card_order_id":"art-order","order_status":"PROCESSING"}`))
 		case "/v1/issuing/cards/pin":
 			_, _ = w.Write([]byte(`{"request_status":"SUCCESS","card_id":"card-1","card_order_id":"order-1","order_status":"PROCESSING"}`))
 		case "/v1/rfis/answer":
@@ -83,6 +85,13 @@ func TestAlignedContractsThroughTransport(t *testing.T) {
 	api := common.NewAPIClient(&configuration.Configuration{Environment: &configuration.Environment{BaseURL: server.URL}, HTTPClient: server.Client()}, &staticTokenProvider{token: "offline-token"})
 	issuing := NewClient(api)
 	ctx := context.Background()
+	updated, updateErr := issuing.Cards.Update(ctx, "card-1", &CardUpdateRequest{CardArtID: "art-1", NameOnCard: "Test"})
+	if updateErr != nil {
+		t.Fatal(updateErr)
+	}
+	if captured["card_art_id"] != "art-1" || captured["name_on_card"] != "Test" || updated.OrderStatus != "PROCESSING" {
+		t.Fatal("lost card update fields")
+	}
 	for _, action := range []string{"", "SET", "RESET", "UPDATE"} {
 		req := &SetPINRequest{CardID: "card-1", PIN: "135790", Type: action}
 		if action == "UPDATE" {

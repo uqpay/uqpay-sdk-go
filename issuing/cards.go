@@ -61,6 +61,9 @@ type RiskControls struct {
 
 // CardUpdateRequest represents a card update request
 type CardUpdateRequest struct {
+	// CardArtID changes virtual or physical card art asynchronously; both statuses must be ACTIVE.
+	CardArtID          string            `json:"card_art_id,omitempty"`
+	NameOnCard         string            `json:"name_on_card,omitempty"`
 	CardLimit          *float64          `json:"card_limit,omitempty"`
 	NoPINPaymentAmount *float64          `json:"no_pin_payment_amount,omitempty"`
 	SpendingControls   []SpendingControl `json:"spending_controls,omitempty"`
