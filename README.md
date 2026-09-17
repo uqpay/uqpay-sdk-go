@@ -493,3 +493,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version-specific changes and [GitHub Releas
 ---
 
 Made with ❤️ by UQPAY
+
+## Contract migration notes
+
+See [PIN, RFI, deposit simulation and settlement contracts](CONTRACT_ALIGNMENT.md) for request changes and response interpretation.

@@ -10,6 +10,7 @@ import (
 type DepositsClient struct{ client *common.APIClient }
 
 type CreateDepositRequest struct {
+	AccountID             string  `json:"account_id"` // Active, verified recipient account; required.
 	Amount                float64 `json:"amount"`
 	Currency              string  `json:"currency"`
 	ReceiverAccountNumber string  `json:"receiver_account_number,omitempty"`

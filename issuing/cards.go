@@ -87,8 +87,10 @@ type ActivateCardRequest struct {
 	NoPINPaymentAmount *float64 `json:"no_pin_payment_amount,omitempty"`
 }
 
-// SetPINRequest represents a card PIN reset request
+// SetPINRequest manages a PIN. Omitted Type means SET. PIN and OldPIN use six digits.
 type SetPINRequest struct {
+	Type   string `json:"type,omitempty"`    // SET (default), RESET, UPDATE
+	OldPIN string `json:"old_pin,omitempty"` // Required only for UPDATE; prohibited otherwise.
 	CardID string `json:"card_id"`
 	PIN    string `json:"pin"`
 }
@@ -189,6 +191,7 @@ type SecureCardInfo struct {
 
 // CardOrder represents a card order
 type CardOrder struct {
+	FailureCode  string  `json:"failure_code,omitempty"`
 	CardID       string  `json:"card_id"`
 	CardOrderID  string  `json:"card_order_id"`
 	OrderType    string  `json:"order_type"`
@@ -204,6 +207,7 @@ type CardOrder struct {
 // returned by the sandbox API while preserving the public float64 field type.
 func (o *CardOrder) UnmarshalJSON(data []byte) error {
 	var wire struct {
+		FailureCode  string                `json:"failure_code,omitempty"`
 		CardID       string                `json:"card_id"`
 		CardOrderID  string                `json:"card_order_id"`
 		OrderType    string                `json:"order_type"`
@@ -228,6 +232,7 @@ func (o *CardOrder) UnmarshalJSON(data []byte) error {
 	}
 
 	*o = CardOrder{
+		FailureCode:  wire.FailureCode,
 		CardID:       wire.CardID,
 		CardOrderID:  wire.CardOrderID,
 		OrderType:    wire.OrderType,
@@ -248,6 +253,10 @@ type ActivateCardResponse struct {
 
 // SetPINResponse represents the response after resetting PIN
 type SetPINResponse struct {
+	CardID        string `json:"card_id"`
+	CardOrderID   string `json:"card_order_id"`
+	OrderStatus   string `json:"order_status"` // PROCESSING at acceptance; not final success.
+	CreateTime    string `json:"create_time"`
 	RequestStatus string `json:"request_status"`
 }
 
@@ -452,7 +461,8 @@ func (c *CardsClient) Activate(ctx context.Context, req *ActivateCardRequest, op
 	return &resp, nil
 }
 
-// ResetPIN resets the PIN for a physical card
+// ResetPIN manages a card PIN. Omitted Type means SET; use RESET or UPDATE explicitly.
+// The returned SUCCESS means acceptance; retrieve CardOrderID for the final result.
 func (c *CardsClient) ResetPIN(ctx context.Context, req *SetPINRequest, opts ...*common.RequestOptions) (*SetPINResponse, error) {
 	var resp SetPINResponse
 	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/pin", req, &resp, firstRequestOptions(opts)); err != nil {
