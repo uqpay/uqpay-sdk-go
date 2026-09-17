@@ -59,3 +59,7 @@ Account list/detail responses expose current company and individual fields. Opti
 Offline route-specific checks cover D189–D196: balance list/detail, bank account list/detail, payout list/detail, settlements list and payment intent detail. Each call is exercised with and without `x-on-behalf-of`, while preserving the configured `x-client-id`. Callers need not supply an idempotency key for these GET requests; existing automatic GET headers remain supported. Existing POST idempotency and retry tests remain part of verification.
 
 Balance and payout `Get`/`List`, and `Reports.ListSettlements`, now accept optional `*common.RequestOptions`. Existing ordinary calls remain valid. Code assigning these methods to exact function types or implementing interfaces may need to update signatures for the variadic options. Bank account reads now preserve the configured client ID when options are omitted or only specify delegation.
+
+## Banking balance precision
+
+Offline D122–D129 fixtures cover `available_balance`, `frozen_balance`, `margin_balance` and `prepaid_balance` through both list and detail reads. Each field receives zero with trailing decimal places, a positive amount, a negative amount, large positive/negative amounts, and a long decimal string. Distinct values across fields detect accidental swaps; comparisons retain strings and precision. Long decimal fixtures test client robustness, not server-supported currency precision. CLI verification covers JSON output.
