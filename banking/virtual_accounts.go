@@ -40,7 +40,7 @@ type VirtualAccountClearing struct {
 
 // ListVirtualAccountsRequest represents a virtual account list request
 type ListVirtualAccountsRequest struct {
-	PageSize   int `json:"page_size"`   // required, 10-100
+	PageSize   int `json:"page_size"`   // required, 1-100
 	PageNumber int `json:"page_number"` // required, >=1
 }
 

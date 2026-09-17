@@ -98,9 +98,11 @@ type AlipayDetails struct {
 
 // CardDetails represents card payment method details
 type CardDetails struct {
-	CardName   string `json:"card_name,omitempty"`
-	CardNumber string `json:"card_number,omitempty"`
-	Network    string `json:"network,omitempty"`
+	// IssuerCountryCode is an optional issuer country, observed in Sandbox payment events.
+	IssuerCountryCode string `json:"issuer_country_code,omitempty"`
+	CardName          string `json:"card_name,omitempty"`
+	CardNumber        string `json:"card_number,omitempty"`
+	Network           string `json:"network,omitempty"`
 	// Brand is the card brand (e.g., "visa", "mastercard")
 	Brand string `json:"brand,omitempty"`
 

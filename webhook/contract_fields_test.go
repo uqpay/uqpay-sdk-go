@@ -10,7 +10,7 @@ func TestAllPaymentMethodDetails(t *testing.T) {
 		t.Run(method, func(t *testing.T) {
 			details := map[string]interface{}{"flow": "qrcode", "os_type": "web", "static_qrcode": "qr-data", "static_qrcode_extension": "png", "static_qrcode_number_plate": "plate"}
 			if method == "card" || method == "card_present" {
-				details = map[string]interface{}{"card_name": "Test", "card_number": "411111******1111", "network": "VISA"}
+				details = map[string]interface{}{"card_name": "Test", "card_number": "411111******1111", "network": "VISA", "issuer_country_code": "SG"}
 			}
 			raw, _ := json.Marshal(map[string]interface{}{"type": method, method: details})
 			var payment PaymentMethod
@@ -59,5 +59,44 @@ func TestWebhookNullAndUnknownValues(t *testing.T) {
 	}
 	if holder.Reason != "more evidence required" {
 		t.Fatal(holder)
+	}
+}
+
+func TestIssuingFinancialAndNullableEvents(t *testing.T) {
+	var fee NetworkProtectionFeeData
+	if err := json.Unmarshal([]byte(`{"transaction_amount":"0.00000001","balance_amount":"-12345678901234567890.12345678"}`), &fee); err != nil {
+		t.Fatal(err)
+	}
+	if fee.TransactionAmount != "0.00000001" || fee.BalanceAmount != "-12345678901234567890.12345678" {
+		t.Fatal(fee)
+	}
+	var transfer IssuingTransferStatusChangedData
+	if err := json.Unmarshal([]byte(`{"amount":"12345678901234567890.12345678","status":"succeeded","previous_status":"pending"}`), &transfer); err != nil {
+		t.Fatal(err)
+	}
+	if transfer.Amount != "12345678901234567890.12345678" || transfer.Status != "succeeded" {
+		t.Fatal(transfer)
+	}
+	for _, payload := range []string{`{"representatives":[{"other_documents":null}]}`, `{"complete_time":null}`, `{"rfi_id":"ACTREQ-prefixed"}`} {
+		raw := []byte(`{"data":` + payload + `}`)
+		var event Event
+		if err := json.Unmarshal(raw, &event); err != nil {
+			t.Fatal(err)
+		}
+		if string(event.Data) != payload {
+			t.Fatal(string(event.Data))
+		}
+	}
+}
+
+func TestRepresentativeNullableDocuments(t *testing.T) {
+	for _, raw := range []string{`null`, `[]`, `[{"type":"PROOF_OF_ADDRESS","front":"https://example.test/proof"}]`} {
+		var representative Representative
+		if err := json.Unmarshal([]byte(`{"other_documents":`+raw+`}`), &representative); err != nil {
+			t.Fatal(err)
+		}
+		if raw[0] == '[' && len(raw) > 2 && (len(representative.OtherDocuments) != 1 || representative.OtherDocuments[0]["type"] != "PROOF_OF_ADDRESS") {
+			t.Fatal(representative.OtherDocuments)
+		}
 	}
 }

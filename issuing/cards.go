@@ -21,6 +21,11 @@ type CardsClient struct {
 
 // CardholderRequiredFields represents supplementary cardholder KYC info provided at card creation time
 type CardholderRequiredFields struct {
+	Email       *string `json:"email,omitempty"`
+	FirstName   *string `json:"first_name,omitempty"`
+	LastName    *string `json:"last_name,omitempty"`
+	CountryCode *string `json:"country_code,omitempty"`
+
 	Gender             *string             `json:"gender,omitempty"`
 	Nationality        *string             `json:"nationality,omitempty"`
 	PhoneNumber        *string             `json:"phone_number,omitempty"`

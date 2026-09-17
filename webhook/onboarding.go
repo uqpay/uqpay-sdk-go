@@ -172,6 +172,8 @@ type Address struct {
 
 // Representative represents an account representative or director
 type Representative struct {
+	// OtherDocuments is null or a list of supplementary documents on create events.
+	OtherDocuments []map[string]interface{} `json:"other_documents,omitempty"`
 	// RepresentativeID is the unique identifier for the representative
 	RepresentativeID string `json:"representative_id,omitempty"`
 

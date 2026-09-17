@@ -23,11 +23,11 @@ type AuthorizationResponse struct {
 	CardholderID         string                 `json:"cardholder_id"`
 	TransactionID        string                 `json:"transaction_id"`
 	TransactionType      string                 `json:"transaction_type"`
-	CardAvailableBalance float64                `json:"card_available_balance"`
+	CardAvailableBalance common.FlexibleString  `json:"card_available_balance"`
 	AuthorizationCode    string                 `json:"authorization_code"`
-	BillingAmount        float64                `json:"billing_amount"`
+	BillingAmount        common.FlexibleString  `json:"billing_amount"`
 	BillingCurrency      string                 `json:"billing_currency"`
-	TransactionAmount    float64                `json:"transaction_amount"`
+	TransactionAmount    common.FlexibleString  `json:"transaction_amount"`
 	TransactionCurrency  string                 `json:"transaction_currency"`
 	TransactionTime      string                 `json:"transaction_time"`
 	PostedTime           string                 `json:"posted_time"`

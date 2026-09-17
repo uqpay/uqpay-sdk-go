@@ -86,6 +86,24 @@ type CreateAccountRequest struct {
 
 // Account represents a Connect account
 type Account struct {
+	// Optional response fields are shared by list summaries and account detail.
+	ShortReferenceID    string                   `json:"short_reference_id,omitempty"`
+	BusinessCode        []string                 `json:"business_code,omitempty"`
+	Email               string                   `json:"email,omitempty"`
+	AccountName         string                   `json:"account_name,omitempty"`
+	Country             string                   `json:"country,omitempty"`
+	VerificationStatus  string                   `json:"verification_status,omitempty"`
+	ReviewReason        string                   `json:"review_reason,omitempty"`
+	ContactDetails      map[string]interface{}   `json:"contact_details,omitempty"`
+	BusinessDetails     map[string]interface{}   `json:"business_details,omitempty"`
+	PersonDetails       map[string]interface{}   `json:"person_details,omitempty"`
+	RegistrationAddress map[string]interface{}   `json:"registration_address,omitempty"`
+	ResidentialAddress  map[string]interface{}   `json:"residential_address,omitempty"`
+	BusinessAddress     []map[string]interface{} `json:"business_address,omitempty"`
+	Representatives     []map[string]interface{} `json:"representatives,omitempty"`
+	Documents           []map[string]interface{} `json:"documents,omitempty"`
+	TosAcceptance       *TosAcceptance           `json:"tos_acceptance,omitempty"`
+
 	AccountID      string               `json:"account_id"`
 	EntityType     EntityType           `json:"entity_type"`
 	Individual     *IndividualDetails   `json:"individual,omitempty"`

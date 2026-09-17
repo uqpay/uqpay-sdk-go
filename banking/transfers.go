@@ -32,7 +32,7 @@ type Transfer struct {
 
 // ListTransfersRequest represents a transfer list request
 type ListTransfersRequest struct {
-	PageSize       int    `json:"page_size"`       // 10-100
+	PageSize       int    `json:"page_size"`       // 1-100
 	PageNumber     int    `json:"page_number"`     // >=1
 	StartTime      string `json:"start_time"`      // optional, ISO8601
 	EndTime        string `json:"end_time"`        // optional, ISO8601

@@ -27,3 +27,22 @@ func TestBeneficiaryIBANAndDepositFields(t *testing.T) {
 		t.Fatalf("lost response fields: %+v", deposit)
 	}
 }
+
+func TestBalancesAndPayoutOptionalValues(t *testing.T) {
+	for _, amount := range []string{"-12345678901234567890.12", "0.00", "1.23"} {
+		var balance Balance
+		if err := json.Unmarshal([]byte(`{"available_balance":"`+amount+`","prepaid_balance":"0.00"}`), &balance); err != nil {
+			t.Fatal(err)
+		}
+		if balance.AvailableBalance != amount || balance.PrepaidBalance != "0.00" {
+			t.Fatal(balance)
+		}
+	}
+	var payout PayoutDetailResponse
+	if err := json.Unmarshal([]byte(`{"payer":{"payer_id":"0","identification_type":""},"beneficiary":{"address":{"country":"SG","city":"","state":"","street_address":"","postal_code":""}}}`), &payout); err != nil {
+		t.Fatal(err)
+	}
+	if payout.Payer.PayerID != "0" || payout.Payer.IdentificationType != "" {
+		t.Fatal(payout.Payer)
+	}
+}

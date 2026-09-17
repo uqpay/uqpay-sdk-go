@@ -27,7 +27,7 @@ type Balance struct {
 
 // ListBalancesRequest represents a balance list request
 type ListBalancesRequest struct {
-	PageSize   int `json:"page_size"`   // required, 10-100
+	PageSize   int `json:"page_size"`   // required, 1-100
 	PageNumber int `json:"page_number"` // required, >=1
 }
 
@@ -57,7 +57,7 @@ type BalanceTransaction struct {
 
 // ListBalanceTransactionsRequest represents a balance transaction list request
 type ListBalanceTransactionsRequest struct {
-	PageSize          int    `json:"page_size"`          // required, 10-100
+	PageSize          int    `json:"page_size"`          // required, 1-100
 	PageNumber        int    `json:"page_number"`        // required, >=1
 	StartTime         string `json:"start_time"`         // optional, ISO8601
 	EndTime           string `json:"end_time"`           // optional, ISO8601

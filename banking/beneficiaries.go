@@ -96,7 +96,7 @@ type BeneficiaryCreationResponse struct {
 
 // ListBeneficiariesRequest represents a beneficiary list request
 type ListBeneficiariesRequest struct {
-	PageSize   int    `json:"page_size"`             // required, 10-100
+	PageSize   int    `json:"page_size"`             // required, 1-100
 	PageNumber int    `json:"page_number"`           // required, >=1
 	Currency   string `json:"currency,omitempty"`    // optional
 	Country    string `json:"country,omitempty"`     // optional, ISO 3166-1 alpha-2
