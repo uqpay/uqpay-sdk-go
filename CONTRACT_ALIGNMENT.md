@@ -53,3 +53,9 @@ Account list/detail responses expose current company and individual fields. Opti
 **Migration:** simulated authorization response amounts (`CardAvailableBalance`, `BillingAmount`, `TransactionAmount`) now use `common.FlexibleString` instead of `float64`. Use `.String()` or an exact decimal library; request amounts remain numeric. Both legacy JSON numbers and current decimal strings decode without a float conversion.
 
 `NetworkProtectionFeeData` and `IssuingTransferStatusChangedData` expose string amounts. Representative webhook models accept null or array `other_documents`. `CardDetails.IssuerCountryCode` is optional and is based on Sandbox commit `5450a0a9` (gateway head `fb887a5d9261ed57122ac2583c02d9651595fa3e`); production support is not assumed.
+
+## Acquiring GET headers
+
+Offline route-specific checks cover D189–D196: balance list/detail, bank account list/detail, payout list/detail, settlements list and payment intent detail. Each call is exercised with and without `x-on-behalf-of`, while preserving the configured `x-client-id`. Callers need not supply an idempotency key for these GET requests; existing automatic GET headers remain supported. Existing POST idempotency and retry tests remain part of verification.
+
+Balance and payout `Get`/`List`, and `Reports.ListSettlements`, now accept optional `*common.RequestOptions`. Existing ordinary calls remain valid. Code assigning these methods to exact function types or implementing interfaces may need to update signatures for the variadic options. Bank account reads now preserve the configured client ID when options are omitted or only specify delegation.

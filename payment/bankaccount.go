@@ -154,10 +154,7 @@ func (c *BankAccountsClient) Create(ctx context.Context, req *CreateBankAccountR
 // Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
 func (c *BankAccountsClient) Get(ctx context.Context, id string, opts ...*common.RequestOptions) (*BankAccount, error) {
 	var resp BankAccount
-	var opt *common.RequestOptions
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
 	path := fmt.Sprintf("/v2/payment/bankaccount/%s", id)
 	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to get bank account: %w", err)
@@ -184,10 +181,7 @@ func (c *BankAccountsClient) Update(ctx context.Context, id string, req *UpdateB
 // Optional RequestOptions can be provided to set custom headers like x-idempotency-key or x-auth-token
 func (c *BankAccountsClient) List(ctx context.Context, req *ListBankAccountsRequest, opts ...*common.RequestOptions) (*ListBankAccountsResponse, error) {
 	var resp ListBankAccountsResponse
-	var opt *common.RequestOptions
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
 	path := fmt.Sprintf("/v2/payment/bankaccount?page_number=%d&page_size=%d", req.PageNumber, req.PageSize)
 	if err := c.client.GetWithOptions(ctx, path, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to list bank accounts: %w", err)

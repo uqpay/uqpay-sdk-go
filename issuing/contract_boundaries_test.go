@@ -78,14 +78,46 @@ func TestKYCBranchesPaginationAndProxyHeaders(t *testing.T) {
 		}
 	}
 	payments := payment.NewClient(api)
-	_, err := payments.PaymentIntents.Get(ctx, "pi-1", &common.RequestOptions{OnBehalfOf: "sub-account"})
-	if err != nil {
-		t.Fatal(err)
+	// D189-D196: route-specific delegation without caller idempotency keys.
+	for _, tc := range []struct {
+		path string
+		call func(*common.RequestOptions) error
+	}{
+		{"/v2/payment/balances", func(o *common.RequestOptions) error {
+			_, e := payments.Balances.List(ctx, &payment.ListBalancesRequest{}, o)
+			return e
+		}},
+		{"/v2/payment/balances/USD", func(o *common.RequestOptions) error { _, e := payments.Balances.Get(ctx, "USD", o); return e }},
+		{"/v2/payment/bankaccount", func(o *common.RequestOptions) error {
+			_, e := payments.BankAccounts.List(ctx, &payment.ListBankAccountsRequest{}, o)
+			return e
+		}},
+		{"/v2/payment/bankaccount/ba-1", func(o *common.RequestOptions) error { _, e := payments.BankAccounts.Get(ctx, "ba-1", o); return e }},
+		{"/v2/payment/payout", func(o *common.RequestOptions) error {
+			_, e := payments.Payouts.List(ctx, &payment.ListPayoutsRequest{}, o)
+			return e
+		}},
+		{"/v2/payment/payout/po-1", func(o *common.RequestOptions) error { _, e := payments.Payouts.Get(ctx, "po-1", o); return e }},
+		{"/v2/payment/settlements", func(o *common.RequestOptions) error {
+			_, e := payments.Reports.ListSettlements(ctx, &payment.ListSettlementsRequest{}, o)
+			return e
+		}},
+		{"/v2/payment_intents/pi-1", func(o *common.RequestOptions) error { _, e := payments.PaymentIntents.Get(ctx, "pi-1", o); return e }},
+	} {
+		for _, account := range []string{"sub-account", ""} {
+			var opts *common.RequestOptions
+			if account != "" {
+				opts = &common.RequestOptions{OnBehalfOf: account}
+			}
+			if err := tc.call(opts); err != nil {
+				t.Fatal(err)
+			}
+			if path != tc.path || headers.Get("x-on-behalf-of") != account || headers.Get("x-client-id") != "client" {
+				t.Fatalf("%s: %s %v", tc.path, path, headers)
+			}
+		}
 	}
-	if headers.Get("x-on-behalf-of") != "sub-account" || path != "/v2/payment_intents/pi-1" {
-		t.Fatal(headers, path)
-	}
-	_, err = payments.PaymentIntents.Create(ctx, &payment.CreatePaymentIntentRequest{Amount: "1.00", Currency: "USD"}, &common.RequestOptions{IdempotencyKey: "fixed-key"})
+	_, err := payments.PaymentIntents.Create(ctx, &payment.CreatePaymentIntentRequest{Amount: "1.00", Currency: "USD"}, &common.RequestOptions{IdempotencyKey: "fixed-key"})
 	if err != nil {
 		t.Fatal(err)
 	}
