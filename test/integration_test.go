@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uqpay/uqpay-sdk-go/v4/issuing"
+	"github.com/uqpay/uqpay-sdk-go/v3/issuing"
 )
 
 func TestFullIntegration(t *testing.T) {

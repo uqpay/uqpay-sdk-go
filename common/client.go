@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
 )
 
 // TokenProvider provides auth tokens

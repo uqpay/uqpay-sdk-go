@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v4/banking"
+	"github.com/uqpay/uqpay-sdk-go/v3/banking"
 )
 
 const (
