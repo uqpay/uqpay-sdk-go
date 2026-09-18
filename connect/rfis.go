@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 type RFIsClient struct{ client *common.APIClient }
@@ -23,7 +23,22 @@ const (
 type RFIAnswerItem struct {
 	Key         string   `json:"key"`
 	Type        string   `json:"type"`
-	Attachments []string `json:"attachments"`
+	Attachments []string `json:"attachments,omitempty"`
+	Text        string   `json:"text,omitempty"` // Non-empty for TEXT answers.
+}
+
+// RFIAnswerResponse is distinct from request answers: attachments contain file details.
+type RFIAnswerResponse struct {
+	Key         string          `json:"key,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Text        string          `json:"text,omitempty"`
+	Attachments []RFIAttachment `json:"attachments,omitempty"`
+}
+type RFIAttachment struct {
+	FileType string `json:"file_type,omitempty"`
+	FileName string `json:"file_name,omitempty"`
+	Size     int64  `json:"size,omitempty"`
+	URL      string `json:"url,omitempty"`
 }
 
 type RFIQuestion struct {
@@ -33,8 +48,8 @@ type RFIQuestion struct {
 }
 
 type RFIRequestItem struct {
-	Question RFIQuestion    `json:"question"`
-	Answer   *RFIAnswerItem `json:"answer,omitempty"`
+	Question RFIQuestion        `json:"question"`
+	Answer   *RFIAnswerResponse `json:"answer,omitempty"`
 }
 
 type RFI struct {

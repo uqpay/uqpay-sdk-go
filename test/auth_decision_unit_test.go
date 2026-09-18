@@ -3,8 +3,8 @@ package test
 import (
 	"testing"
 
-	uqpay "github.com/uqpay/uqpay-sdk-go/v3"
-	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
+	uqpay "github.com/uqpay/uqpay-sdk-go/v4"
+	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
 )
 
 func TestAuthDecisionIsAvailableOnIssuingClient(t *testing.T) {

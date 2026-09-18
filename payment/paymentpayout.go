@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // PaymentPayoutsClient handles payment payout operations
@@ -74,10 +74,10 @@ func (c *PaymentPayoutsClient) Create(ctx context.Context, req *CreatePayoutRequ
 }
 
 // Get retrieves a specific payout by ID
-func (c *PaymentPayoutsClient) Get(ctx context.Context, payoutID string) (*Payout, error) {
+func (c *PaymentPayoutsClient) Get(ctx context.Context, payoutID string, opts ...*common.RequestOptions) (*Payout, error) {
 	var resp Payout
 	path := fmt.Sprintf("/v2/payment/payout/%s", payoutID)
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, requestOptionsWithClientID(c.client.Config.ClientID, opts...)); err != nil {
 		return nil, fmt.Errorf("failed to get payout: %w", err)
 	}
 	return &resp, nil
@@ -85,7 +85,7 @@ func (c *PaymentPayoutsClient) Get(ctx context.Context, payoutID string) (*Payou
 
 // List returns a paginated list of payouts with optional filters
 // Note: When filtering by date range, max interval is one month
-func (c *PaymentPayoutsClient) List(ctx context.Context, req *ListPayoutsRequest) (*ListPayoutsResponse, error) {
+func (c *PaymentPayoutsClient) List(ctx context.Context, req *ListPayoutsRequest, opts ...*common.RequestOptions) (*ListPayoutsResponse, error) {
 	var resp ListPayoutsResponse
 
 	path := "/v2/payment/payout"
@@ -111,7 +111,7 @@ func (c *PaymentPayoutsClient) List(ctx context.Context, req *ListPayoutsRequest
 		path += fmt.Sprintf("%send_time=%s", separator, url.QueryEscape(req.EndTime))
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, requestOptionsWithClientID(c.client.Config.ClientID, opts...)); err != nil {
 		return nil, fmt.Errorf("failed to list payouts: %w", err)
 	}
 	return &resp, nil

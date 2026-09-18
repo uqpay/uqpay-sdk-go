@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // ConversionClient handles conversion operations
@@ -56,7 +56,7 @@ type CreateConversionResponse struct {
 
 // ListConversionsRequest represents a conversion list request
 type ListConversionsRequest struct {
-	PageSize         int    `json:"page_size"`         // required, 10-100
+	PageSize         int    `json:"page_size"`         // required, 1-100
 	PageNumber       int    `json:"page_number"`       // required, >=1
 	StartTime        int64  `json:"start_time"`        // optional, Unix timestamp in milliseconds
 	EndTime          int64  `json:"end_time"`          // optional, Unix timestamp in milliseconds

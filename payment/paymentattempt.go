@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // PaymentAttemptsClient handles payment attempt operations
@@ -30,19 +30,21 @@ type ListPaymentAttemptsRequest struct {
 
 // PaymentAttempt represents a payment attempt response
 type PaymentAttempt struct {
-	AttemptID          string            `json:"attempt_id"`
-	Amount             string            `json:"amount,omitempty"`
-	Currency           string            `json:"currency,omitempty"`
-	CapturedAmount     string            `json:"captured_amount,omitempty"`
-	RefundedAmount     string            `json:"refunded_amount,omitempty"`
-	AttemptStatus      string            `json:"attempt_status,omitempty"`
-	CancellationReason string            `json:"cancellation_reason,omitempty"`
-	FailureCode        string            `json:"failure_code,omitempty"`
-	PaymentMethod      *PaymentMethod    `json:"payment_method,omitempty"`
-	Metadata           map[string]string `json:"metadata,omitempty"`
-	CreateTime         string            `json:"create_time,omitempty"`
-	UpdateTime         string            `json:"update_time,omitempty"`
-	CompleteTime       string            `json:"complete_time,omitempty"`
+	AdviceCode         string                 `json:"advice_code,omitempty"`
+	AuthenticationData map[string]interface{} `json:"authentication_data,omitempty"`
+	AttemptID          string                 `json:"attempt_id"`
+	Amount             string                 `json:"amount,omitempty"`
+	Currency           string                 `json:"currency,omitempty"`
+	CapturedAmount     string                 `json:"captured_amount,omitempty"`
+	RefundedAmount     string                 `json:"refunded_amount,omitempty"`
+	AttemptStatus      string                 `json:"attempt_status,omitempty"`
+	CancellationReason string                 `json:"cancellation_reason,omitempty"`
+	FailureCode        string                 `json:"failure_code,omitempty"`
+	PaymentMethod      *PaymentMethod         `json:"payment_method,omitempty"`
+	Metadata           map[string]string      `json:"metadata,omitempty"`
+	CreateTime         string                 `json:"create_time,omitempty"`
+	UpdateTime         string                 `json:"update_time,omitempty"`
+	CompleteTime       string                 `json:"complete_time,omitempty"`
 }
 
 // ListPaymentAttemptsResponse represents a paginated list of payment attempts

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // TransfersClient handles issuing transfer operations
@@ -43,7 +43,7 @@ type Transfer struct {
 	Amount               string `json:"amount"`                 // Transfer amount
 	FeeAmount            string `json:"fee_amount"`             // Transaction fee amount
 	Currency             string `json:"currency"`               // Transfer currency
-	TransferStatus       string `json:"transfer_status"`        // Transfer status: pending, failed, completed
+	TransferStatus       string `json:"transfer_status"`        // Transfer status: PENDING, FAILED, COMPLETED
 	CreateTime           string `json:"create_time"`            // Transfer create time
 	CompleteTime         string `json:"complete_time"`          // Transfer complete time
 	CreatorID            string `json:"creator_id"`             // The account id that create the transfer

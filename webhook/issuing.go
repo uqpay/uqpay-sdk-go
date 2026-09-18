@@ -100,6 +100,7 @@ type RiskControl struct {
 
 // Cardholder represents the cardholder information
 type Cardholder struct {
+	Reason string `json:"reason,omitempty"`
 	// CardholderID is the unique identifier for the cardholder
 	CardholderID string `json:"cardholder_id"`
 
@@ -203,6 +204,8 @@ type CardRechargeData struct {
 // CardTransactionData represents card transaction information in issuing webhook events.
 // This is returned in the data field for issuing.fee.card and other transaction events.
 type CardTransactionData struct {
+	// WalletType is an open string; preserve unknown provider values and empty strings.
+	WalletType string `json:"wallet_type,omitempty"`
 	// CardID is the unique identifier for the card
 	CardID string `json:"card_id"`
 

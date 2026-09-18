@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // TransactionsClient handles transaction operations
@@ -24,6 +24,8 @@ type MerchantData struct {
 
 // Transaction represents a card transaction
 type Transaction struct {
+	// Detail only; SETTLED includes partial clearing. Nil for list items without this field.
+	SettlementStatus       *string       `json:"settlement_status,omitempty"`
 	TransactionID          string        `json:"transaction_id"`
 	CardID                 string        `json:"card_id"`
 	CardNumber             string        `json:"card_number"`

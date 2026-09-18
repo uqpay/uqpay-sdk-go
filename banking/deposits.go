@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // DepositsClient handles deposit operations
@@ -16,6 +16,7 @@ type DepositsClient struct {
 
 // Deposit represents a deposit transaction
 type Deposit struct {
+	DepositMethod         string         `json:"deposit_method,omitempty"`
 	DepositID             string         `json:"deposit_id"`
 	ShortReferenceID      string         `json:"short_reference_id"`
 	Currency              string         `json:"currency"`
@@ -31,6 +32,8 @@ type Deposit struct {
 
 // DepositSender represents the sender information for a deposit
 type DepositSender struct {
+	SenderType          string `json:"sender_type,omitempty"`
+	NameType            string `json:"name_type,omitempty"`
 	SenderName          string `json:"sender_name"`
 	SenderCountry       string `json:"sender_country"`
 	SenderAccountNumber string `json:"sender_account_number"`
@@ -40,7 +43,7 @@ type DepositSender struct {
 
 // ListDepositsRequest represents a deposit list request
 type ListDepositsRequest struct {
-	PageSize      int    `json:"page_size"`      // required, 10-100
+	PageSize      int    `json:"page_size"`      // required, 1-100
 	PageNumber    int    `json:"page_number"`    // required, >=1
 	StartTime     string `json:"start_time"`     // optional, ISO8601
 	EndTime       string `json:"end_time"`       // optional, ISO8601

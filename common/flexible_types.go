@@ -36,7 +36,19 @@ func (m *FlexibleStringMap) UnmarshalJSON(data []byte) error {
 		*m = nil
 		return nil
 	}
-	if data[0] == '"' || data[0] == '[' {
+	if data[0] == '"' {
+		var encoded string
+		if err := json.Unmarshal(data, &encoded); err != nil {
+			return err
+		}
+		// List-card metadata is a JSON-encoded object; empty strings remain empty.
+		if encoded == "" {
+			*m = nil
+			return nil
+		}
+		return m.UnmarshalJSON([]byte(encoded))
+	}
+	if data[0] == '[' {
 		*m = nil
 		return nil
 	}

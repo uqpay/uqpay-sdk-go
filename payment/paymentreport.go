@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // PaymentReportsClient handles payment reports operations
@@ -73,7 +73,7 @@ type ListSettlementsResponse struct {
 
 // ListSettlements returns a paginated list of settlements with optional date filters
 // Note: When both date params are specified, max interval is one month
-func (c *PaymentReportsClient) ListSettlements(ctx context.Context, req *ListSettlementsRequest) (*ListSettlementsResponse, error) {
+func (c *PaymentReportsClient) ListSettlements(ctx context.Context, req *ListSettlementsRequest, opts ...*common.RequestOptions) (*ListSettlementsResponse, error) {
 	var resp ListSettlementsResponse
 
 	path := "/v2/payment/settlements"
@@ -103,7 +103,7 @@ func (c *PaymentReportsClient) ListSettlements(ctx context.Context, req *ListSet
 		path += fmt.Sprintf("%spage_number=%d", separator, req.PageNumber)
 	}
 
-	if err := c.client.Get(ctx, path, &resp); err != nil {
+	if err := c.client.GetWithOptions(ctx, path, &resp, requestOptionsWithClientID(c.client.Config.ClientID, opts...)); err != nil {
 		return nil, fmt.Errorf("failed to list settlements: %w", err)
 	}
 	return &resp, nil

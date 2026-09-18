@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // VirtualAccountsClient handles virtual account operations
@@ -40,7 +40,7 @@ type VirtualAccountClearing struct {
 
 // ListVirtualAccountsRequest represents a virtual account list request
 type ListVirtualAccountsRequest struct {
-	PageSize   int `json:"page_size"`   // required, 10-100
+	PageSize   int `json:"page_size"`   // required, 1-100
 	PageNumber int `json:"page_number"` // required, >=1
 }
 

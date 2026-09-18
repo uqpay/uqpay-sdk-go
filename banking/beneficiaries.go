@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
 )
 
 // BeneficiariesClient handles beneficiary operations
@@ -96,7 +96,7 @@ type BeneficiaryCreationResponse struct {
 
 // ListBeneficiariesRequest represents a beneficiary list request
 type ListBeneficiariesRequest struct {
-	PageSize   int    `json:"page_size"`             // required, 10-100
+	PageSize   int    `json:"page_size"`             // required, 1-100
 	PageNumber int    `json:"page_number"`           // required, >=1
 	Currency   string `json:"currency,omitempty"`    // optional
 	Country    string `json:"country,omitempty"`     // optional, ISO 3166-1 alpha-2
@@ -118,16 +118,17 @@ type BeneficiaryCheckAdditionalInfo struct {
 
 // BeneficiaryCheckRequest represents a beneficiary check request
 type BeneficiaryCheckRequest struct {
-	EntityType     string                          `json:"entity_type"`               // required: INDIVIDUAL or COMPANY
-	PaymentMethod  string                          `json:"payment_method"`            // required: LOCAL or SWIFT
-	AccountNumber  string                          `json:"account_number"`            // required
-	Currency       string                          `json:"currency"`                  // required, ISO 4217
-	FirstName      string                          `json:"first_name,omitempty"`      // required if INDIVIDUAL
-	LastName       string                          `json:"last_name,omitempty"`       // required if INDIVIDUAL
-	CompanyName    string                          `json:"company_name,omitempty"`    // required if COMPANY
-	ClearingSystem string                          `json:"clearing_system,omitempty"` // e.g. LOCAL, ACH, FEDWIRE
-	IBAN           string                          `json:"iban,omitempty"`            // conditional, e.g. country code for validation
-	AdditionalInfo *BeneficiaryCheckAdditionalInfo `json:"additional_info,omitempty"` // optional
+	BankCountryCode string                          `json:"bank_country_code,omitempty"` // Conditional on payment method and currency.
+	EntityType      string                          `json:"entity_type"`                 // required: INDIVIDUAL or COMPANY
+	PaymentMethod   string                          `json:"payment_method"`              // required: LOCAL or SWIFT
+	AccountNumber   string                          `json:"account_number,omitempty"`    // At least one non-empty account_number or iban; account_number takes precedence.
+	Currency        string                          `json:"currency"`                    // required, ISO 4217
+	FirstName       string                          `json:"first_name,omitempty"`        // required if INDIVIDUAL
+	LastName        string                          `json:"last_name,omitempty"`         // required if INDIVIDUAL
+	CompanyName     string                          `json:"company_name,omitempty"`      // required if COMPANY
+	ClearingSystem  string                          `json:"clearing_system,omitempty"`   // e.g. LOCAL, ACH, FEDWIRE
+	IBAN            string                          `json:"iban,omitempty"`              // Alternative to account_number.
+	AdditionalInfo  *BeneficiaryCheckAdditionalInfo `json:"additional_info,omitempty"`   // optional
 }
 
 // PaymentMethod represents an available payment method
