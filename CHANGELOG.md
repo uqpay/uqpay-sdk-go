@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow UQPAY's shared `MAJOR.MINOR` and repository-specific `PATCH`
 policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] - Unreleased
+## [4.0.0] - 2026-09-18
 
 ### Breaking
 
@@ -19,7 +19,7 @@ policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 - Align KYC, beneficiary checks, card art, acquiring GET headers and Webhook fields
   within the approved frozen scope. Later capture/CARD-beneficiary contracts are excluded.
-- Preserve runtime support floors. This version has not been published.
+- Preserve runtime support floors.
 
 - Go imports and module requirement now use `/v4`.
 
