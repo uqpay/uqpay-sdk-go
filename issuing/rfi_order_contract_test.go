@@ -102,6 +102,39 @@ func TestRFIAndPINOrderResponses(t *testing.T) {
 			t.Fatalf("recharge financial fields: %+v", order)
 		}
 	}
+	// D044/D094: detail-only status; missing detail is legacy robustness.
+	transactions := NewClient(api).Transactions
+	for _, status := range []string{"UNKNOWN", "UNSETTLED", "SETTLED", "NOT_APPLICABLE", ""} {
+		response = []byte(`{"transaction_id":"tx-1"}`)
+		if status != "" {
+			response = []byte(`{"transaction_id":"tx-1","settlement_status":"` + status + `"}`)
+		}
+		tx, err := transactions.Get(ctx, "tx-1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		checkPath("/v1/issuing/transactions/tx-1")
+		if tx.TransactionID != "tx-1" {
+			t.Fatal(tx)
+		}
+		if status == "" {
+			if tx.SettlementStatus != nil {
+				t.Fatal("invented status")
+			}
+		} else if tx.SettlementStatus == nil || *tx.SettlementStatus != status {
+			t.Fatal("lost status", status)
+		}
+	}
+	response = []byte(`{"data":[{"transaction_id":"tx-1"}],"total_pages":1,"total_items":1}`)
+	page, err := transactions.List(ctx, &ListTransactionsRequest{PageSize: 10, PageNumber: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkPath("/v1/issuing/transactions")
+	if len(page.Data) != 1 || page.TotalPages != 1 || page.TotalItems != 1 || page.Data[0].TransactionID != "tx-1" || page.Data[0].SettlementStatus != nil {
+		t.Fatalf("list: %+v", page)
+	}
+
 }
 
 func assertRFIWireFields(t *testing.T, got connect.RFI, expected map[string]interface{}) {
