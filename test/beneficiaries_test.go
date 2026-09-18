@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/banking"
+	"github.com/uqpay/uqpay-sdk-go/v4/banking"
 )
 
 // newUSBankDetails creates a standard US ACH beneficiary bank details for testing

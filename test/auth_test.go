@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/auth"
-	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v4/auth"
+	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
 )
 
 // minInt returns the smaller of two integers (Go 1.19 compatible)

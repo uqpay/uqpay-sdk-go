@@ -1,5 +1,7 @@
 # API contract alignment
 
+Target compatibility cohort: **4.0.0 (unreleased)**. This branch is prepared for review; no tag or package publication is implied.
+
 Contract reference: [OpenAPI revision 1feb1d2](https://github.com/uqpay/uqpay-docs/tree/1feb1d26d032c53b79ab44a7d48e88c9a91d397d/docs).
 
 ## PIN management
@@ -81,3 +83,7 @@ Signed Webhook fixtures preserve raw data and reject a payload whose bytes chang
 ## Cardholder KYC event interpretation
 
 For `cardholder.kyc.status_changed`, use `data.cardholder_status` to determine the outcome: `SUCCESS` is approved, `FAILED` is rejected, and `INCOMPLETE` requires additional information. The optional or empty `data.reason` explains rejection or a request for more information; its presence alone does not determine the outcome.
+
+## Go v4 import migration
+
+Update the module requirement and all imports from `github.com/uqpay/uqpay-sdk-go/v3` to `github.com/uqpay/uqpay-sdk-go/v4`. The new module is available from a local checkout until publication; do not assume `v4.0.0` is already downloadable. Review the typed RFI response and optional request-options signature changes before recompiling.

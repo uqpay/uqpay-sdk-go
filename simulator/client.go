@@ -1,6 +1,6 @@
 package simulator
 
-import "github.com/uqpay/uqpay-sdk-go/v3/common"
+import "github.com/uqpay/uqpay-sdk-go/v4/common"
 
 type Client struct {
 	Issuing  *IssuingClient

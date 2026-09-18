@@ -3,8 +3,8 @@ package payment
 import (
 	"context"
 	"encoding/json"
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
-	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
 	"net/http"
 	"net/http/httptest"
 	"testing"

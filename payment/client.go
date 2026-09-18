@@ -1,6 +1,6 @@
 package payment
 
-import "github.com/uqpay/uqpay-sdk-go/v3/common"
+import "github.com/uqpay/uqpay-sdk-go/v4/common"
 
 // Client represents the Payment API client
 type Client struct {

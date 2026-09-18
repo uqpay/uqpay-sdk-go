@@ -9,9 +9,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v3/common"
-	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
-	"github.com/uqpay/uqpay-sdk-go/v3/connect"
+	"github.com/uqpay/uqpay-sdk-go/v4/common"
+	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v4/connect"
 )
 
 func TestRFIAndPINOrderResponses(t *testing.T) {
