@@ -1,6 +1,6 @@
 # API contract alignment
 
-Compatibility cohort: **3.1.0 (unreleased)**. This release preserves the 4.0.0 API behavior under the 3.x version line. It does not restore the 3.0.0 API contract; the migration requirements below still apply.
+Compatibility cohort: **3.1.0**. This release preserves the 4.0.0 API behavior under the 3.x version line. It does not restore the 3.0.0 API contract; the migration requirements below still apply.
 
 Contract reference: [OpenAPI revision 1feb1d2](https://github.com/uqpay/uqpay-docs/tree/1feb1d26d032c53b79ab44a7d48e88c9a91d397d/docs).
 
@@ -86,4 +86,4 @@ For `cardholder.kyc.status_changed`, use `data.cardholder_status` to determine t
 
 ## Go v3 module path
 
-Version 3.1.0 uses `github.com/uqpay/uqpay-sdk-go/v3`. Existing 3.0.0 integrations retain their module/import path. Code prepared against 4.0.0 must change `/v4` imports back to `/v3`. The typed RFI response and request-option migration requirements still apply. Version 3.1.0 is not yet published.
+Version 3.1.0 uses `github.com/uqpay/uqpay-sdk-go/v3`. Existing 3.0.0 integrations retain their module/import path. Code prepared against 4.0.0 must change `/v4` imports back to `/v3`. The typed RFI response and request-option migration requirements still apply.
