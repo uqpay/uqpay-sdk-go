@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/uqpay/uqpay-sdk-go/v4/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
 )
 
 // PaymentRefundsClient handles payment refund operations

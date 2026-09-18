@@ -9,11 +9,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/uqpay/uqpay-sdk-go/v4/banking"
-	"github.com/uqpay/uqpay-sdk-go/v4/common"
-	"github.com/uqpay/uqpay-sdk-go/v4/configuration"
-	"github.com/uqpay/uqpay-sdk-go/v4/payment"
-	"github.com/uqpay/uqpay-sdk-go/v4/simulator"
+	"github.com/uqpay/uqpay-sdk-go/v3/banking"
+	"github.com/uqpay/uqpay-sdk-go/v3/common"
+	"github.com/uqpay/uqpay-sdk-go/v3/configuration"
+	"github.com/uqpay/uqpay-sdk-go/v3/payment"
+	"github.com/uqpay/uqpay-sdk-go/v3/simulator"
 )
 
 func TestRemainingFrozenResponses(t *testing.T) {

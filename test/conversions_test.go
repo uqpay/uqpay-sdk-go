@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	uqpay "github.com/uqpay/uqpay-sdk-go/v4"
-	"github.com/uqpay/uqpay-sdk-go/v4/banking"
+	uqpay "github.com/uqpay/uqpay-sdk-go/v3"
+	"github.com/uqpay/uqpay-sdk-go/v3/banking"
 )
 
 // getAvailableConversionDate fetches available conversion dates and returns the first valid one

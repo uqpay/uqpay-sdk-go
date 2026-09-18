@@ -1,6 +1,6 @@
 package connect
 
-import "github.com/uqpay/uqpay-sdk-go/v4/common"
+import "github.com/uqpay/uqpay-sdk-go/v3/common"
 
 // Client provides access to Connect APIs
 type Client struct {
