@@ -135,6 +135,55 @@ func TestRFIAndPINOrderResponses(t *testing.T) {
 		t.Fatalf("list: %+v", page)
 	}
 
+	// Frozen account summaries/details and issuing money: all provided fields.
+	moneyRaw, err := os.ReadFile("testdata/account-money.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var moneyCases []struct {
+		Operation string          `json:"operation"`
+		Path      string          `json:"path"`
+		Body      json.RawMessage `json:"body"`
+	}
+	if err := json.Unmarshal(moneyRaw, &moneyCases); err != nil {
+		t.Fatal(err)
+	}
+	accounts := connect.NewClient(api).Accounts
+	for _, fixture := range moneyCases {
+		response = fixture.Body
+		var actual interface{}
+		switch fixture.Operation {
+		case "accounts.list":
+			actual, err = accounts.List(ctx, &connect.ListAccountsRequest{PageSize: 10, PageNumber: 1})
+		case "accounts.get":
+			actual, err = accounts.Get(ctx, "account-1")
+		case "transactions.get":
+			actual, err = transactions.Get(ctx, "tx-1")
+		case "transactions.list":
+			actual, err = transactions.List(ctx, &ListTransactionsRequest{PageSize: 10, PageNumber: 1})
+		case "transfers.get":
+			actual, err = NewClient(api).Transfers.Retrieve(ctx, "transfer-1")
+		default:
+			t.Fatal(fixture.Operation)
+		}
+		if err != nil {
+			t.Fatal(fixture.Operation, err)
+		}
+		checkPath(fixture.Path)
+		encoded, err := json.Marshal(actual)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got, want interface{}
+		if err := json.Unmarshal(encoded, &got); err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(fixture.Body, &want); err != nil {
+			t.Fatal(err)
+		}
+		assertProvidedFields(t, fixture.Operation, got, want)
+	}
+
 }
 
 func assertRFIWireFields(t *testing.T, got connect.RFI, expected map[string]interface{}) {
@@ -166,5 +215,36 @@ func assertRFIWireFields(t *testing.T, got connect.RFI, expected map[string]inte
 	}
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatalf("RFI fields mismatch: got %s want %+v", raw, expected)
+	}
+}
+
+// Typed models may add zero-valued fields; every provided field must survive exactly.
+func assertProvidedFields(t *testing.T, path string, got, want interface{}) {
+	t.Helper()
+	switch w := want.(type) {
+	case map[string]interface{}:
+		g, ok := got.(map[string]interface{})
+		if !ok {
+			t.Fatalf("%s: expected object, got %#v", path, got)
+		}
+		for k, v := range w {
+			actual, exists := g[k]
+			if !exists {
+				t.Fatalf("%s.%s missing", path, k)
+			}
+			assertProvidedFields(t, path+"."+k, actual, v)
+		}
+	case []interface{}:
+		g, ok := got.([]interface{})
+		if !ok || len(g) != len(w) {
+			t.Fatalf("%s: array mismatch", path)
+		}
+		for i, v := range w {
+			assertProvidedFields(t, path, g[i], v)
+		}
+	default:
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("%s: got %#v want %#v", path, got, want)
+		}
 	}
 }
