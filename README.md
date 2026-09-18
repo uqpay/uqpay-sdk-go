@@ -1,6 +1,6 @@
 # UQPAY Go SDK
 
-> This branch prepares SDK/CLI **4.0.0 (unreleased)**. Review [contract migration guidance](CONTRACT_ALIGNMENT.md) before upgrading. Public downloads remain on the published version until a release is explicitly announced.
+> SDK/CLI **4.0.0** was released on **2026-09-18**. Review [contract migration guidance](CONTRACT_ALIGNMENT.md) before upgrading.
 
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/uqpay/uqpay-sdk-go/v4.svg)](https://pkg.go.dev/github.com/uqpay/uqpay-sdk-go/v4)
