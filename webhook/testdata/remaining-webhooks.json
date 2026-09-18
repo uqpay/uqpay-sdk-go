@@ -1,0 +1,182 @@
+[
+  {
+    "kind": "representative",
+    "data": {
+      "other_documents": null
+    }
+  },
+  {
+    "kind": "representative",
+    "data": {
+      "other_documents": []
+    }
+  },
+  {
+    "kind": "representative",
+    "data": {
+      "other_documents": [
+        {
+          "type": "PROOF_OF_ADDRESS",
+          "front": "https://example.test/proof"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "rfi",
+    "data": {
+      "rfi_id": "ACTREQ-prefixed"
+    }
+  },
+  {
+    "kind": "rfi",
+    "data": {
+      "rfi_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+  },
+  {
+    "kind": "cardholder",
+    "data": {
+      "reason": ""
+    }
+  },
+  {
+    "kind": "cardholder",
+    "data": {
+      "reason": "More evidence required"
+    }
+  },
+  {
+    "kind": "fee",
+    "data": {
+      "transaction_amount": "0.00",
+      "balance_amount": "0.00"
+    }
+  },
+  {
+    "kind": "transfer",
+    "data": {
+      "amount": "0.00"
+    }
+  },
+  {
+    "kind": "fee",
+    "data": {
+      "transaction_amount": "0.00000001",
+      "balance_amount": "0.00000001"
+    }
+  },
+  {
+    "kind": "transfer",
+    "data": {
+      "amount": "0.00000001"
+    }
+  },
+  {
+    "kind": "fee",
+    "data": {
+      "transaction_amount": "-12345678901234567890.12345678",
+      "balance_amount": "-12345678901234567890.12345678"
+    }
+  },
+  {
+    "kind": "transfer",
+    "data": {
+      "amount": "-12345678901234567890.12345678"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "APPLE_PAY_CONTACTLESS"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "APPLE_PAY_ECOM"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "GOOGLE_PAY_CONTACTLESS"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "GOOGLE_PAY_ECOM"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "SAMSUNG_PAY_CONTACTLESS"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "SAMSUNG_PAY_ECOM"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "OTHER"
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": ""
+    }
+  },
+  {
+    "kind": "transaction",
+    "data": {
+      "wallet_type": "FUTURE_WALLET"
+    }
+  },
+  {
+    "kind": "deposit",
+    "data": {
+      "complete_time": null
+    }
+  },
+  {
+    "kind": "deposit",
+    "data": {
+      "complete_time": ""
+    }
+  },
+  {
+    "kind": "deposit",
+    "data": {
+      "complete_time": "2026-09-17T00:00:00Z"
+    }
+  },
+  {
+    "kind": "intent",
+    "data": {
+      "next_action": null
+    }
+  },
+  {
+    "kind": "intent",
+    "data": {
+      "next_action": {}
+    }
+  },
+  {
+    "kind": "intent",
+    "data": {
+      "next_action": {
+        "redirect_to_url": {
+          "return_url": ""
+        }
+      }
+    }
+  }
+]
