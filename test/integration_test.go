@@ -67,7 +67,10 @@ func TestFullIntegration(t *testing.T) {
 				PageNumber: 1,
 			})
 
-			if err != nil || len(productsResp.Data) == 0 {
+			if err != nil {
+				t.Fatalf("Failed to list card products: %v", err)
+			}
+			if len(productsResp.Data) == 0 {
 				t.Skip("No card products available")
 			}
 
@@ -100,9 +103,7 @@ func TestFullIntegration(t *testing.T) {
 
 			card, err := client.Issuing.Cards.Create(ctx, createReq)
 			if err != nil {
-				t.Logf("❌ Failed to create card: %v", err)
-				t.Skip("Skipping card tests due to creation failure")
-				return
+				t.Fatalf("❌ Failed to create card: %v", err)
 			}
 
 			t.Logf("✅ Card created: ID=%s", card.CardID)
