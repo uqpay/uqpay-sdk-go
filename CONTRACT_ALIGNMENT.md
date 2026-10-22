@@ -25,7 +25,7 @@ Use `CapturePaymentIntentRequest{AmountToCapture: "50.00"}` instead of a float l
 
 `PaymentIntents.Confirm` accepts optional `RequestOptions`, including ClientID, OnBehalfOf and IdempotencyKey, while existing ordinary calls remain valid. Exact function types or interfaces that include Confirm must adopt its variadic `...*common.RequestOptions` signature. It uses the configured client ID unless explicitly overridden, consistently with create/capture. Assignment accepts optional `metadata.card_sku_code` for Personal Visa. Unset CARD request address fields are omitted, allowing sparse individual addresses. The public Address type and response empty-string serialization remain unchanged; bank and unknown payment methods retain their existing request serialization. Required fields for each scenario remain server-authoritative.
 
-The new `ValidatePayoutResponse.SufficientFunds` and `BeneficiaryValid` fields use `*bool`; the new `CaptureRecord.ChannelCaptureStatus` field uses `*int`. These fields did not exist in the 3.1.0 baseline. Check for nil before dereferencing: nil means not returned, false is an explicit negative result, and status 0 is an explicit pending capture. When constructing these models, pass pointers to values. Only these decision fields change presence representation.
+The new `ValidatePayoutResponse.SufficientFunds` and `BeneficiaryValid` fields use `*bool`; the new `CaptureRecord.ChannelCaptureStatus` field uses `*int`. These fields did not exist in the 3.1.0 baseline. Check for nil before dereferencing: nil means not returned, false is an explicit negative result, and status 0 is an explicit pending capture. When constructing these models, pass pointers to values.
 
 ## Published 3.1.0 baseline
 

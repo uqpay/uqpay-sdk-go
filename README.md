@@ -465,9 +465,12 @@ go vet ./...
 
 ## Versioning
 
-This SDK follows [Semantic Versioning](https://semver.org/).
+UQPAY coordinates all five clients at one complete `3.MINOR.PATCH` version.
+MAJOR remains 3; MINOR may include source or behavior changes. The stable `/v3`
+import path does not guarantee compatibility. Review cumulative migration notes
+and inspect `go list -m all` after dependency updates.
 
-Install the latest compatible version:
+Install this exact version:
 
 ```bash
 go get github.com/uqpay/uqpay-sdk-go/v3@v3.2.0
