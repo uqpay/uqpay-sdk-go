@@ -1,6 +1,6 @@
 # UQPAY Go SDK
 
-> SDK/CLI **3.1.0** retains the complete 4.0.0 feature set under the 3.x version line. Review [contract migration guidance](CONTRACT_ALIGNMENT.md) before upgrading.
+> SDK **3.2.0** aligns with the English v1.6 contract. Review [migration from 3.1.0](CONTRACT_ALIGNMENT.md#version-320--migration-from-310) before upgrading; UQPAY MINOR releases can require source changes.
 
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/uqpay/uqpay-sdk-go/v3.svg)](https://pkg.go.dev/github.com/uqpay/uqpay-sdk-go/v3)
@@ -25,7 +25,7 @@ Official Go SDK for UQPAY - A comprehensive payment and card issuing platform.
 ## Installation
 
 ```bash
-go get github.com/uqpay/uqpay-sdk-go/v3@latest
+go get github.com/uqpay/uqpay-sdk-go/v3@v3.2.0
 ```
 
 **Requirements**: Go 1.19 or higher
@@ -470,7 +470,7 @@ This SDK follows [Semantic Versioning](https://semver.org/).
 Install the latest compatible version:
 
 ```bash
-go get github.com/uqpay/uqpay-sdk-go/v3@latest
+go get github.com/uqpay/uqpay-sdk-go/v3@v3.2.0
 ```
 
 View all releases: [GitHub Releases](https://github.com/uqpay/uqpay-sdk-go/releases)

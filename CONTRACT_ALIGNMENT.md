@@ -1,8 +1,8 @@
 # API contract alignment
 
-## Unreleased contract update
+## Version 3.2.0 — migration from 3.1.0
 
-This source update targets [English v1.6 contract `16d84adb`](https://github.com/uqpay/uqpay-docs/tree/16d84adb1a6275004c5e223ddcc18d64feedfc8e/docs), compared with the 3.1.0 contract `1feb1d26d032c53b79ab44a7d48e88c9a91d397d`. Package version metadata remains 3.1.0 for development; these changes are not a published 3.1.0 artifact. A future coordinated release requires a new MINOR version under the SDK version policy.
+This source update targets [English v1.6 contract `16d84adb`](https://github.com/uqpay/uqpay-docs/tree/16d84adb1a6275004c5e223ddcc18d64feedfc8e/docs), compared with the 3.1.0 contract `1feb1d26d032c53b79ab44a7d48e88c9a91d397d`. Compatibility baseline: [`v3.1.0` (`f631f53f`)](https://github.com/uqpay/uqpay-sdk-go/tree/f631f53fcf657b1d37ec9f1e1389f0c7a9337d98). This is a MINOR release under UQPAY's coordinated `3.MINOR.PATCH` policy; MINOR does not imply source compatibility. Runtime floors and dependencies are unchanged.
 
 - Banking: CARD beneficiaries and expiry, optional payment-method entity filtering, mixed validation rule objects, optional payout reference/fee/date, and `GET /v1/payouts/validation`. Validation checks a saved beneficiary and funds without reserving funds or guaranteeing later success. The target operation lists a Sandbox server; Production availability is unverified.
 - Issuing: cardholder supporting documents (`proof_of_address`, its issue date/country, and `identity_verification`), supporting-only updates, sparse response addresses, and omitted cardholder IDs for Business Visa default-holder issuance/assignment. Personal and other product requirements remain server-authoritative. One-step inline cardholder identity is not extended by the supporting-document contract.
@@ -15,13 +15,15 @@ Length/date/enum constraints moved from descriptions into schema do not add clie
 
 Targeted regressions exercise request method/path, serialization, response decoding and local webhook payloads with synthetic data. Tests and candidate-package consumers do not establish live API deployment, permissions, channel execution, webhook delivery or financial reconciliation. Live integration tests are skipped when disabled or missing credentials; a skipped test is not a passed business flow. Known historical integration tests outside this update still require review before being used as end-to-end acceptance evidence.
 
-### Source migration
+### Source migration from 3.1.0
+
+Keep `github.com/uqpay/uqpay-sdk-go/v3` imports. Install `go get github.com/uqpay/uqpay-sdk-go/v3@v3.2.0` and inspect the selected SDK with `go list -m all`; Go MVS may select a higher version required by another dependency. Earlier migration requirements below remain cumulative.
 
 Use `CapturePaymentIntentRequest{AmountToCapture: "50.00"}` instead of a float literal. This preserves the exact decimal string required on the wire. `PaymentMethod.ValidationField` is now `[]any`; use a type switch for `string` and `map[string]any` entries. `ListPaymentMethodsForEntity` adds entity filtering while the original method remains available. Omitted optional payout fields and empty default-holder IDs are no longer serialized as empty required values.
 
 ### Cross-client contract details
 
-`PaymentIntents.Confirm` accepts optional `RequestOptions`, including ClientID, OnBehalfOf and IdempotencyKey, while existing calls remain valid. It uses the configured client ID unless explicitly overridden, consistently with create/capture. Assignment accepts optional `metadata.card_sku_code` for Personal Visa. Unset CARD request address fields are omitted, allowing sparse individual addresses. The public Address type and response empty-string serialization remain unchanged; bank and unknown payment methods retain their existing request serialization. Required fields for each scenario remain server-authoritative.
+`PaymentIntents.Confirm` accepts optional `RequestOptions`, including ClientID, OnBehalfOf and IdempotencyKey, while existing ordinary calls remain valid. Exact function types or interfaces that include Confirm must adopt its variadic `...*common.RequestOptions` signature. It uses the configured client ID unless explicitly overridden, consistently with create/capture. Assignment accepts optional `metadata.card_sku_code` for Personal Visa. Unset CARD request address fields are omitted, allowing sparse individual addresses. The public Address type and response empty-string serialization remain unchanged; bank and unknown payment methods retain their existing request serialization. Required fields for each scenario remain server-authoritative.
 
 `ValidatePayoutResponse.SufficientFunds` and `BeneficiaryValid` are now `*bool`; `CaptureRecord.ChannelCaptureStatus` is now `*int`. Check for nil before dereferencing: nil means not returned, false is an explicit negative result, and status 0 is an explicit pending capture. When constructing these models, pass pointers to values. Only these decision fields change presence representation.
 

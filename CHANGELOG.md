@@ -3,8 +3,37 @@
 All notable changes to the UQPAY Go SDK are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versions follow UQPAY's shared `MAJOR.MINOR` and repository-specific `PATCH`
-policy, which is based on [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Versions follow UQPAY's coordinated `3.MINOR.PATCH` policy. MAJOR remains 3;
+MINOR can require migration. Pin an exact version and review its migration notes.
+
+## [3.2.0]
+
+### Added
+
+- Align Banking CARD beneficiaries and expiry, entity/payment-method filtering,
+  mixed validation rules, and payout validation with English v1.6 contract
+  [`16d84adb`](https://github.com/uqpay/uqpay-docs/tree/16d84adb1a6275004c5e223ddcc18d64feedfc8e/docs).
+- Add Issuing cardholder supporting documents, Business Visa default-holder
+  omission, and optional Personal Visa assignment `metadata.card_sku_code`.
+- Expose Acquiring authorization/capture options, capture references and records,
+  authorization balances/expiry and updated payment intent states.
+
+### Fixed
+
+- Preserve omitted company supporting documents, sparse request/response fields,
+  and optional decision values without inventing business defaults.
+- Exercise authentication and affected public entry points with offline fixtures;
+  disabled integration tests do not establish live API acceptance.
+
+### Migration from 3.1.0
+
+- Capture amounts now use decimal strings; `PaymentMethod.ValidationField` uses
+  `[]any` for string/object rules. Payout validation decisions use `*bool` and
+  capture channel status uses `*int`: check nil before dereferencing.
+- `PaymentIntents.Confirm` accepts variadic request options. Ordinary calls remain
+  valid; exact function types/interfaces must adopt the variadic signature.
+- Keep `/v3` imports. The stable module path does not guarantee source compatibility.
+  See [3.2.0 migration guidance](CONTRACT_ALIGNMENT.md#version-320--migration-from-310).
 
 ## [3.1.0]
 
