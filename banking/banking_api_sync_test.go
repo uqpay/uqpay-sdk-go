@@ -38,7 +38,7 @@ func TestBankingAPISyncValidationAndMethodRules(t *testing.T) {
 	defer closeServer()
 	opts := &common.RequestOptions{OnBehalfOf: "sub-account"}
 	result, err := client.Payouts.Validate(context.Background(), &ValidatePayoutRequest{BeneficiaryID: "saved + id", Currency: "USD", Amount: "1.00", FeePaidBy: "OURS"}, opts)
-	if err != nil || result.ChannelCode != "MASTERCARD" || result.FeeAmount != "5" || result.TotalAmount != "6" || result.SufficientFunds || !result.BeneficiaryValid {
+	if err != nil || result.ChannelCode != "MASTERCARD" || result.FeeAmount != "5" || result.TotalAmount != "6" || result.SufficientFunds == nil || *result.SufficientFunds || result.BeneficiaryValid == nil || !*result.BeneficiaryValid {
 		t.Fatalf("result %+v, %v", result, err)
 	}
 	methods, err := client.Beneficiaries.ListPaymentMethodsForEntity(context.Background(), "USD", "US", "INDIVIDUAL", opts)
@@ -75,6 +75,147 @@ func TestBankingAPISyncCardFieldsAndOptionalPayout(t *testing.T) {
 	for _, key := range []string{"payout_reference", "fee_paid_by", "payout_date"} {
 		if _, ok := payout[key]; ok {
 			t.Errorf("optional field %s emitted: %s", key, raw)
+		}
+	}
+}
+
+func TestBankingAPISyncSparseCardAddressPublicRequests(t *testing.T) {
+	calls := 0
+	client, closeServer := newVATestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %s", r.Method)
+		}
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if r.URL.Path == "/v1/payouts" {
+			body = body["beneficiary"].(map[string]any)
+		}
+		address := body["address"].(map[string]any)
+		if len(address) != 1 || address["nationality"] != "US" {
+			t.Errorf("sparse address changed: %+v", address)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"beneficiary_id":"ben-id","payout_id":"payout-id"}`))
+	})
+	defer closeServer()
+	address := &Address{Nationality: "US"}
+	bank := &BankDetails{CardExpiry: "2099-12", AccountHolder: "Test Recipient", AccountNumber: "1234567890123", AccountCurrencyCode: "USD", BankCountryCode: "US", ClearingSystem: "MASTERCARD SEND"}
+	req := &BeneficiaryCreationRequest{EntityType: "INDIVIDUAL", PaymentMethod: "CARD", BankDetails: bank, Address: address}
+	if _, err := client.Beneficiaries.Create(context.Background(), req); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.Beneficiaries.Update(context.Background(), "ben-id", req); err != nil {
+		t.Fatal(err)
+	}
+	payout := &CreatePayoutRequest{Currency: "USD", Amount: "1", PurposeCode: "BILL_PAYMENT", Beneficiary: &PayoutInlineBeneficiary{EntityType: "INDIVIDUAL", PaymentMethod: "CARD", BankDetails: bank, Address: address}}
+	if _, err := client.Payouts.Create(context.Background(), payout); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 3 {
+		t.Errorf("calls = %d", calls)
+	}
+}
+
+func TestBankingAPISyncValidationMissingVersusFalse(t *testing.T) {
+	response := `{}`
+	client, closeServer := newVATestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(response))
+	})
+	defer closeServer()
+	req := &ValidatePayoutRequest{BeneficiaryID: "ben-id", Currency: "USD", Amount: "1", FeePaidBy: "OURS"}
+	absent, err := client.Payouts.Validate(context.Background(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if absent.SufficientFunds != nil || absent.BeneficiaryValid != nil {
+		t.Fatalf("missing decision must remain unknown: %+v", absent)
+	}
+	raw, err := json.Marshal(absent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var encoded map[string]any
+	if err := json.Unmarshal(raw, &encoded); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"sufficient_funds", "beneficiary_valid"} {
+		if _, ok := encoded[key]; ok {
+			t.Errorf("absent %s emitted", key)
+		}
+	}
+	response = `{"sufficient_funds":false,"beneficiary_valid":false}`
+	negative, err := client.Payouts.Validate(context.Background(), req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if negative.SufficientFunds == nil || *negative.SufficientFunds || negative.BeneficiaryValid == nil || *negative.BeneficiaryValid {
+		t.Fatalf("false decision lost: %+v", negative)
+	}
+	raw, err = json.Marshal(negative)
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded = nil
+	if err := json.Unmarshal(raw, &encoded); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"sufficient_funds", "beneficiary_valid"} {
+		if value, ok := encoded[key]; !ok || value != false {
+			t.Errorf("explicit false %s lost: %s", key, raw)
+		}
+	}
+}
+
+func TestBankingAPISyncAddressResponseAndLegacyRequestSemantics(t *testing.T) {
+	// Responses must retain empty strings, including the five frozen address fields.
+	raw, err := json.Marshal(Beneficiary{Address: &Address{Nationality: "US"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var response map[string]any
+	if err := json.Unmarshal(raw, &response); err != nil {
+		t.Fatal(err)
+	}
+	address := response["address"].(map[string]any)
+	for _, key := range []string{"country", "city", "street_address", "state", "postal_code"} {
+		if value, ok := address[key]; !ok || value != "" {
+			t.Errorf("response empty %s lost: %s", key, raw)
+		}
+	}
+	for _, paymentMethod := range []string{"LOCAL", "SWIFT", "FUTURE"} {
+		raw, err = json.Marshal(BeneficiaryCreationRequest{PaymentMethod: paymentMethod, Address: &Address{Nationality: "US"}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var request map[string]any
+		if err := json.Unmarshal(raw, &request); err != nil {
+			t.Fatal(err)
+		}
+		legacy := request["address"].(map[string]any)
+		if len(legacy) != 6 || legacy["country"] != "" {
+			t.Errorf("%s request changed: %s", paymentMethod, raw)
+		}
+	}
+	full := &Address{StreetAddress: "1 Main Street", City: "Boston", State: "MA", PostalCode: "02101", Country: "US", Nationality: "US"}
+	for _, request := range []any{
+		BeneficiaryCreationRequest{PaymentMethod: "CARD", Address: full},
+		PayoutInlineBeneficiary{PaymentMethod: "CARD", Address: full},
+	} {
+		raw, err = json.Marshal(request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var fields map[string]any
+		if err := json.Unmarshal(raw, &fields); err != nil {
+			t.Fatal(err)
+		}
+		address := fields["address"].(map[string]any)
+		if len(address) != 6 || address["country"] != "US" || address["street_address"] != "1 Main Street" {
+			t.Errorf("complete CARD address changed: %s", raw)
 		}
 	}
 }

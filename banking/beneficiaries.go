@@ -2,6 +2,7 @@ package banking
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -14,13 +15,13 @@ type BeneficiariesClient struct {
 	client *common.APIClient
 }
 
-// Address represents a beneficiary address
+// Address represents a beneficiary address. Required fields depend on the payment method and entity type.
 type Address struct {
-	StreetAddress string `json:"street_address"`        // required
-	City          string `json:"city"`                  // required
-	State         string `json:"state"`                 // required
-	PostalCode    string `json:"postal_code"`           // required
-	Country       string `json:"country"`               // required, ISO 3166-1 alpha-2
+	StreetAddress string `json:"street_address"`
+	City          string `json:"city"`
+	State         string `json:"state"`
+	PostalCode    string `json:"postal_code"`
+	Country       string `json:"country"`               // ISO 3166-1 alpha-2
 	Nationality   string `json:"nationality,omitempty"` // optional, ISO 3166-1 alpha-2
 }
 
@@ -86,6 +87,34 @@ type BeneficiaryCreationRequest struct {
 	Address        *Address        `json:"address,omitempty"`         // required for bank and company CARD recipients
 	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
 	Email          string          `json:"email,omitempty"`           // optional
+}
+
+// beneficiaryRequestAddress leaves bank and unknown payment methods unchanged.
+// CARD recipients can supply a partial address without creating empty fields.
+func beneficiaryRequestAddress(address *Address, paymentMethod string) any {
+	if address == nil {
+		return nil
+	}
+	if paymentMethod != "CARD" {
+		return address
+	}
+	return struct {
+		StreetAddress string `json:"street_address,omitempty"`
+		City          string `json:"city,omitempty"`
+		State         string `json:"state,omitempty"`
+		PostalCode    string `json:"postal_code,omitempty"`
+		Country       string `json:"country,omitempty"`
+		Nationality   string `json:"nationality,omitempty"`
+	}{address.StreetAddress, address.City, address.State, address.PostalCode, address.Country, address.Nationality}
+}
+
+// MarshalJSON preserves response Address semantics while omitting absent CARD request fields.
+func (r BeneficiaryCreationRequest) MarshalJSON() ([]byte, error) {
+	type request BeneficiaryCreationRequest
+	return json.Marshal(struct {
+		*request
+		Address any `json:"address,omitempty"`
+	}{(*request)(&r), beneficiaryRequestAddress(r.Address, r.PaymentMethod)})
 }
 
 // BeneficiaryCreationResponse represents a beneficiary creation response

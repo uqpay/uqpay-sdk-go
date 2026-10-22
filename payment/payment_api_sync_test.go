@@ -56,7 +56,7 @@ func TestPaymentAPISync(t *testing.T) {
 	if bodies[2]["amount_to_capture"] != "6.00" || bodies[2]["final_capture"] != true || bodies[2]["merchant_capture_order_id"] != "order-cap-1" {
 		t.Fatal(bodies[2])
 	}
-	if result.CaptureID != "cap-1" || result.CapturedAmount != "6.00" || result.AuthorizationExpiresAt != nil || result.AvailableToCapture != "0.00" || result.CaptureRecords[0].ChannelCaptureStatus != 0 || result.CaptureRecords[0].CompleteTime != nil || result.CaptureRecords[0].MerchantCaptureOrderID != nil {
+	if result.CaptureID != "cap-1" || result.CapturedAmount != "6.00" || result.AuthorizationExpiresAt != nil || result.AvailableToCapture != "0.00" || result.CaptureRecords[0].ChannelCaptureStatus == nil || *result.CaptureRecords[0].ChannelCaptureStatus != 0 || result.CaptureRecords[0].CompleteTime != nil || result.CaptureRecords[0].MerchantCaptureOrderID != nil {
 		t.Fatalf("lost capture response: %+v", result)
 	}
 
@@ -73,3 +73,85 @@ func TestPaymentAPISync(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestPaymentConfirmOptionsAndLegacyCall(t *testing.T) {
+	var headers []http.Header
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v2/payment_intents/pi-1/confirm" {
+			t.Errorf("unexpected route %s %s", r.Method, r.URL.Path)
+		}
+		headers = append(headers, r.Header.Clone())
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"payment_intent_id":"pi-1"}`))
+	}))
+	defer server.Close()
+	cfg := &configuration.Configuration{ClientID: "configured-client", Environment: &configuration.Environment{BaseURL: server.URL}, HTTPClient: server.Client()}
+	c := NewClient(common.NewAPIClient(cfg, &staticTokenProvider{token: "offline-token"}))
+	req := &ConfirmPaymentIntentRequest{AuthorizationType: "pre_authorization"}
+	// Existing three-argument callers retain the configured client ID.
+	if _, err := c.PaymentIntents.Confirm(context.Background(), "pi-1", req); err != nil {
+		t.Fatal(err)
+	}
+	opts := &common.RequestOptions{OnBehalfOf: "sub-account", IdempotencyKey: "caller-key"}
+	if _, err := c.PaymentIntents.Confirm(context.Background(), "pi-1", req, opts); err != nil {
+		t.Fatal(err)
+	}
+	override := &common.RequestOptions{ClientID: "override-client", OnBehalfOf: "other-account", IdempotencyKey: "override-key"}
+	if _, err := c.PaymentIntents.Confirm(context.Background(), "pi-1", req, override); err != nil {
+		t.Fatal(err)
+	}
+	if headers[0].Get("x-client-id") != "configured-client" || headers[0].Get("x-idempotency-key") == "" {
+		t.Fatal(headers[0])
+	}
+	if headers[1].Get("x-client-id") != "configured-client" || headers[1].Get("x-on-behalf-of") != "sub-account" || headers[1].Get("x-idempotency-key") != "caller-key" {
+		t.Fatal(headers[1])
+	}
+	if headers[2].Get("x-client-id") != "override-client" || headers[2].Get("x-on-behalf-of") != "other-account" || headers[2].Get("x-idempotency-key") != "override-key" {
+		t.Fatal(headers[2])
+	}
+	if opts.ClientID != "" {
+		t.Fatal("caller options mutated")
+	}
+}
+
+func TestCaptureRecordStatusPresence(t *testing.T) {
+	for _, tc := range []struct {
+		raw  string
+		want *int
+	}{
+		{raw: `{}`},
+		{raw: `{"channel_capture_status":0}`, want: paymentStatusPointer(0)},
+		{raw: `{"channel_capture_status":1}`, want: paymentStatusPointer(1)},
+		{raw: `{"channel_capture_status":2}`, want: paymentStatusPointer(2)},
+		{raw: `{"channel_capture_status":3}`, want: paymentStatusPointer(3)},
+	} {
+		var record CaptureRecord
+		if err := json.Unmarshal([]byte(tc.raw), &record); err != nil {
+			t.Fatal(err)
+		}
+		if tc.want == nil {
+			if record.ChannelCaptureStatus != nil {
+				t.Fatal("missing status must remain absent")
+			}
+		} else if record.ChannelCaptureStatus == nil || *record.ChannelCaptureStatus != *tc.want {
+			t.Fatalf("status mismatch: %+v", record)
+		}
+		raw, err := json.Marshal(record)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var fields map[string]interface{}
+		if err := json.Unmarshal(raw, &fields); err != nil {
+			t.Fatal(err)
+		}
+		status, present := fields["channel_capture_status"]
+		if tc.want == nil {
+			if present {
+				t.Fatal("marshal invented a status")
+			}
+		} else if !present || status != float64(*tc.want) {
+			t.Fatalf("status lost: %s", raw)
+		}
+	}
+}
+func paymentStatusPointer(status int) *int { return &status }

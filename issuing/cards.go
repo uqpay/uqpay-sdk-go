@@ -103,12 +103,20 @@ type SetPINRequest struct {
 	PIN    string `json:"pin"`
 }
 
+// AssignCardMetadata carries the SKU required when assigning a Personal Visa card.
+// CardSKUCode must contain exactly 12 characters; validated by the server.
+type AssignCardMetadata struct {
+	CardSKUCode string `json:"card_sku_code"`
+}
+
 // AssignCardRequest represents a card assignment request
 type AssignCardRequest struct {
 	CardholderID string `json:"cardholder_id,omitempty"`
 	CardNumber   string `json:"card_number"`
 	CardCurrency string `json:"card_currency"`
 	CardMode     string `json:"card_mode"` // SINGLE or SHARE
+	// Required for Personal Visa; omit metadata for other card products.
+	Metadata *AssignCardMetadata `json:"metadata,omitempty"`
 }
 
 // ListCardsRequest represents a card list request

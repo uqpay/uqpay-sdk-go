@@ -19,6 +19,12 @@ Targeted regressions exercise request method/path, serialization, response decod
 
 Use `CapturePaymentIntentRequest{AmountToCapture: "50.00"}` instead of a float literal. This preserves the exact decimal string required on the wire. `PaymentMethod.ValidationField` is now `[]any`; use a type switch for `string` and `map[string]any` entries. `ListPaymentMethodsForEntity` adds entity filtering while the original method remains available. Omitted optional payout fields and empty default-holder IDs are no longer serialized as empty required values.
 
+### Cross-client contract details
+
+`PaymentIntents.Confirm` accepts optional `RequestOptions`, including ClientID, OnBehalfOf and IdempotencyKey, while existing calls remain valid. It uses the configured client ID unless explicitly overridden, consistently with create/capture. Assignment accepts optional `metadata.card_sku_code` for Personal Visa. Unset CARD request address fields are omitted, allowing sparse individual addresses. The public Address type and response empty-string serialization remain unchanged; bank and unknown payment methods retain their existing request serialization. Required fields for each scenario remain server-authoritative.
+
+`ValidatePayoutResponse.SufficientFunds` and `BeneficiaryValid` are now `*bool`; `CaptureRecord.ChannelCaptureStatus` is now `*int`. Check for nil before dereferencing: nil means not returned, false is an explicit negative result, and status 0 is an explicit pending capture. When constructing these models, pass pointers to values. Only these decision fields change presence representation.
+
 ## Published 3.1.0 baseline
 
 Compatibility cohort: **3.1.0**. This release preserves the 4.0.0 API behavior under the 3.x version line. It does not restore the 3.0.0 API contract; the migration requirements below still apply.

@@ -2,6 +2,7 @@ package banking
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -58,6 +59,15 @@ type PayoutInlineBeneficiary struct {
 	BankDetails    *BankDetails    `json:"bank_details"`              // required (uses BankDetails from beneficiaries.go)
 	Address        *Address        `json:"address,omitempty"`         // conditional (uses Address from beneficiaries.go)
 	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
+}
+
+// MarshalJSON applies CARD request address rules without changing the shared response model.
+func (r PayoutInlineBeneficiary) MarshalJSON() ([]byte, error) {
+	type request PayoutInlineBeneficiary
+	return json.Marshal(struct {
+		*request
+		Address any `json:"address,omitempty"`
+	}{(*request)(&r), beneficiaryRequestAddress(r.Address, r.PaymentMethod)})
 }
 
 // PayoutDocumentation represents documentation attached to a payout
@@ -200,8 +210,8 @@ type ValidatePayoutResponse struct {
 	FeeAmount        string `json:"fee_amount"`
 	TotalAmount      string `json:"total_amount"`
 	ChannelCode      string `json:"channel_code"`
-	SufficientFunds  bool   `json:"sufficient_funds"`
-	BeneficiaryValid bool   `json:"beneficiary_valid"`
+	SufficientFunds  *bool  `json:"sufficient_funds,omitempty"`
+	BeneficiaryValid *bool  `json:"beneficiary_valid,omitempty"`
 }
 
 func (c *PayoutsClient) Validate(ctx context.Context, req *ValidatePayoutRequest, opts ...*common.RequestOptions) (*ValidatePayoutResponse, error) {

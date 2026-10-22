@@ -365,8 +365,8 @@ type CaptureRecord struct {
 	CaptureSequence        int     `json:"capture_sequence,omitempty"`
 	CaptureAmount          string  `json:"capture_amount,omitempty"`
 	Currency               string  `json:"currency,omitempty"`
-	CaptureMode            string  `json:"capture_mode,omitempty"` // final or non_final
-	ChannelCaptureStatus   int     `json:"channel_capture_status"` // 0 pending, 1 processing, 2 completed, 3 failed
+	CaptureMode            string  `json:"capture_mode,omitempty"`           // final or non_final
+	ChannelCaptureStatus   *int    `json:"channel_capture_status,omitempty"` // 0 pending, 1 processing, 2 completed, 3 failed
 	ARN                    string  `json:"arn,omitempty"`
 	ChannelCaptureTime     *string `json:"channel_capture_time,omitempty"`
 	RequestTime            string  `json:"request_time,omitempty"`
@@ -449,10 +449,11 @@ func (c *PaymentIntentsClient) Update(ctx context.Context, paymentIntentID strin
 }
 
 // Confirm confirms a payment intent for payment authorization
-func (c *PaymentIntentsClient) Confirm(ctx context.Context, paymentIntentID string, req *ConfirmPaymentIntentRequest) (*PaymentIntent, error) {
+func (c *PaymentIntentsClient) Confirm(ctx context.Context, paymentIntentID string, req *ConfirmPaymentIntentRequest, opts ...*common.RequestOptions) (*PaymentIntent, error) {
 	var resp PaymentIntent
 	path := fmt.Sprintf("/v2/payment_intents/%s/confirm", paymentIntentID)
-	if err := c.client.Post(ctx, path, req, &resp); err != nil {
+	opt := requestOptionsWithClientID(c.client.Config.ClientID, opts...)
+	if err := c.client.PostWithOptions(ctx, path, req, &resp, opt); err != nil {
 		return nil, fmt.Errorf("failed to confirm payment intent: %w", err)
 	}
 	return &resp, nil
