@@ -132,8 +132,7 @@ func TestFullIntegration(t *testing.T) {
 
 				secureInfo, err := client.Issuing.Cards.GetSecure(ctx, cardID)
 				if err != nil {
-					t.Logf("❌ Failed to get secure info: %v", err)
-					return
+					t.Fatalf("Failed to get secure info: %v", err)
 				}
 
 				t.Logf("✅ Retrieved secure info:")
@@ -152,8 +151,7 @@ func TestFullIntegration(t *testing.T) {
 
 				order, err := client.Issuing.Cards.Recharge(ctx, cardID, rechargeReq)
 				if err != nil {
-					t.Logf("❌ Failed to recharge card: %v", err)
-					return
+					t.Fatalf("Failed to recharge card: %v", err)
 				}
 
 				t.Logf("✅ Recharge order created:")
@@ -172,8 +170,7 @@ func TestFullIntegration(t *testing.T) {
 
 				resp, err := client.Issuing.Cards.UpdateStatus(ctx, cardID, statusReq)
 				if err != nil {
-					t.Logf("❌ Failed to update card status: %v", err)
-					return
+					t.Fatalf("Failed to update card status: %v", err)
 				}
 
 				t.Logf("✅ Card status updated to: %s", statusReq.CardStatus)
