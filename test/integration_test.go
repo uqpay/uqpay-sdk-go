@@ -67,7 +67,10 @@ func TestFullIntegration(t *testing.T) {
 				PageNumber: 1,
 			})
 
-			if err != nil || len(productsResp.Data) == 0 {
+			if err != nil {
+				t.Fatalf("Failed to list card products: %v", err)
+			}
+			if len(productsResp.Data) == 0 {
 				t.Skip("No card products available")
 			}
 
@@ -100,9 +103,7 @@ func TestFullIntegration(t *testing.T) {
 
 			card, err := client.Issuing.Cards.Create(ctx, createReq)
 			if err != nil {
-				t.Logf("❌ Failed to create card: %v", err)
-				t.Skip("Skipping card tests due to creation failure")
-				return
+				t.Fatalf("❌ Failed to create card: %v", err)
 			}
 
 			t.Logf("✅ Card created: ID=%s", card.CardID)
@@ -132,8 +133,7 @@ func TestFullIntegration(t *testing.T) {
 
 				secureInfo, err := client.Issuing.Cards.GetSecure(ctx, cardID)
 				if err != nil {
-					t.Logf("❌ Failed to get secure info: %v", err)
-					return
+					t.Fatalf("Failed to get secure info: %v", err)
 				}
 
 				t.Logf("✅ Retrieved secure info:")
@@ -152,8 +152,7 @@ func TestFullIntegration(t *testing.T) {
 
 				order, err := client.Issuing.Cards.Recharge(ctx, cardID, rechargeReq)
 				if err != nil {
-					t.Logf("❌ Failed to recharge card: %v", err)
-					return
+					t.Fatalf("Failed to recharge card: %v", err)
 				}
 
 				t.Logf("✅ Recharge order created:")
@@ -172,8 +171,7 @@ func TestFullIntegration(t *testing.T) {
 
 				resp, err := client.Issuing.Cards.UpdateStatus(ctx, cardID, statusReq)
 				if err != nil {
-					t.Logf("❌ Failed to update card status: %v", err)
-					return
+					t.Fatalf("Failed to update card status: %v", err)
 				}
 
 				t.Logf("✅ Card status updated to: %s", statusReq.CardStatus)

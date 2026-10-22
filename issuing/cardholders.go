@@ -26,11 +26,16 @@ type ResidentialAddress struct {
 
 // Identity represents a cardholder's identity document
 type Identity struct {
-	Type      string  `json:"type"` // ID_CARD or PASSPORT
-	Number    string  `json:"number"`
-	FrontFile string  `json:"front_file"`
+	Type      string  `json:"type,omitempty"` // ID_CARD or PASSPORT
+	Number    string  `json:"number,omitempty"`
+	FrontFile string  `json:"front_file,omitempty"`
 	BackFile  *string `json:"back_file,omitempty"`
 	HandFile  *string `json:"hand_file,omitempty"`
+	// Supporting-only updates may omit document details. Empty/omitted files preserve saved values.
+	ProofOfAddress               *string `json:"proof_of_address,omitempty"`
+	ProofOfAddressIssueDate      *string `json:"proof_of_address_issue_date,omitempty"`
+	ProofOfAddressIssuingCountry *string `json:"proof_of_address_issuing_country,omitempty"`
+	IdentityVerification         *string `json:"identity_verification,omitempty"`
 }
 
 // KycProof represents third-party KYC verification proof

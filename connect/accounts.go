@@ -242,6 +242,8 @@ func validateCreateSubAccountRequest(req *CreateSubAccountRequest) error {
 
 // GetAdditionalDocuments retrieves the required and optional document types for creating
 // a company-type sub-account based on the specified country and business code (e.g. "BANKING").
+//
+// Deprecated: Retained for existing integrations; do not use for new integrations.
 func (c *AccountsClient) GetAdditionalDocuments(ctx context.Context, country, businessCode string, opts ...*common.RequestOptions) ([]AdditionalDocument, error) {
 	var resp []AdditionalDocument
 	path := fmt.Sprintf("/v1/accounts/get_additional?country=%s&business_code=%s", country, businessCode)

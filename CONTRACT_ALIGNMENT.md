@@ -1,5 +1,32 @@
 # API contract alignment
 
+## Unreleased contract update
+
+This source update targets [English v1.6 contract `16d84adb`](https://github.com/uqpay/uqpay-docs/tree/16d84adb1a6275004c5e223ddcc18d64feedfc8e/docs), compared with the 3.1.0 contract `1feb1d26d032c53b79ab44a7d48e88c9a91d397d`. Package version metadata remains 3.1.0 for development; these changes are not a published 3.1.0 artifact. A future coordinated release requires a new MINOR version under the SDK version policy.
+
+- Banking: CARD beneficiaries and expiry, optional payment-method entity filtering, mixed validation rule objects, optional payout reference/fee/date, and `GET /v1/payouts/validation`. Validation checks a saved beneficiary and funds without reserving funds or guaranteeing later success. The target operation lists a Sandbox server; Production availability is unverified.
+- Issuing: cardholder supporting documents (`proof_of_address`, its issue date/country, and `identity_verification`), supporting-only updates, sparse response addresses, and omitted cardholder IDs for Business Visa default-holder issuance/assignment. Personal and other product requirements remain server-authoritative. One-step inline cardholder identity is not extended by the supporting-document contract.
+- Acquiring: top-level authorization type, card-present authorization/capture options, merchant capture references, `final_capture=true`, authorization balances/expiry, capture records and new payment intent statuses. Capture acceptance is not channel completion. Existing optional attempt `captured_amount` remains for source compatibility even though the target no longer returns it.
+- Account Center: optional company supporting documents are preserved. The deprecated additional-documents method remains for existing integrations; do not use it for new integrations.
+
+Length/date/enum constraints moved from descriptions into schema do not add client-side validators. Product eligibility, beneficiary rules, POA validity and account/channel availability remain server-authoritative. Ramp/Stablecoin Account and Treasury remain outside this SDK scope. The hidden deposit simulator remains as an existing compatibility entry point.
+
+### Verification boundary
+
+Targeted regressions exercise request method/path, serialization, response decoding and local webhook payloads with synthetic data. Tests and candidate-package consumers do not establish live API deployment, permissions, channel execution, webhook delivery or financial reconciliation. Live integration tests are skipped when disabled or missing credentials; a skipped test is not a passed business flow. Known historical integration tests outside this update still require review before being used as end-to-end acceptance evidence.
+
+### Source migration
+
+Use `CapturePaymentIntentRequest{AmountToCapture: "50.00"}` instead of a float literal. This preserves the exact decimal string required on the wire. `PaymentMethod.ValidationField` is now `[]any`; use a type switch for `string` and `map[string]any` entries. `ListPaymentMethodsForEntity` adds entity filtering while the original method remains available. Omitted optional payout fields and empty default-holder IDs are no longer serialized as empty required values.
+
+### Cross-client contract details
+
+`PaymentIntents.Confirm` accepts optional `RequestOptions`, including ClientID, OnBehalfOf and IdempotencyKey, while existing calls remain valid. It uses the configured client ID unless explicitly overridden, consistently with create/capture. Assignment accepts optional `metadata.card_sku_code` for Personal Visa. Unset CARD request address fields are omitted, allowing sparse individual addresses. The public Address type and response empty-string serialization remain unchanged; bank and unknown payment methods retain their existing request serialization. Required fields for each scenario remain server-authoritative.
+
+`ValidatePayoutResponse.SufficientFunds` and `BeneficiaryValid` are now `*bool`; `CaptureRecord.ChannelCaptureStatus` is now `*int`. Check for nil before dereferencing: nil means not returned, false is an explicit negative result, and status 0 is an explicit pending capture. When constructing these models, pass pointers to values. Only these decision fields change presence representation.
+
+## Published 3.1.0 baseline
+
 Compatibility cohort: **3.1.0**. This release preserves the 4.0.0 API behavior under the 3.x version line. It does not restore the 3.0.0 API contract; the migration requirements below still apply.
 
 Contract reference: [OpenAPI revision 1feb1d2](https://github.com/uqpay/uqpay-docs/tree/1feb1d26d032c53b79ab44a7d48e88c9a91d397d/docs).

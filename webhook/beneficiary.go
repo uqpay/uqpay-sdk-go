@@ -19,6 +19,7 @@ const (
 // Payment type constants
 const (
 	PaymentTypeLocal         = "LOCAL"
+	PaymentTypeCard          = "CARD"
 	PaymentTypeInternational = "INTERNATIONAL"
 )
 
@@ -66,6 +67,7 @@ type BeneficiaryAddress struct {
 
 // BeneficiaryBankDetails represents the parsed beneficiary bank details.
 type BeneficiaryBankDetails struct {
+	CardExpiry          string `json:"card_expiry,omitempty"`
 	BankName            string `json:"bank_name"`
 	BankAddress         string `json:"bank_address"`
 	BankCountryCode     string `json:"bank_country_code"`

@@ -354,7 +354,7 @@ func TestCapturePaymentIntent(t *testing.T) {
 	}
 
 	captureReq := &payment.CapturePaymentIntentRequest{
-		AmountToCapture: 50.00,
+		AmountToCapture: "50.00",
 	}
 
 	captured, err := client.Payment.PaymentIntents.Capture(ctx, intent.PaymentIntentID, captureReq)
