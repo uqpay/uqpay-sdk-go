@@ -386,7 +386,7 @@ type SubAccountOwnershipDetails struct {
 	Representatives []SubAccountRepresentative `json:"representatives"`
 
 	// ShareholderDocs is a list of shareholder documents (base64 or file IDs)
-	ShareholderDocs []string `json:"shareholder_docs"`
+	ShareholderDocs []string `json:"shareholder_docs,omitempty"`
 }
 
 // SubAccountRepresentative represents a company representative/director/UBO.
@@ -457,7 +457,7 @@ type SubAccountRepresentative struct {
 	OtherDocuments []SubAccountRepresentativeDocument `json:"other_documents,omitempty"`
 
 	// FaceDocs is a list of face photo images (base64 or file IDs).
-	// Required for DIRECTOR and BENEFICIAL_OWNER roles.
+	// Optional for company representatives.
 	FaceDocs []string `json:"face_docs,omitempty"`
 }
 

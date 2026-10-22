@@ -18,16 +18,17 @@ type PaymentIntentsClient struct {
 
 // CreatePaymentIntentRequest represents a payment intent creation request
 type CreatePaymentIntentRequest struct {
-	Amount          string            `json:"amount"`
-	Currency        string            `json:"currency"`
-	MerchantOrderID string            `json:"merchant_order_id"`
-	Description     string            `json:"description"` // Max 32 characters
-	ReturnURL       string            `json:"return_url"`
-	PaymentMethod   *PaymentMethod    `json:"payment_method,omitempty"`
-	IPAddress       string            `json:"ip_address,omitempty"`
-	PaymentOrders   *PaymentOrders    `json:"payment_orders,omitempty"`
-	BrowserInfo     *BrowserInfo      `json:"browser_info,omitempty"`
-	Metadata        map[string]string `json:"metadata,omitempty"`
+	AuthorizationType string            `json:"authorization_type,omitempty"` // authorization or pre_authorization
+	Amount            string            `json:"amount"`
+	Currency          string            `json:"currency"`
+	MerchantOrderID   string            `json:"merchant_order_id"`
+	Description       string            `json:"description"` // Max 32 characters
+	ReturnURL         string            `json:"return_url"`
+	PaymentMethod     *PaymentMethod    `json:"payment_method,omitempty"`
+	IPAddress         string            `json:"ip_address,omitempty"`
+	PaymentOrders     *PaymentOrders    `json:"payment_orders,omitempty"`
+	BrowserInfo       *BrowserInfo      `json:"browser_info,omitempty"`
+	Metadata          map[string]string `json:"metadata,omitempty"`
 }
 
 // ============================================================================
@@ -82,7 +83,7 @@ type Card struct {
 	Network           string   `json:"network,omitempty"` // e.g., "mastercard", "visa"
 	Billing           *Billing `json:"billing,omitempty"`
 	AutoCapture       *bool    `json:"auto_capture,omitempty"`
-	AuthorizationType string   `json:"authorization_type,omitempty"` // "authorization"
+	AuthorizationType string   `json:"authorization_type,omitempty"` // authorization or pre_authorization
 	ThreeDSAction     string   `json:"three_ds_action,omitempty"`    // "enforce_3ds"
 }
 
@@ -182,6 +183,8 @@ type MobileInfo struct {
 
 // CardPresent represents card present (POS terminal) payment details
 type CardPresent struct {
+	AuthorizationType            string        `json:"authorization_type,omitempty"`
+	AutoCapture                  *bool         `json:"auto_capture,omitempty"`
 	CardNumber                   string        `json:"card_number"`
 	ExpiryMonth                  string        `json:"expiry_month"`
 	ExpiryYear                   string        `json:"expiry_year"`
@@ -323,15 +326,18 @@ type UpdatePaymentIntentRequest struct {
 
 // ConfirmPaymentIntentRequest represents a payment intent confirmation request
 type ConfirmPaymentIntentRequest struct {
-	PaymentMethod *PaymentMethod `json:"payment_method,omitempty"`
-	IPAddress     string         `json:"ip_address,omitempty"`
-	BrowserInfo   *BrowserInfo   `json:"browser_info,omitempty"`
-	ReturnURL     string         `json:"return_url,omitempty"`
+	AuthorizationType string         `json:"authorization_type,omitempty"` // authorization or pre_authorization
+	PaymentMethod     *PaymentMethod `json:"payment_method,omitempty"`
+	IPAddress         string         `json:"ip_address,omitempty"`
+	BrowserInfo       *BrowserInfo   `json:"browser_info,omitempty"`
+	ReturnURL         string         `json:"return_url,omitempty"`
 }
 
 // CapturePaymentIntentRequest represents a payment intent capture request
 type CapturePaymentIntentRequest struct {
-	AmountToCapture float64 `json:"amount_to_capture,omitempty"` // Optional: amount to capture, if different from original amount
+	AmountToCapture        string `json:"amount_to_capture,omitempty"` // Decimal string; omit to capture the full available amount.
+	MerchantCaptureOrderID string `json:"merchant_capture_order_id,omitempty"`
+	FinalCapture           *bool  `json:"final_capture,omitempty"` // Only true is supported; omit for the default final capture.
 }
 
 // CancelPaymentIntentRequest represents a payment intent cancellation request
@@ -352,8 +358,31 @@ type ListPaymentIntentsRequest struct {
 // Response Structures
 // ============================================================================
 
-// PaymentIntent represents a payment intent response
+// CaptureRecord represents the processing result of one capture.
+type CaptureRecord struct {
+	CaptureID              string  `json:"capture_id,omitempty"`
+	MerchantCaptureOrderID *string `json:"merchant_capture_order_id,omitempty"`
+	CaptureSequence        int     `json:"capture_sequence,omitempty"`
+	CaptureAmount          string  `json:"capture_amount,omitempty"`
+	Currency               string  `json:"currency,omitempty"`
+	CaptureMode            string  `json:"capture_mode,omitempty"` // final or non_final
+	ChannelCaptureStatus   int     `json:"channel_capture_status"` // 0 pending, 1 processing, 2 completed, 3 failed
+	ARN                    string  `json:"arn,omitempty"`
+	ChannelCaptureTime     *string `json:"channel_capture_time,omitempty"`
+	RequestTime            string  `json:"request_time,omitempty"`
+	CompleteTime           *string `json:"complete_time,omitempty"`
+}
+
+// PaymentIntent also carries capture acceptance fields; acceptance is not channel completion.
 type PaymentIntent struct {
+	CaptureID                   string                 `json:"capture_id,omitempty"`
+	MerchantCaptureOrderID      string                 `json:"merchant_capture_order_id,omitempty"`
+	AuthorizationExpiresAt      *string                `json:"authorization_expires_at,omitempty"`
+	AvailableToCapture          string                 `json:"available_to_capture,omitempty"`
+	AvailableToVoid             string                 `json:"available_to_void,omitempty"`
+	CurrentFundsAction          map[string]interface{} `json:"current_funds_action,omitempty"`
+	CaptureRecords              []CaptureRecord        `json:"capture_records,omitempty"`
+	AuthorizationType           string                 `json:"authorization_type,omitempty"` // authorization or pre_authorization
 	PaymentIntentID             string                 `json:"payment_intent_id"`
 	Amount                      string                 `json:"amount"`
 	Currency                    string                 `json:"currency"`

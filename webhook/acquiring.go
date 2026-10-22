@@ -170,7 +170,7 @@ type PaymentAttemptData struct {
 	// PaymentMethod contains payment method details
 	PaymentMethod *PaymentMethod `json:"payment_method,omitempty"`
 
-	// CapturedAmount is the amount that has been captured
+	// Deprecated: CapturedAmount is not returned by the current PaymentAttempt webhook contract.
 	CapturedAmount string `json:"captured_amount,omitempty"`
 
 	// RefundedAmount is the amount that has been refunded

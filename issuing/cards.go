@@ -39,7 +39,7 @@ type CardholderRequiredFields struct {
 type CreateCardRequest struct {
 	CardLimit                *float64                  `json:"card_limit,omitempty"`
 	CardCurrency             string                    `json:"card_currency"`
-	CardholderID             string                    `json:"cardholder_id"`
+	CardholderID             string                    `json:"cardholder_id,omitempty"`
 	CardProductID            string                    `json:"card_product_id"`
 	SpendingControls         []SpendingControl         `json:"spending_controls,omitempty"`
 	RiskControls             *RiskControls             `json:"risk_controls,omitempty"`
@@ -105,7 +105,7 @@ type SetPINRequest struct {
 
 // AssignCardRequest represents a card assignment request
 type AssignCardRequest struct {
-	CardholderID string `json:"cardholder_id"`
+	CardholderID string `json:"cardholder_id,omitempty"`
 	CardNumber   string `json:"card_number"`
 	CardCurrency string `json:"card_currency"`
 	CardMode     string `json:"card_mode"` // SINGLE or SHARE
@@ -479,7 +479,7 @@ func (c *CardsClient) ResetPIN(ctx context.Context, req *SetPINRequest, opts ...
 	return &resp, nil
 }
 
-// Assign assigns a physical card or bulk created virtual card to a cardholder
+// Assign assigns a physical card. Business Visa may omit CardholderID to use the company authorized person.
 func (c *CardsClient) Assign(ctx context.Context, req *AssignCardRequest, opts ...*common.RequestOptions) (*AssignCardResponse, error) {
 	var resp AssignCardResponse
 	if err := c.client.PostWithOptions(ctx, "/v1/issuing/cards/assign", req, &resp, firstRequestOptions(opts)); err != nil {

@@ -26,13 +26,14 @@ type Address struct {
 
 // BankDetails represents beneficiary bank account details
 type BankDetails struct {
+	CardExpiry          string `json:"card_expiry,omitempty"`
 	AccountNumber       string `json:"account_number"`                // required
 	AccountHolder       string `json:"account_holder"`                // required
 	AccountCurrencyCode string `json:"account_currency_code"`         // required, ISO 4217
-	BankName            string `json:"bank_name"`                     // required
-	BankAddress         string `json:"bank_address"`                  // required
+	BankName            string `json:"bank_name,omitempty"`           // required
+	BankAddress         string `json:"bank_address,omitempty"`        // required
 	BankCountryCode     string `json:"bank_country_code"`             // required, ISO 3166-1 alpha-2
-	SwiftCode           string `json:"swift_code"`                    // required
+	SwiftCode           string `json:"swift_code,omitempty"`          // required
 	ClearingSystem      string `json:"clearing_system"`               // required, e.g. ACH, FEDWIRE, FASTER_PAYMENTS, SEPA
 	RoutingCodeType1    string `json:"routing_code_type1,omitempty"`  // e.g. ach, sort_code, iban
 	RoutingCodeValue1   string `json:"routing_code_value1,omitempty"` // routing code value
@@ -80,9 +81,9 @@ type BeneficiaryCreationRequest struct {
 	Nickname       string          `json:"nickname,omitempty"`        // optional, max 120 chars
 	Currency       string          `json:"currency,omitempty"`        // optional
 	Country        string          `json:"country,omitempty"`         // optional, ISO 3166-1 alpha-2
-	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
+	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL, SWIFT or CARD
 	BankDetails    *BankDetails    `json:"bank_details"`              // required
-	Address        *Address        `json:"address"`                   // required
+	Address        *Address        `json:"address,omitempty"`         // required for bank and company CARD recipients
 	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
 	Email          string          `json:"email,omitempty"`           // optional
 }
@@ -96,12 +97,13 @@ type BeneficiaryCreationResponse struct {
 
 // ListBeneficiariesRequest represents a beneficiary list request
 type ListBeneficiariesRequest struct {
-	PageSize   int    `json:"page_size"`             // required, 1-100
-	PageNumber int    `json:"page_number"`           // required, >=1
-	Currency   string `json:"currency,omitempty"`    // optional
-	Country    string `json:"country,omitempty"`     // optional, ISO 3166-1 alpha-2
-	Status     string `json:"status,omitempty"`      // optional: active, inactive, deleted
-	EntityType string `json:"entity_type,omitempty"` // optional: INDIVIDUAL, COMPANY
+	PaymentMethod string `json:"payment_method,omitempty"`
+	PageSize      int    `json:"page_size"`             // required, 1-100
+	PageNumber    int    `json:"page_number"`           // required, >=1
+	Currency      string `json:"currency,omitempty"`    // optional
+	Country       string `json:"country,omitempty"`     // optional, ISO 3166-1 alpha-2
+	Status        string `json:"status,omitempty"`      // optional: active, inactive, deleted
+	EntityType    string `json:"entity_type,omitempty"` // optional: INDIVIDUAL, COMPANY
 }
 
 // ListBeneficiariesResponse represents a beneficiary list response
@@ -120,7 +122,7 @@ type BeneficiaryCheckAdditionalInfo struct {
 type BeneficiaryCheckRequest struct {
 	BankCountryCode string                          `json:"bank_country_code,omitempty"` // Conditional on payment method and currency.
 	EntityType      string                          `json:"entity_type"`                 // required: INDIVIDUAL or COMPANY
-	PaymentMethod   string                          `json:"payment_method"`              // required: LOCAL or SWIFT
+	PaymentMethod   string                          `json:"payment_method"`              // required: LOCAL, SWIFT or CARD
 	AccountNumber   string                          `json:"account_number,omitempty"`    // At least one non-empty account_number or iban; account_number takes precedence.
 	Currency        string                          `json:"currency"`                    // required, ISO 4217
 	FirstName       string                          `json:"first_name,omitempty"`        // required if INDIVIDUAL
@@ -133,11 +135,11 @@ type BeneficiaryCheckRequest struct {
 
 // PaymentMethod represents an available payment method
 type PaymentMethod struct {
-	ClearingSystems string   `json:"clearing_systems"`
-	Currency        string   `json:"currency"`
-	Country         string   `json:"country"`
-	PaymentMethod   string   `json:"payment_method"`
-	ValidationField []string `json:"validation_field"`
+	ClearingSystems string `json:"clearing_systems"`
+	Currency        string `json:"currency"`
+	Country         string `json:"country"`
+	PaymentMethod   string `json:"payment_method"`
+	ValidationField []any  `json:"validation_field"`
 }
 
 // ListPaymentMethodsResponse wraps the payment methods list response
@@ -158,6 +160,9 @@ func (c *BeneficiariesClient) Create(ctx context.Context, req *BeneficiaryCreati
 func (c *BeneficiariesClient) List(ctx context.Context, req *ListBeneficiariesRequest, opts ...*common.RequestOptions) (*ListBeneficiariesResponse, error) {
 	var resp ListBeneficiariesResponse
 	params := url.Values{}
+	if req.PaymentMethod != "" {
+		params.Set("payment_method", req.PaymentMethod)
+	}
 	params.Set("page_size", strconv.Itoa(req.PageSize))
 	params.Set("page_number", strconv.Itoa(req.PageNumber))
 	if req.Currency != "" {
@@ -211,15 +216,25 @@ func (c *BeneficiariesClient) Delete(ctx context.Context, beneficiaryID string, 
 
 // ListPaymentMethods retrieves available payment methods for a currency and country
 func (c *BeneficiariesClient) ListPaymentMethods(ctx context.Context, currency, country string, opts ...*common.RequestOptions) ([]PaymentMethod, error) {
+	return c.ListPaymentMethodsForEntity(ctx, currency, country, "", opts...)
+}
+
+// ListPaymentMethodsForEntity explicitly selects the recipient entity type.
+func (c *BeneficiariesClient) ListPaymentMethodsForEntity(ctx context.Context, currency, country, entityType string, opts ...*common.RequestOptions) ([]PaymentMethod, error) {
 	var resp ListPaymentMethodsResponse
-	path := fmt.Sprintf("/v1/beneficiaries/paymentmethods?currency=%s&country=%s", currency, country)
+	params := url.Values{"currency": {currency}, "country": {country}}
+	if entityType != "" {
+		params.Set("entity_type", entityType)
+	}
+	path := "/v1/beneficiaries/paymentmethods?" + params.Encode()
 	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to list payment methods: %w", err)
 	}
 	return resp.Data, nil
 }
 
-// Check validates beneficiary details before creation
+// Check matches a saved beneficiary; it does not verify a card or its ability to receive funds.
+// CARD requires account_number, bank_country_code and clearing_system=MASTERCARD SEND, without card_expiry.
 func (c *BeneficiariesClient) Check(ctx context.Context, req *BeneficiaryCheckRequest, opts ...*common.RequestOptions) (*Beneficiary, error) {
 	var resp Beneficiary
 	if err := c.client.PostWithOptions(ctx, "/v1/beneficiaries/check", req, &resp, firstRequestOptions(opts)); err != nil {

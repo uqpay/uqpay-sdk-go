@@ -54,9 +54,9 @@ type PayoutInlineBeneficiary struct {
 	IDNumber       string          `json:"id_number,omitempty"`       // required when account currency = COP
 	Nickname       string          `json:"nickname,omitempty"`        // optional
 	Email          string          `json:"email,omitempty"`           // optional
-	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL or SWIFT
+	PaymentMethod  string          `json:"payment_method"`            // required: LOCAL, SWIFT or CARD
 	BankDetails    *BankDetails    `json:"bank_details"`              // required (uses BankDetails from beneficiaries.go)
-	Address        *Address        `json:"address"`                   // required (uses Address from beneficiaries.go)
+	Address        *Address        `json:"address,omitempty"`         // conditional (uses Address from beneficiaries.go)
 	AdditionalInfo *AdditionalInfo `json:"additional_info,omitempty"` // optional
 }
 
@@ -68,19 +68,19 @@ type PayoutDocumentation struct {
 
 // CreatePayoutRequest represents a payout creation request
 type CreatePayoutRequest struct {
-	Currency        string                   `json:"currency"`                  // required, ISO 4217
-	Amount          string                   `json:"amount"`                    // required
-	QuoteID         string                   `json:"quote_id,omitempty"`        // optional, UUID
-	PayoutCurrency  string                   `json:"payout_currency,omitempty"` // conditional, required when quote_id specified
-	PayoutAmount    string                   `json:"payout_amount,omitempty"`   // conditional, required when quote_id specified
-	PurposeCode     string                   `json:"purpose_code"`              // required
-	PayoutReference string                   `json:"payout_reference"`          // required, max 100 chars
-	FeePaidBy       string                   `json:"fee_paid_by"`               // required, "OURS"
-	PayoutDate      string                   `json:"payout_date"`               // required, YYYY-MM-DD
-	BeneficiaryID   string                   `json:"beneficiary_id,omitempty"`  // conditional, either this or beneficiary
-	Beneficiary     *PayoutInlineBeneficiary `json:"beneficiary,omitempty"`     // conditional, inline beneficiary
-	IsPayer         string                   `json:"is_payer,omitempty"`        // optional, "Y" or "N"
-	Documentation   []PayoutDocumentation    `json:"documentation,omitempty"`   // optional
+	Currency        string                   `json:"currency"`                   // required, ISO 4217
+	Amount          string                   `json:"amount"`                     // required
+	QuoteID         string                   `json:"quote_id,omitempty"`         // optional, UUID
+	PayoutCurrency  string                   `json:"payout_currency,omitempty"`  // conditional, required when quote_id specified
+	PayoutAmount    string                   `json:"payout_amount,omitempty"`    // conditional, required when quote_id specified
+	PurposeCode     string                   `json:"purpose_code"`               // required
+	PayoutReference string                   `json:"payout_reference,omitempty"` // optional, max 100 chars
+	FeePaidBy       string                   `json:"fee_paid_by,omitempty"`      // optional, "OURS"
+	PayoutDate      string                   `json:"payout_date,omitempty"`      // optional, YYYY-MM-DD
+	BeneficiaryID   string                   `json:"beneficiary_id,omitempty"`   // conditional, either this or beneficiary
+	Beneficiary     *PayoutInlineBeneficiary `json:"beneficiary,omitempty"`      // conditional, inline beneficiary
+	IsPayer         string                   `json:"is_payer,omitempty"`         // optional, "Y" or "N"
+	Documentation   []PayoutDocumentation    `json:"documentation,omitempty"`    // optional
 }
 
 // CreatePayoutResponse represents a payout creation response
@@ -181,6 +181,34 @@ func (c *PayoutsClient) Get(ctx context.Context, payoutID string, opts ...*commo
 	path := fmt.Sprintf("/v1/payouts/%s", payoutID)
 	if err := c.client.GetWithOptions(ctx, path, &resp, firstRequestOptions(opts)); err != nil {
 		return nil, fmt.Errorf("failed to get payout: %w", err)
+	}
+	return &resp, nil
+}
+
+// ValidatePayoutRequest checks a saved beneficiary without creating an order.
+type ValidatePayoutRequest struct {
+	BeneficiaryID string `json:"beneficiary_id"`
+	Currency      string `json:"currency"`
+	Amount        string `json:"amount"`
+	FeePaidBy     string `json:"fee_paid_by"`
+}
+
+// ValidatePayoutResponse does not reserve funds or guarantee a later payout.
+type ValidatePayoutResponse struct {
+	Currency         string `json:"currency"`
+	Amount           string `json:"amount"`
+	FeeAmount        string `json:"fee_amount"`
+	TotalAmount      string `json:"total_amount"`
+	ChannelCode      string `json:"channel_code"`
+	SufficientFunds  bool   `json:"sufficient_funds"`
+	BeneficiaryValid bool   `json:"beneficiary_valid"`
+}
+
+func (c *PayoutsClient) Validate(ctx context.Context, req *ValidatePayoutRequest, opts ...*common.RequestOptions) (*ValidatePayoutResponse, error) {
+	params := url.Values{"beneficiary_id": {req.BeneficiaryID}, "currency": {req.Currency}, "amount": {req.Amount}, "fee_paid_by": {req.FeePaidBy}}
+	var resp ValidatePayoutResponse
+	if err := c.client.GetWithOptions(ctx, "/v1/payouts/validation?"+params.Encode(), &resp, firstRequestOptions(opts)); err != nil {
+		return nil, fmt.Errorf("failed to validate payout: %w", err)
 	}
 	return &resp, nil
 }
