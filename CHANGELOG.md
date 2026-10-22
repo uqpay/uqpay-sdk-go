@@ -17,6 +17,8 @@ MINOR can require migration. Pin an exact version and review its migration notes
   omission, and optional Personal Visa assignment `metadata.card_sku_code`.
 - Expose Acquiring authorization/capture options, capture references and records,
   authorization balances/expiry and updated payment intent states.
+- New payout-validation decision fields use `*bool`; new capture channel status
+  uses `*int`. Check nil before dereferencing; explicit false and status 0 remain values.
 
 ### Fixed
 
@@ -28,8 +30,7 @@ MINOR can require migration. Pin an exact version and review its migration notes
 ### Migration from 3.1.0
 
 - Capture amounts now use decimal strings; `PaymentMethod.ValidationField` uses
-  `[]any` for string/object rules. Payout validation decisions use `*bool` and
-  capture channel status uses `*int`: check nil before dereferencing.
+  `[]any` for string/object rules.
 - `PaymentIntents.Confirm` accepts variadic request options. Ordinary calls remain
   valid; exact function types/interfaces must adopt the variadic signature.
 - Keep `/v3` imports. The stable module path does not guarantee source compatibility.
